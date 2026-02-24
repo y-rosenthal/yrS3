@@ -33,10 +33,13 @@ git --version
 
 ### 1.3 Docker (optional, for local Supabase stack)
 
-Only needed if you run Supabase **locally** with `supabase start`. For using a **hosted** Supabase project (recommended for this app), you can skip Docker.
+Only needed if you run Supabase **locally** with `supabase start` (see Section 1.6). For using a **hosted** Supabase project (recommended for this app), you can skip Docker.
+
+**Install Docker Engine on Ubuntu**
+
+Official method using Docker’s apt repository:
 
 ```bash
-# Install Docker Engine: https://docs.docker.com/engine/install/ubuntu/
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -45,8 +48,23 @@ sudo chmod a+r /etc/apt/keyrings/docker.asc
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-# Add your user to the docker group to run without sudo: sudo usermod -aG docker $USER (then log out and back in)
 ```
+
+Allow your user to run Docker without `sudo` (optional but convenient):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Log out and back in (or run `newgrp docker`) so the group change takes effect.
+
+Verify Docker:
+
+```bash
+docker run hello-world
+```
+
+If that runs successfully, Docker is installed. For more options (e.g. other distros), see [Install Docker Engine](https://docs.docker.com/engine/install/).
 
 ### 1.4 Supabase CLI
 
@@ -76,6 +94,60 @@ Only needed if you want to deploy and manage environment variables from the comm
 npm install -g vercel
 vercel --version
 ```
+
+### 1.6 Running Supabase locally (optional)
+
+If you want a **fully local** Supabase backend (no hosted project), you need **Docker** (Section 1.3) and the **Supabase CLI** (Section 1.4). The CLI does not “install” Supabase as a system service; it starts the Supabase stack (Postgres, Auth, Studio, etc.) in Docker containers.
+
+**Start the local stack**
+
+From your project root (where `supabase/` lives, or where you will run `supabase init`):
+
+```bash
+# Create supabase/ and config if you don’t have them yet
+supabase init
+
+# Start all services (Postgres, Auth, Studio, Storage, etc.). First run downloads images.
+supabase start
+```
+
+This can take a few minutes the first time. When it finishes, the CLI prints **API URL**, **anon key**, **Studio URL**, and other values.
+
+**Use local credentials in the app**
+
+Export env vars or put them in `.env.local`:
+
+```bash
+supabase status -o env
+```
+
+Copy the `API URL` and `anon key` (or the whole block) into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Studio is usually at `http://127.0.0.1:54323` (see `supabase status`).
+
+**Apply migrations**
+
+```bash
+supabase db reset
+```
+
+This applies all migrations in `supabase/migrations/` to the local database.
+
+**GitHub OAuth (local Auth)**
+
+To sign in with GitHub against local Supabase, you must configure the GitHub provider in `supabase/config.toml` and set a GitHub OAuth App callback to your local URL. In `supabase/config.toml`, under `[auth.external.github]`:
+
+- Set `enabled = true`
+- Set `client_id` and `secret` (e.g. from env: `client_id = "env(GITHUB_CLIENT_ID)"`)
+- Create a GitHub OAuth App with callback URL `http://127.0.0.1:54321/auth/v1/callback` (or the Auth URL your `supabase status` shows)
+
+Then run `supabase start` again if the stack was already running. See [Supabase: Managing config](https://supabase.com/docs/guides/local-development/managing-config) for details.
+
+**Stop the stack**
+
+```bash
+supabase stop
+```
+
+Use `supabase stop --no-backup` to remove local data. For day-to-day development with a hosted project, you can skip this section and use Section 2.3 instead.
 
 ---
 
@@ -110,7 +182,7 @@ Optional:
 
 ### 2.3 Supabase project setup (CLI-first where possible)
 
-You need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations.
+You need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations. For **separate dev, test, and production** environments using multiple hosted projects (no Docker), see **Section 3.4**.
 
 #### One-time: create project and auth settings (Dashboard)
 
@@ -158,17 +230,7 @@ psql "postgresql://postgres.[ref]:[PASSWORD]@aws-0-[region].pooler.supabase.com:
 
 Replace `USER_UUID` with your user id.
 
-#### Optional: run Supabase locally (Docker)
-
-If you prefer a fully local backend (no hosted Supabase project), install Docker (Section 1.3), then:
-
-```bash
-supabase init    # already done if you have a supabase/ folder
-supabase start   # starts Postgres, Auth, Studio, etc.
-supabase status -o env   # print API URL and anon key for .env.local
-```
-
-Use the printed **API URL** and **anon key** in `.env.local`. For GitHub OAuth with local Auth, configure a GitHub OAuth App and set `GITHUB_CLIENT_ID` and `GITHUB_SECRET` in `supabase/config.toml` under `[auth.external.github]` (see [Supabase auth config](https://supabase.com/docs/guides/local-development/managing-config)). Then run migrations locally: `supabase db reset`. This setup is optional; most users will use a hosted project as in the steps above.
+For a **fully local** Supabase backend instead of a hosted project, see **Section 1.6** (Docker and local Supabase).
 
 ### 2.4 Create questions directory (filesystem mode)
 
@@ -294,6 +356,88 @@ vercel env pull .env.local
 ### 3.3 Questions on Vercel
 
 With `QUESTIONS_STORAGE=supabase`, question files are read/written to the Supabase Storage bucket created by the migration. Authors upload via the Author UI; the app does not use a local `questions` folder in production.
+
+### 3.4 Separate dev, test, and production environments (hosted Supabase)
+
+When you are **not** using Docker and local Supabase, you can still keep **dev**, **test** (staging), and **production** separate by using multiple **hosted** Supabase projects and Vercel environments.
+
+**Overview**
+
+- **Dev** — Local app (`npm run dev`) and/or Vercel “Development” env; points at a **dev** Supabase project.
+- **Test** — Preview deployments (e.g. PRs, `vercel` without `--prod`); points at a **test** Supabase project.
+- **Production** — Live app (`vercel --prod` or main branch); points at a **production** Supabase project.
+
+Each Supabase project has its own database, auth users, and storage. That way test and prod data stay isolated.
+
+**1. Create three Supabase projects**
+
+In the [Supabase Dashboard](https://supabase.com/dashboard), create three projects (e.g. `yrS3-dev`, `yrS3-test`, `yrS3-prod`). For each:
+
+- Note the **project ref** and the **Project URL** and **anon key** (Project Settings → API).
+- Enable **GitHub** under Authentication → Providers (use the same or different GitHub OAuth Apps per environment).
+- Set **Authentication** → **URL Configuration**:
+  - **Dev project:** Site URL `http://localhost:3000`; Redirect URLs: `http://localhost:3000/auth/callback`.
+  - **Test project:** Site URL your Vercel preview URL (e.g. `https://yrS3-*.vercel.app` or a fixed preview domain); Redirect URLs: `https://*.vercel.app/auth/callback` or your exact preview URL plus `/auth/callback`.
+  - **Production project:** Site URL your production URL; Redirect URLs: `https://your-app.vercel.app/auth/callback`.
+
+**2. Push migrations to each project**
+
+From the repo root, link and push to each project in turn:
+
+```bash
+supabase login
+supabase link --project-ref DEV_PROJECT_REF
+supabase db push
+supabase link --project-ref TEST_PROJECT_REF
+supabase db push
+supabase link --project-ref PROD_PROJECT_REF
+supabase db push
+```
+
+Your local repo is “linked” to whichever project you ran last; that’s fine. Each project now has the same schema.
+
+**3. Local development (dev)**
+
+In `.env.local` use the **dev** Supabase project URL and anon key. Run `npm run dev`. Sign-in and data stay in the dev project.
+
+**4. Vercel environments (test and production)**
+
+In Vercel, configure environment variables **per environment** (Production, Preview, Development):
+
+- **Production:**  
+  `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` = **production** Supabase project.  
+  `QUESTIONS_STORAGE` = `supabase`, and optionally `NEXT_PUBLIC_APP_URL` = production URL.
+
+- **Preview (test):**  
+  Same variables but with the **test** Supabase project URL and anon key.  
+  `NEXT_PUBLIC_APP_URL` = your preview base URL if needed.
+
+- **Development (optional):**  
+  Can point at the **dev** Supabase project for Vercel “dev” deployments.
+
+**CLI:** Add vars per environment:
+
+```bash
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+vercel env add NEXT_PUBLIC_SUPABASE_URL preview
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview
+# ... same for development if you use it
+```
+
+**Dashboard:** Project → Settings → Environment Variables → for each variable choose Production, Preview, and/or Development and set the value for each.
+
+**5. Add authors per environment**
+
+In each Supabase project (dev, test, prod), add author users as in Section 2.3 (“Add an author”) so the Author UI works in that environment. User IDs can differ between projects.
+
+**Summary**
+
+| Environment | App runs on        | Supabase project | Vercel env   |
+|-------------|--------------------|------------------|--------------|
+| Dev        | localhost          | dev              | —            |
+| Test       | Vercel preview URL | test             | Preview      |
+| Production | Vercel prod URL    | production       | Production   |
 
 ---
 
