@@ -68,21 +68,38 @@ If that runs successfully, Docker is installed. For more options (e.g. other dis
 
 ### 1.4 Supabase CLI
 
-Use either a global install or run via `npx` from the project:
+**Global npm install is not supported.** The Supabase CLI blocks `npm install -g supabase` by design. Use one of the methods below.
+
+**Option A — Linux binary (recommended on Ubuntu)**
+
+Download the latest binary and put it on your `PATH`:
 
 ```bash
-# Option A: global install (recommended so you can use `supabase` anywhere)
-npm install -g supabase
-
-# Option B: use npx from the project directory (no global install)
-# npx supabase --help
-```
-
-Verify:
-
-```bash
+curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
+sudo mv supabase /usr/local/bin/
 supabase --version
 ```
+
+For ARM64 (e.g. some ARM boards), use `supabase_linux_arm64.tar.gz` from the [releases page](https://github.com/supabase/cli/releases) instead.
+
+**Option B — Homebrew (if you use Homebrew on Linux)**
+
+```bash
+brew install supabase/tap/supabase
+supabase --version
+```
+
+If you don’t have Homebrew: [Install Homebrew](https://docs.brew.sh/Homebrew-on-Linux), then run the command above.
+
+**Option C — npx (no global install)**
+
+From the project directory (or any directory) you can run the CLI without installing it:
+
+```bash
+npx supabase --version
+```
+
+Use `npx supabase` instead of `supabase` for every command (e.g. `npx supabase login`, `npx supabase link --project-ref XXX`, `npx supabase db push`).
 
 You will use the CLI to log in, link a hosted project, and push migrations. A [personal access token](https://supabase.com/dashboard/account/tokens) is required for `supabase login` (create one in the Dashboard once).
 
