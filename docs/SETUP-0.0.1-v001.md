@@ -105,12 +105,25 @@ You will use the CLI to log in, link a hosted project, and push migrations. A [p
 
 ### 1.5 Vercel CLI (optional, for deploy from the terminal)
 
-Only needed if you want to deploy and manage environment variables from the command line instead of the Vercel website:
+Only needed if you want to deploy and manage environment variables from the command line instead of the Vercel website.
+
+**Option A — Homebrew (if you use Homebrew)**
+
+```bash
+brew install vercel-cli
+vercel --version
+```
+
+Same approach as Supabase CLI if you installed that via Homebrew (Section 1.4 Option B). The formula is maintained in Homebrew and may lag the npm release slightly.
+
+**Option B — npm (global)**
 
 ```bash
 npm install -g vercel
 vercel --version
 ```
+
+Vercel still supports global npm install (unlike Supabase CLI). Use this if you don’t use Homebrew.
 
 ### 1.6 Running Supabase locally (optional)
 
