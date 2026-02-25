@@ -1,0 +1,4 @@
+Some docs files already have an intro explainig what the document is, but not all of them do.
+Make sure that each documentation file has an intro section that explains what that document is,
+including the audience, what to read before this document and possibly what to read after.
+This could be broken down into different audiences.

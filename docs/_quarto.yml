@@ -1,5 +1,5 @@
 # Quarto book configuration for yrS3 documentation
-# See docs/QUARTO-DOC-GUIDE.md for how to install Quarto and render this book.
+# See docs/QUARTO-DOC-GUIDE.qmd for how to install Quarto and render this book.
 
 project:
   type: book
@@ -13,22 +13,22 @@ book:
     - index.qmd
     - part: "DOC-GUIDES"
       chapters:
-        - DOC-GUIDE-v001.md
-        - QUARTO-DOC-GUIDE.md
+        - DOC-GUIDE-v001.qmd
+        - QUARTO-DOC-GUIDE.qmd
     - part: "PRD"
       chapters:
-        - PRD-0.0.1-v003.md
-        - PRD-0.0.1-v002.md
-        - PRD-0.0.1-v001.md
+        - PRD-0.0.1-v003.qmd
+        - PRD-0.0.1-v002.qmd
+        - PRD-0.0.1-v001.qmd
     - part: "SPEC"
       chapters:
-        - SPEC-0.0.1.md
+        - SPEC-0.0.1.qmd
     - part: "SETUP"
       chapters:
-        - SETUP-0.0.1-v001.md
+        - SETUP-0.0.1-v001.qmd
     - part: "QUESTION-FORMAT"
       chapters:
-        - QUESTION-FORMAT-0.0.1.md
+        - QUESTION-FORMAT-0.0.1.qmd
 
 format:
   html:
