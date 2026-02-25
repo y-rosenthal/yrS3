@@ -3,6 +3,10 @@
 This document describes the various types of documentation files and the
 version numbering scheme.
 
+## Reading the docs as an HTML book
+
+The documentation in `docs/` can be rendered as a single **Quarto book** (HTML) for easier reading. To build or rebuild the book after documentation changes, see **[QUARTO-DOC-GUIDE.md](QUARTO-DOC-GUIDE.md)**. That guide explains how to install the Quarto tools (if needed) and how to regenerate the book. The built book is in `docs/_book/`; open `docs/_book/index.html` in a browser to read it.
+
 ## v001 version format
 
 In general, any document (including this one) can have a -v001 format style 

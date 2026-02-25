@@ -1,0 +1,33 @@
+# Quarto book configuration for yrS3 documentation
+# See docs/QUARTO-DOC-GUIDE.md for how to install Quarto and render this book.
+
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "yrS3 Documentation"
+  author: "yrS3 Project"
+  description: "Tutorial & Testing System — specs, setup, and reference."
+  chapters:
+    - index.qmd
+    - part: "Documentation guides"
+      chapters:
+        - DOC-GUIDE-v001.md
+        - QUARTO-DOC-GUIDE.md
+    - part: "Specification & vision"
+      chapters:
+        - SPEC-0.0.1.md
+        - PRD-0.0.1-v003.md
+    - part: "Reference"
+      chapters:
+        - QUESTION-FORMAT-0.0.1.md
+        - SETUP-0.0.1-v001.md
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    code-fold: false

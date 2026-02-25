@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# Quarto book output (docs rendered to HTML)
+/docs/_book/
+
 # production
 /build
 
