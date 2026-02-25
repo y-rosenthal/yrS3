@@ -141,8 +141,6 @@ supabase init
 supabase start
 ```
 
-YRTODO - YRUPTOHERE
-
 This can take a few minutes the first time. When it finishes, the CLI prints **API URL**, **anon key**, **Studio URL**, and other values.
 
 **Use local credentials in the app**
@@ -161,7 +159,10 @@ Copy the `API URL` and `anon key` (or the whole block) into `.env.local` as `NEX
 supabase db reset
 ```
 
+
 This applies all migrations in `supabase/migrations/` to the local database.
+
+YRTODO - UPTOHERE
 
 **GitHub OAuth (local Auth)**
 
