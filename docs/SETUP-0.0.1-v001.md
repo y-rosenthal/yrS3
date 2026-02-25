@@ -159,20 +159,58 @@ Copy the `API URL` and `anon key` (or the whole block) into `.env.local` as `NEX
 supabase db reset
 ```
 
-
 This applies all migrations in `supabase/migrations/` to the local database.
-
-YRTODO - UPTOHERE
 
 **GitHub OAuth (local Auth)**
 
-To sign in with GitHub against local Supabase, you must configure the GitHub provider in `supabase/config.toml` and set a GitHub OAuth App callback to your local URL. In `supabase/config.toml`, under `[auth.external.github]`:
+The Supabase CLI does **not** provide a command to configure GitHub or Google OAuth. For local development you set providers in `supabase/config.toml`; for hosted projects you use the Dashboard (Authentication → Providers). The CLI only helps by giving you the Auth base URL for the callback (see below).
 
-- Set `enabled = true`
-- Set `client_id` and `secret` (e.g. from env: `client_id = "env(GITHUB_CLIENT_ID)"`)
-- Create a GitHub OAuth App with callback URL `http://127.0.0.1:54321/auth/v1/callback` (or the Auth URL your `supabase status` shows)
+1. **Get your local Auth callback URL** (CLI):
 
-Then run `supabase start` again if the stack was already running. See [Supabase: Managing config](https://supabase.com/docs/guides/local-development/managing-config) for details.
+   ```bash
+   supabase status
+   ```
+
+   Note the **API URL** (e.g. `http://127.0.0.1:54321`). The callback URL is that base + `/auth/v1/callback`, e.g. `http://127.0.0.1:54321/auth/v1/callback`.
+
+2. **Create a GitHub OAuth App** at [GitHub → Settings → Developer settings → OAuth Apps](https://github.com/settings/developers):
+   - Homepage URL: `http://127.0.0.1:3000` (or your app URL)
+   - Authorization callback URL: the value from step 1 (e.g. `http://127.0.0.1:54321/auth/v1/callback`)
+   - Copy the Client ID and generate a Client Secret.
+
+3. **Configure in `supabase/config.toml`** under `[auth.external.github]`:
+
+   ```toml
+   [auth.external.github]
+   enabled = true
+   client_id = "env(GITHUB_CLIENT_ID)"
+   secret = "env(GITHUB_SECRET)"
+   ```
+
+   In your project root (or in `supabase/.env`), set `GITHUB_CLIENT_ID` and `GITHUB_SECRET` so the config can read them. Do not commit secrets to git.
+
+4. Restart the stack if it was already running: `supabase stop` then `supabase start`.
+
+**Google OAuth (local Auth)**
+
+Same idea as GitHub: no CLI command; use `config.toml` and a Google OAuth client.
+
+1. **Callback URL** — same as above: from `supabase status`, use API URL + `/auth/v1/callback`.
+
+2. **Create a Google OAuth client** in [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (APIs & Services → Credentials → Create Credentials → OAuth client ID). Use application type “Web application”, add the callback URL from step 1 to “Authorized redirect URIs”, and note the Client ID and Client Secret.
+
+3. **Configure in `supabase/config.toml`** under `[auth.external.google]`:
+
+   ```toml
+   [auth.external.google]
+   enabled = true
+   client_id = "env(GOOGLE_CLIENT_ID)"
+   secret = "env(GOOGLE_CLIENT_SECRET)"
+   ```
+
+   Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the environment (or `supabase/.env`). Restart with `supabase stop` then `supabase start`.
+
+**Reference:** [Supabase: Managing config and secrets](https://supabase.com/docs/guides/local-development/managing-config).
 
 **Stop the stack**
 
