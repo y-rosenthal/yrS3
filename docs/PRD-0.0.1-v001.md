@@ -1,3 +1,7 @@
+---
+title: "PRD-0.0.1-v001.md"
+---
+
 I would like to design a PRD for a project to build a tutorial/testing system. Please put the following ideas into a PRD in markdown format. Help me revise the document. Ask me questions that would help. Organize the ideas into appropriate sections, etc.
 
 Version 0.1 will focus primarily on the testing component.

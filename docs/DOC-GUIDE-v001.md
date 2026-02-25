@@ -1,3 +1,7 @@
+---
+title: "DOC-GUIDE-v001.md"
+---
+
 # How to navigate documentation for this project
 
 This document describes the various types of documentation files and the

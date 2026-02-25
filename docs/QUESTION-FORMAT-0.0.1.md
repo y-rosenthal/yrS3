@@ -1,3 +1,7 @@
+---
+title: "QUESTION-FORMAT-0.0.1.md"
+---
+
 # Question Format — v0.0.1 (MVP)
 
 This document defines how questions are stored on the **filesystem** for the initial MVP. It is referenced by SPEC-0.0.1.md.

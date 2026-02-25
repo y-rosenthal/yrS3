@@ -1,3 +1,7 @@
+---
+title: "SETUP-0.0.1-v001.md"
+---
+
 # Setup & Run — SPEC 0.0.1
 
 This document describes how to set up and run the Tutorial & Testing System MVP locally (Ubuntu KDE) and deploy to Vercel and Supabase. It is versioned for **SPEC 0.0.1** (see DOC-GUIDE-v001.md).

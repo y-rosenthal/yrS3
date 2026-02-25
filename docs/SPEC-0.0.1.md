@@ -1,3 +1,7 @@
+---
+title: "SPEC-0.0.1.md"
+---
+
 # SPEC — Initial MVP (v0.0.1)
 
 Read DOC-GUIDE-v001.md for documentation navigation and version numbering.  

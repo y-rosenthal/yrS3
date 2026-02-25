@@ -1,3 +1,7 @@
+---
+title: "QUARTO-DOC-GUIDE.md"
+---
+
 # Quarto documentation book — build guide
 
 This document explains how to build and regenerate the **HTML documentation book** for this project. The book is built with [Quarto](https://quarto.org/) and turns the markdown files in `docs/` into a single navigable HTML site.
