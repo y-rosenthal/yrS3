@@ -2,16 +2,16 @@
 title: "QUARTO-DOC-GUIDE.md"
 ---
 
-# Quarto documentation book — build guide
+
 
 This document explains how to build and regenerate the **HTML documentation book** for this project. The book is built with [Quarto](https://quarto.org/) and turns the markdown files in `docs/` into a single navigable HTML site.
 
-### What gets built
+## What gets built
 
 - **Source:** All `.md` and `.qmd` files in `docs/` that are listed in `docs/_quarto.yml`.
 - **Output:** Rendered HTML and assets go into **`docs/_book/`**. Open `docs/_book/index.html` in a browser to read the book.
 
-### When to regenerate
+## When to regenerate
 
 Regenerate the book whenever you:
 
@@ -20,16 +20,16 @@ Regenerate the book whenever you:
 
 ---
 
-### 1. Installing Quarto
+## 1. Installing Quarto
 
 You need the **Quarto CLI** to render the book. If `quarto --version` works in your terminal, you can skip this section.
 
-#### Option A: Official installer (recommended)
+### Option A: Official installer (recommended)
 
 1. Go to [https://quarto.org/docs/get-started/](https://quarto.org/docs/get-started/).
 2. Choose your OS and follow the install steps. On Linux you can use the `.deb` package or the tarball; on macOS, the `.pkg`; on Windows, the `.msi`.
 
-#### Option B: Linux (tarball, single user)
+### Option B: Linux (tarball, single user)
 
 Replace `VERSION` with a release from [Quarto releases](https://github.com/quarto-dev/quarto-cli/releases) (e.g. `1.4.553`):
 
@@ -47,7 +47,7 @@ ln -sf ~/opt/quarto-${VERSION}/bin/quarto ~/.local/bin/quarto
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-#### Verify
+### Verify
 
 ```bash
 quarto check
@@ -57,7 +57,7 @@ This checks the CLI and suggests any missing tools (e.g. Pandoc).
 
 ---
 
-### 2. Regenerating the book
+## 2. Regenerating the book
 
 From **inside** the `docs/` directory (recommended):
 
@@ -76,7 +76,7 @@ If you see errors about missing environment variables when running from the proj
 
 After a successful run, open **`docs/_book/index.html`** in your browser to view the book.
 
-#### Optional: preview while editing
+### Optional: preview while editing
 
 To auto-rebuild when files change and optionally open the book in a browser:
 
@@ -88,7 +88,7 @@ Press `Ctrl+C` to stop the preview server.
 
 ---
 
-### 3. Adding or removing chapters
+## 3. Adding or removing chapters
 
 The book’s table of contents is defined in **`docs/_quarto.yml`** under `book.chapters`. To add a new doc:
 
@@ -110,7 +110,7 @@ To remove a chapter, delete or comment out its entry in `_quarto.yml` and re-ren
 
 ---
 
-### 4. Summary
+## 4. Summary
 
 | Task              | Command (from project root) |
 |-------------------|-----------------------------|

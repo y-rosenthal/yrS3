@@ -2,7 +2,7 @@
 title: "SETUP-0.0.1-v001.md"
 ---
 
-# Setup & Run — SPEC 0.0.1
+
 
 This document describes how to set up and run the Tutorial & Testing System MVP locally (Ubuntu KDE) and deploy to Vercel and Supabase. It is versioned for **SPEC 0.0.1** (see DOC-GUIDE-v001.md).
 
@@ -12,11 +12,11 @@ You will need: a **Supabase** account (for auth and optional storage) and, for l
 
 ---
 
-### 1. Installing required software (Ubuntu / Plasma KDE)
+## 1. Installing required software (Ubuntu / Plasma KDE)
 
 Install the following on your machine. These steps assume Ubuntu (or a similar Debian-based distribution) with Plasma KDE.
 
-#### 1.1 Node.js 20+ and npm
+### 1.1 Node.js 20+ and npm
 
 Supabase CLI and the app require Node.js 20 or later. Use the NodeSource repository:
 
@@ -29,7 +29,7 @@ npm --version
 
 Alternatively, use [nvm](https://github.com/nvm-sh/nvm): `nvm install 20 && nvm use 20`.
 
-#### 1.2 Git
+### 1.2 Git
 
 ```bash
 sudo apt-get update
@@ -37,7 +37,7 @@ sudo apt-get install -y git
 git --version
 ```
 
-#### 1.3 Docker (optional, for local Supabase stack)
+### 1.3 Docker (optional, for local Supabase stack)
 
 Only needed if you run Supabase **locally** with `supabase start` (see Section 1.6). For using a **hosted** Supabase project (recommended for this app), you can skip Docker.
 
@@ -72,7 +72,7 @@ docker run hello-world
 
 If that runs successfully, Docker is installed. For more options (e.g. other distros), see [Install Docker Engine](https://docs.docker.com/engine/install/).
 
-#### 1.4 Supabase CLI
+### 1.4 Supabase CLI
 
 **Global npm install is not supported.** The Supabase CLI blocks `npm install -g supabase` by design. Use one of the methods below.
 
@@ -109,7 +109,7 @@ Use `npx supabase` instead of `supabase` for every command (e.g. `npx supabase l
 
 You will use the CLI to log in, link a hosted project, and push migrations. A [personal access token](https://supabase.com/dashboard/account/tokens) is required for `supabase login` (create one in the Dashboard once).
 
-#### 1.5 Vercel CLI (optional, for deploy from the terminal)
+### 1.5 Vercel CLI (optional, for deploy from the terminal)
 
 Only needed if you want to deploy and manage environment variables from the command line instead of the Vercel website.
 
@@ -131,7 +131,7 @@ vercel --version
 
 Vercel still supports global npm install (unlike Supabase CLI). Use this if you don’t use Homebrew.
 
-#### 1.6 Running Supabase locally (optional)
+### 1.6 Running Supabase locally (optional)
 
 If you want a **fully local** Supabase backend (no hosted project), you need **Docker** (Section 1.3) and the **Supabase CLI** (Section 1.4). The CLI does not “install” Supabase as a system service; it starts the Supabase stack (Postgres, Auth, Studio, etc.) in Docker containers.
 
@@ -253,16 +253,16 @@ Use `supabase stop --no-backup` to remove local data. For day-to-day development
 
 ---
 
-### 2. Local development (Ubuntu KDE)
+## 2. Local development (Ubuntu KDE)
 
-#### 2.1 Clone and install
+### 2.1 Clone and install
 
 ```bash
 cd /path/to/yrS3
 npm install
 ```
 
-#### 2.2 Environment variables
+### 2.2 Environment variables
 
 Copy the example env file and fill in your Supabase values:
 
@@ -282,11 +282,11 @@ Optional:
 - `QUESTIONS_ROOT` — directory for question folders (default: `./questions`)
 - `TESTS_CONFIG` — JSON array of test definitions (see Section 5)
 
-#### 2.3 Supabase project setup (CLI-first where possible)
+### 2.3 Supabase project setup (CLI-first where possible)
 
 You need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations. For **separate dev, test, and production** environments using multiple hosted projects (no Docker), see **Section 3.4**.
 
-##### One-time: create project and auth settings (Dashboard — no CLI)
+#### One-time: create project and auth settings (Dashboard — no CLI)
 
 For a **hosted** Supabase project, the CLI **cannot** create the project or configure auth (providers, email confirmation, redirect URLs). Those steps are done only in the [Supabase Dashboard](https://supabase.com/dashboard). Use the CLI for everything else (link, migrations, `supabase status -o env`).
 
@@ -299,7 +299,7 @@ Auth is **modular**: implement email/password first (no OAuth setup), then add G
 4. **Google OAuth (optional):** **Authentication** → **Providers** → **Google** → enable and set your Google OAuth client id/secret. Only if implementing Google sign-in.
 5. **GitHub OAuth (optional):** **Authentication** → **Providers** → **GitHub** → enable and set your GitHub OAuth App client id/secret. Only if implementing GitHub sign-in.
 
-##### Link project and push migrations (CLI)
+#### Link project and push migrations (CLI)
 
 From the repo root:
 
@@ -317,7 +317,7 @@ supabase db push
 
 If you prefer not to use the CLI, run the SQL in `supabase/migrations/00001_initial.sql` manually in the Dashboard **SQL Editor**.
 
-##### Add an author
+#### Add an author
 
 After your first sign-in (email/password or any enabled OAuth provider), add your user as an author. You need your Supabase user UUID (Dashboard → **Authentication** → **Users** → copy your user’s UUID).
 
@@ -337,7 +337,7 @@ Replace `USER_UUID` with your user id.
 
 For a **fully local** Supabase backend instead of a hosted project, see **Section 1.6** (Docker and local Supabase).
 
-#### 2.4 Create questions directory (filesystem mode)
+### 2.4 Create questions directory (filesystem mode)
 
 ```bash
 mkdir -p questions
@@ -372,7 +372,7 @@ What is 2 + 2?
   text: "5"
 ```
 
-#### 2.5 Configure tests
+### 2.5 Configure tests
 
 Set `TESTS_CONFIG` in `.env.local` to include question ids, or add a test that references them. Example:
 
@@ -381,7 +381,7 @@ Set `TESTS_CONFIG` in `.env.local` to include question ids, or add a test that r
 TESTS_CONFIG=[{"id":"test-1","title":"Sample Test","description":"First test","questionIds":["q-mult-001"]}]
 ```
 
-#### 2.6 Run the app
+### 2.6 Run the app
 
 ```bash
 npm run dev
@@ -394,9 +394,9 @@ Open [http://localhost:3000](http://localhost:3000). Sign in (email/password aft
 
 ---
 
-### 3. Deploy to Vercel and Supabase
+## 3. Deploy to Vercel and Supabase
 
-#### 3.1 Supabase (production)
+### 3.1 Supabase (production)
 
 Auth redirects must be updated for your production URL. This is not configurable via the Supabase CLI; use the **Dashboard** once:
 
@@ -404,11 +404,11 @@ Auth redirects must be updated for your production URL. This is not configurable
 2. **Redirect URLs**: add `https://your-app.vercel.app/auth/callback`.
 3. Ensure migrations are applied (you already ran `supabase db push` in Section 2.3; the same linked project is used for production).
 
-#### 3.2 Vercel (CLI or Dashboard)
+### 3.2 Vercel (CLI or Dashboard)
 
 You can deploy and set environment variables either with the **Vercel CLI** or the Vercel website.
 
-##### Option A — Vercel CLI
+#### Option A — Vercel CLI
 
 From the repo root:
 
@@ -448,7 +448,7 @@ To pull env vars into a local `.env.local` (e.g. for testing production config l
 vercel env pull .env.local
 ```
 
-##### Option B — Vercel Dashboard
+#### Option B — Vercel Dashboard
 
 1. Push the repo to GitHub and import the project at [Vercel](https://vercel.com) → **Add New** → **Project**.
 2. **Project** → **Settings** → **Environment Variables**. Add:
@@ -458,11 +458,11 @@ vercel env pull .env.local
    - Optionally `QUESTIONS_BUCKET`, `TESTS_CONFIG`, `NEXT_PUBLIC_APP_URL`
 3. Deploy (automatic on push, or **Deployments** → **Redeploy**).
 
-#### 3.3 Questions on Vercel
+### 3.3 Questions on Vercel
 
 With `QUESTIONS_STORAGE=supabase`, question files are read/written to the Supabase Storage bucket created by the migration. Authors upload via the Author UI; the app does not use a local `questions` folder in production.
 
-#### 3.4 Separate dev, test, and production environments (hosted Supabase)
+### 3.4 Separate dev, test, and production environments (hosted Supabase)
 
 When you are **not** using Docker and local Supabase, you can still keep **dev**, **test** (staging), and **production** separate by using multiple **hosted** Supabase projects and Vercel environments.
 
@@ -546,7 +546,7 @@ In each Supabase project (dev, test, prod), add author users as in Section 2.3 (
 
 ---
 
-### 4. Summary of environment variables
+## 4. Summary of environment variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -560,7 +560,7 @@ In each Supabase project (dev, test, prod), add author users as in Section 2.3 (
 
 ---
 
-### 5. Related documents
+## 5. Related documents
 
 - **DOC-GUIDE-v001.md** — Documentation and versioning
 - **SPEC-0.0.1.md** — MVP scope and behaviour
