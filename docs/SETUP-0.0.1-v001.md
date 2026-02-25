@@ -141,6 +141,8 @@ supabase init
 supabase start
 ```
 
+YRTODO - YRUPTOHERE
+
 This can take a few minutes the first time. When it finishes, the CLI prints **API URL**, **anon key**, **Studio URL**, and other values.
 
 **Use local credentials in the app**
