@@ -7,11 +7,11 @@ title: "DOC-GUIDE-v001.md"
 This document describes the various types of documentation files and the
 version numbering scheme.
 
-## Reading the docs as an HTML book
+### Reading the docs as an HTML book
 
 The documentation in `docs/` can be rendered as a single **Quarto book** (HTML) for easier reading. To build or rebuild the book after documentation changes, see **[QUARTO-DOC-GUIDE.md](QUARTO-DOC-GUIDE.md)**. That guide explains how to install the Quarto tools (if needed) and how to regenerate the book. The built book is in `docs/_book/`; open `docs/_book/index.html` in a browser to read it.
 
-## v001 version format
+### v001 version format
 
 In general, any document (including this one) can have a -v001 format style 
 version number at the end of its name. 
@@ -19,7 +19,7 @@ This notation is used to ensure that it is easy to compare
 different versions of the same document - without needing to know how to use
 GIT commands.
 
-## SPEC documents
+### SPEC documents
 
 This system will be continuously developed in an incremental way.
 Each incremental development phase will be versioned in 0.0.1 style.
@@ -27,7 +27,7 @@ Each incremental development phase will have a spec document named SPEC-v0.0.1.m
 or something similar, where the version number for the spec matches the 
 version number of the release.
 
-## PVD documents
+### PVD documents
 
 PVD stands for Product Vision Document. 
 A PVD is a living document that describes the goals for the full system. 

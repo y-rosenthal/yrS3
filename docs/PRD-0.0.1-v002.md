@@ -3,40 +3,40 @@ title: "PRD-0.0.1-v002.md"
 ---
 
 # Product Requirements Document (PRD)
-## Tutorial & Testing System — v0.1
+### Tutorial & Testing System — v0.1
 
 ---
 
-## 1. Overview
+### 1. Overview
 This project aims to build a web-based tutorial and testing system focused initially on **knowledge assessment**. Version 0.1 prioritizes the **testing component**, with extensibility toward tutorials in later versions.
 
 The system is designed to be **modular and componentized** to support AI-assisted design and implementation, allowing each component to be developed, tested, and validated independently.
 
 ---
 
-## 2. Goals & Non-Goals
+### 2. Goals & Non-Goals
 
-### Goals (v0.1)
+#### Goals (v0.1)
 - Deliver a functional testing platform
 - Support multiple question types with automated and AI-assisted grading
 - Enable secure user authentication
 - Establish a scalable, modular architecture compatible with AI coding assistants
 
-### Non-Goals (v0.1)
+#### Non-Goals (v0.1)
 - Full tutorial authoring workflows
 - Advanced analytics or reporting
 - Social or collaborative features
 
 ---
 
-## 3. Target Users
+### 3. Target Users
 - Learners testing technical knowledge
 - Internal educational or training use
 - Early adopters comfortable with AI-assisted grading
 
 ---
 
-## 4. Scope: Knowledge Domains (Initial)
+### 4. Scope: Knowledge Domains (Initial)
 The system will support testing in the following areas:
 - R coding
 - Bash commands and scripting
@@ -50,15 +50,15 @@ Each domain may reuse shared infrastructure but can define domain-specific evalu
 
 ---
 
-## 5. Functional Requirements
+### 5. Functional Requirements
 
-### 5.1 Authentication
+#### 5.1 Authentication
 - Users authenticate via **Google OAuth**
 - Authentication, session management, and user records handled by **Supabase**
 
 ---
 
-### 5.2 Testing Flow
+#### 5.2 Testing Flow
 - Users can:
   - Log in
   - Select a test
@@ -71,14 +71,14 @@ Each domain may reuse shared infrastructure but can define domain-specific evalu
 
 ---
 
-## 6. Question Types & Evaluation Modules
+### 6. Question Types & Evaluation Modules
 
 Each question type is implemented as a **separate module** with:
 - A defined input schema
 - Evaluation logic
 - Feedback output
 
-### Supported Question Types (v0.1)
+#### Supported Question Types (v0.1)
 
 1. **Multiple Choice**
    - Deterministic grading
@@ -117,13 +117,13 @@ Each question type is implemented as a **separate module** with:
 
 ---
 
-## 7. System Architecture
+### 7. System Architecture
 
-### 7.1 Frontend
+#### 7.1 Frontend
 - **Next.js** web application
 - Component-based UI aligned with question modules
 
-### 7.2 Backend & Infrastructure
+#### 7.2 Backend & Infrastructure
 - **Supabase**
   - Authentication
   - Database
@@ -134,11 +134,11 @@ Each question type is implemented as a **separate module** with:
 
 ---
 
-## 8. Modularity & AI-Assisted Development
+### 8. Modularity & AI-Assisted Development
 
 The system is decomposed into small, testable components:
 
-### Core Modules
+#### Core Modules
 - **Auth Module**
   - Google OAuth via Supabase
   - Exposes: `getUser()`, `requireAuth()`
@@ -169,7 +169,7 @@ Each module:
 
 ---
 
-## 9. High-Level System Flow
+### 9. High-Level System Flow
 
 
 
@@ -187,9 +187,9 @@ User
 
 ---
 
-## 10. Scoring & Evaluation Rules
+### 10. Scoring & Evaluation Rules
 
-### Deterministic AI Scoring
+#### Deterministic AI Scoring
 **Deterministic scoring** means:
 - Given the same question, expected answer, and user response,
 - The system always produces the **same score and feedback**
@@ -199,7 +199,7 @@ YRTODO: Finalize prompt templates and constraints to guarantee deterministic AI 
 
 ---
 
-## 11. Sandbox Isolation (Minimum Viable Level)
+### 11. Sandbox Isolation (Minimum Viable Level)
 
 **Minimum viable sandbox isolation level** refers to the *lowest acceptable security boundary* that:
 - Prevents user-submitted code from accessing:
@@ -215,15 +215,15 @@ YRTODO: Decide on sandbox implementation strategy (e.g., container-based vs WASM
 
 ---
 
-## 12. Database Schema (Initial)
+### 12. Database Schema (Initial)
 
-### users
+#### users
 - id (uuid, PK)
 - email
 - name
 - created_at
 
-### tests
+#### tests
 - id (uuid, PK)
 - title
 - description
@@ -232,14 +232,14 @@ YRTODO: Decide on sandbox implementation strategy (e.g., container-based vs WASM
 - allow_multiple_attempts (boolean)
 - created_at
 
-### questions
+#### questions
 - id (uuid, PK)
 - test_id (FK)
 - type (enum)
 - prompt
 - config_json (expected answer, rubric, etc.)
 
-### test_sessions
+#### test_sessions
 - id (uuid, PK)
 - user_id (FK)
 - test_id (FK)
@@ -248,7 +248,7 @@ YRTODO: Decide on sandbox implementation strategy (e.g., container-based vs WASM
 - submitted_at
 - score
 
-### answers
+#### answers
 - id (uuid, PK)
 - session_id (FK)
 - question_id (FK)
@@ -258,24 +258,24 @@ YRTODO: Decide on sandbox implementation strategy (e.g., container-based vs WASM
 
 ---
 
-## 13. User Stories (v0.1)
+### 13. User Stories (v0.1)
 
-### Authentication
+#### Authentication
 - As a user, I want to sign in with Google.
 - As a user, I want my test history associated with my account.
 
-### Test Taking
+#### Test Taking
 - As a user, I want to take timed or untimed tests.
 - As a user, I want to retry tests when allowed.
 - As a user, I want clear feedback explaining incorrect answers.
 
-### Administration
+#### Administration
 - As an admin, I want to define question types and expected answers.
 - As an admin, I want to configure test timing and attempts.
 
 ---
 
-## 14. Open Items / TODOs
+### 14. Open Items / TODOs
 
 YRTODO: Define API contracts for all core modules  
 YRTODO: Draft example question configuration JSON per question type  

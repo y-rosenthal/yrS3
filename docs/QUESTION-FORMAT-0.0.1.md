@@ -10,7 +10,7 @@ All structured data uses **YAML** for readability and easy hand-editing. Prefer 
 
 ---
 
-## 1. One Folder per Question
+### 1. One Folder per Question
 
 - Each question has its **own folder**.
 - Folder name SHOULD be the question **id** (e.g. `q-bash-ls-001` or a UUID) so that updates can replace the same folder.
@@ -18,9 +18,9 @@ All structured data uses **YAML** for readability and easy hand-editing. Prefer 
 
 ---
 
-## 2. Required Files
+### 2. Required Files
 
-### 2.1 `meta.yaml` (required)
+#### 2.1 `meta.yaml` (required)
 
 Minimal metadata that identifies and classifies the question. Keep this file short so it’s easy to scan and edit.
 
@@ -51,7 +51,7 @@ title: List files in current directory
 domain: bash
 ```
 
-### 2.2 Prompt file: `prompt.md` or `prompt.txt` (required)
+#### 2.2 Prompt file: `prompt.md` or `prompt.txt` (required)
 
 - The question text shown to the student.
 - **Exactly one** prompt file is required per question: either `prompt.md` (Markdown) or `prompt.txt` (plain text).
@@ -61,11 +61,11 @@ domain: bash
 
 ---
 
-## 3. Type-Specific Files
+### 3. Type-Specific Files
 
 Depending on `type`, the folder may include additional files. All paths are relative to the question folder. Use one file per concern where possible.
 
-### 3.1 Multiple choice (`type: multiple_choice`)
+#### 3.1 Multiple choice (`type: multiple_choice`)
 
 **`options.yaml`** (required) — list of choices. Mark the correct one with `correct: true`. Use simple keys so authors can add options without learning a schema.
 
@@ -95,7 +95,7 @@ options:
 
 MVP implementation chooses one convention; the first (inline `correct: true`) is recommended for readability.
 
-### 3.2 Short answer (`type: short_answer`)
+#### 3.2 Short answer (`type: short_answer`)
 
 **`expected.yaml`** (optional) — expected answer(s) or grading hint. Prefer one simple field when that’s enough.
 
@@ -126,11 +126,11 @@ points_per_criterion: 5
 
 Exact schema can be refined per evaluator; the above are easy to type and modify.
 
-### 3.3 Long answer (`type: long_answer`)
+#### 3.3 Long answer (`type: long_answer`)
 
 Same as short answer: **`expected.yaml`** and/or **`rubric.yaml`**. Use `rubric.yaml` when feedback is criteria-based rather than a single string match.
 
-### 3.4 R / Bash coding (`type: r` or `type: bash`)
+#### 3.4 R / Bash coding (`type: r` or `type: bash`)
 
 - **`solution.R`** or **`solution.sh`** (required) — reference solution. Used to generate or compare outputs.
 - **`tests.yaml`** (optional) — explicit test inputs/scenarios. If absent, the system may derive tests from the solution or another spec.
@@ -165,13 +165,13 @@ Example for R (conceptual):
 
 Exact keys (e.g. `stdin`, `inputs`, `setup`) depend on the evaluator; the format should stay list-based and readable.
 
-### 3.5 Excel, HTML, CSS
+#### 3.5 Excel, HTML, CSS
 
 - **Excel formula / HTML / CSS**: Add in a later revision. Prefer separate files (e.g. `expected.yaml` for formula or snippet, optional asset files) and the same readability guidelines.
 
 ---
 
-## 4. Question Type Values (MVP)
+### 4. Question Type Values (MVP)
 
 Use lowercase. Canonical list:
 
@@ -190,7 +190,7 @@ The SPEC defines which types are implemented in the initial MVP.
 
 ---
 
-## 5. Upload and Versioning
+### 5. Upload and Versioning
 
 - **New question**: Author provides a folder (or zip that unpacks to one folder) containing at least `meta.yaml` and `prompt.md` or `prompt.txt`. System stores it under the questions root and may set `created_at` / `modified_at` in `meta.yaml`.
 - **Modification**: Author uploads updated files for an existing `id`. System overwrites/updates files and updates `modified_at` (and optionally `version` in `meta.yaml`; author may supply the new version in the upload).
@@ -198,11 +198,11 @@ The SPEC defines which types are implemented in the initial MVP.
 
 ---
 
-## 6. Edge Cases and Deterministic Behavior
+### 6. Edge Cases and Deterministic Behavior
 
 The following rules remove ambiguity. Implementations MUST behave as specified.
 
-### 6.1 Prompt file
+#### 6.1 Prompt file
 
 | Scenario | Behavior |
 |---------|----------|
@@ -211,7 +211,7 @@ The following rules remove ambiguity. Implementations MUST behave as specified.
 | Only `prompt.txt` present | Use `prompt.txt`. |
 | Neither present | **Invalid.** Reject upload; do not use question. |
 
-### 6.2 `meta.yaml` identity and type
+#### 6.2 `meta.yaml` identity and type
 
 | Scenario | Behavior |
 |---------|----------|
@@ -220,7 +220,7 @@ The following rules remove ambiguity. Implementations MUST behave as specified.
 | `type` not in the canonical list (Section 4) | **Invalid.** Reject upload. |
 | `version` missing or empty | **Invalid.** Reject upload. |
 
-### 6.3 Type-specific required files
+#### 6.3 Type-specific required files
 
 | Question type | Required files | If missing |
 |---------------|----------------|------------|
@@ -231,7 +231,7 @@ The following rules remove ambiguity. Implementations MUST behave as specified.
 
 For types not yet defined (e.g. `excel_formula`, `html`, `css`), required files are specified when the type is added.
 
-### 6.4 Multiple choice options
+#### 6.4 Multiple choice options
 
 | Scenario | Behavior |
 |---------|----------|
@@ -240,7 +240,7 @@ For types not yet defined (e.g. `excel_formula`, `html`, `css`), required files 
 | `options.yaml` missing or empty list | **Invalid.** Reject upload. |
 | Duplicate option `id` values | **Invalid.** Reject upload. |
 
-### 6.5 Malformed or missing YAML
+#### 6.5 Malformed or missing YAML
 
 | Scenario | Behavior |
 |---------|----------|
@@ -248,7 +248,7 @@ For types not yet defined (e.g. `excel_formula`, `html`, `css`), required files 
 | `meta.yaml` not valid YAML | **Invalid.** Reject upload; return parse error to author. |
 | Type-specific YAML (e.g. `options.yaml`) not valid YAML | **Invalid.** Reject upload; return parse error. |
 
-### 6.6 Modification uploads (existing question id)
+#### 6.6 Modification uploads (existing question id)
 
 | Scenario | Behavior |
 |---------|----------|
@@ -258,7 +258,7 @@ For types not yet defined (e.g. `excel_formula`, `html`, `css`), required files 
 
 ---
 
-## 7. Example Folder Layouts
+### 7. Example Folder Layouts
 
 **Multiple choice:**
 

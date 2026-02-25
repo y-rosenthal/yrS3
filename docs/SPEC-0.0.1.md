@@ -9,9 +9,9 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 
 ---
 
-## 1. MVP Scope Summary
+### 1. MVP Scope Summary
 
-### In scope (MVP)
+#### In scope (MVP)
 - **Question storage**: Filesystem-based; each question in its own folder with text and metadata (no DB for question content yet).
 - **Question authoring**: Authors develop questions offline and upload new questions or modifications via the app.
 - **Authentication**: Email/password with full email confirmation workflow via Supabase (learners and question authors). Optionally Google and/or GitHub OAuth via Supabase; each auth option is implemented and documented separately so the team can ship email/password first and add OAuth later if desired.
@@ -19,7 +19,7 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 - **Author experience**: Upload new questions; upload modifications to existing questions; view metadata (e.g. created/modified).
 - **Progress and integrity**: Store student progress (attempts, timestamps, question id/version, timing); basic anti-cheat (keystroke timing, copy/paste controls); comprehensive logging.
 
-### Out of scope (MVP)
+#### Out of scope (MVP)
 - Database-backed question bank (questions live on filesystem only).
 - Full tutorial authoring or tutorial flows.
 - Advanced analytics, reporting, or social features.
@@ -27,15 +27,15 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 
 ---
 
-## 2. Questions: Filesystem-Based Storage
+### 2. Questions: Filesystem-Based Storage
 
-### 2.1 Rationale
+#### 2.1 Rationale
 Questions are stored in the **filesystem**, not in the database, so that:
 - Authors can develop and version questions on their own machine (e.g. with Git).
 - Questions can be uploaded as a unit (folder + files) without a DB migration.
 - The same format can later be imported into a DB if the system evolves.
 
-### 2.2 Layout and metadata
+#### 2.2 Layout and metadata
 - **One folder per question.**  
   See **docs/QUESTION-FORMAT-0.0.1.md** for the canonical folder layout, file names, metadata schema, and **all edge cases** (e.g. prompt file when both `prompt.md` and `prompt.txt` exist, id/type/version validation, type-specific required files, multiple-choice correctness). Implementations MUST follow that document so behavior is unambiguous.
 - **Required metadata** (per question):
@@ -44,7 +44,7 @@ Questions are stored in the **filesystem**, not in the database, so that:
   - **Version** — so modifications can be tracked and linked to student attempts.
 - **Optional metadata**: title, domain, difficulty, rubric reference, etc., as defined in the question format doc.
 
-### 2.3 Author workflow
+#### 2.3 Author workflow
 - Author creates/edits the question folder and files locally (no need to be connected to the system).
 - Author **uploads** via the app:
   - **New question**: upload a folder (or archive) that conforms to the question format; system assigns or validates id and stores under the configured questions root.
@@ -53,31 +53,31 @@ Questions are stored in the **filesystem**, not in the database, so that:
 
 ---
 
-## 3. Authentication
+### 3. Authentication
 
 Authentication in v0.0.1 is **modular**: the tech team may implement one or more of the following. Each option is specified and documented so it can be implemented **individually**; if the team cannot implement all in v0.0.1, they can pick and choose. Most likely, **email/password** is implemented first, then OAuth providers as needed.
 
-### 3.1 Email/password (primary; implement first)
+#### 3.1 Email/password (primary; implement first)
 - **Provider**: Supabase Auth email/password.
 - **Email confirmation**: Full workflow — user signs up → system sends confirmation email → user clicks link (or enters code) → account is confirmed → user can sign in. Confirmation is required before the user can access protected flows.
 - **Backend**: Supabase Auth (session management, user records). No third-party OAuth app setup required.
 - **Behavior**: Users sign up, confirm email, then sign in; session is used for all subsequent requests; student progress and logs are tied to the authenticated user.
 
-### 3.2 Google OAuth (optional)
+#### 3.2 Google OAuth (optional)
 - **Provider**: Google OAuth via Supabase Auth. Can be added alongside or after email/password.
 - **Backend**: Same Supabase Auth; enable Google in Supabase Dashboard (or local config) and implement the Google sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.
 
-### 3.3 GitHub OAuth (optional)
+#### 3.3 GitHub OAuth (optional)
 - **Provider**: GitHub OAuth via Supabase Auth. Can be added alongside or after email/password.
 - **Backend**: Same Supabase Auth; enable GitHub in Supabase Dashboard (or local config) and implement the GitHub sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.
 
-### 3.4 Roles and behavior (all providers)
+#### 3.4 Roles and behavior (all providers)
 - **Roles**: Distinguish between **learners** (students) and **question authors** (e.g. via Supabase role, claim, or a simple authors table/flag). Only authors can access upload and question-metadata UIs.
 - **Unified behavior**: Regardless of which provider a user signed in with, the app treats them as the same authenticated user; progress and logs are tied to the Supabase user id.
 
 ---
 
-## 4. Frontend — Question Authors
+### 4. Frontend — Question Authors
 
 - **Upload new questions**: UI to select a question folder (or zip) and upload; server validates per QUESTION-FORMAT-0.0.1.md (required files, meta fields, type-specific rules, edge cases). If validation fails, upload is **rejected** and the author receives clear errors; if it passes, the question is stored under the questions root and creation time (and optionally author) is recorded.
 - **Upload modifications**: UI to select an existing question (by id) and upload updated files; server validates per QUESTION-FORMAT-0.0.1.md. If validation fails, upload is **rejected** and no files are changed. If it passes, server replaces/updates only the provided files, leaves omitted required files (e.g. prompt) unchanged, and updates "modified" metadata and version.
@@ -88,7 +88,7 @@ Authentication in v0.0.1 is **modular**: the tech team may implement one or more
 
 ---
 
-## 5. Frontend — Students (Learners)
+### 5. Frontend — Students (Learners)
 
 - **Test selection**: List of available tests (tests can be defined in config or filesystem; which tests are “active” is MVP-defined).
 - **Test taking**: 
@@ -100,7 +100,7 @@ Authentication in v0.0.1 is **modular**: the tech team may implement one or more
 
 ---
 
-## 6. Sandboxed Execution (Coding Questions)
+### 6. Sandboxed Execution (Coding Questions)
 
 - **Purpose**: Run user-submitted code (e.g. R, Bash) safely for grading.
 - **Minimum viable isolation** (aligned with PRD):
@@ -111,7 +111,7 @@ Authentication in v0.0.1 is **modular**: the tech team may implement one or more
 
 ---
 
-## 7. Student Progress and Storage
+### 7. Student Progress and Storage
 
 Student progress is stored in **database and/or filesystem** (MVP can choose one or both). The following must be recorded:
 
@@ -126,7 +126,7 @@ Student progress is stored in **database and/or filesystem** (MVP can choose one
 
 ---
 
-## 8. Logging
+### 8. Logging
 
 - **Principle**: Log everything that is needed for security, auditing, and debugging.
 - **Scope** (non-exhaustive):
@@ -138,7 +138,7 @@ Student progress is stored in **database and/or filesystem** (MVP can choose one
 
 ---
 
-## 9. Technical Stack (MVP)
+### 9. Technical Stack (MVP)
 
 - **Frontend**: Next.js.
 - **Auth & DB**: Supabase (email/password with email confirmation; optionally Google and/or GitHub OAuth; user tables and tables for tests/sessions/answers if used in MVP). Each auth method is configured and implemented independently per SETUP.
@@ -148,7 +148,7 @@ Student progress is stored in **database and/or filesystem** (MVP can choose one
 
 ---
 
-## 10. Question Types in MVP
+### 10. Question Types in MVP
 
 Support a **subset** of the PRD question types to keep MVP shippable. Recommended minimum:
 
@@ -160,7 +160,7 @@ Additional types (long answer, Excel, HTML, CSS) can be added incrementally; eac
 
 ---
 
-## 11. Open Items / TODOs
+### 11. Open Items / TODOs
 
 - [ ] Finalize question folder layout and metadata schema in QUESTION-FORMAT-0.0.1.md.
 - [ ] Define API contracts for upload, test listing, and submission.
@@ -172,7 +172,7 @@ Additional types (long answer, Excel, HTML, CSS) can be added incrementally; eac
 
 ---
 
-## 12. Related Documents
+### 12. Related Documents
 
 - **DOC-GUIDE-v001.md** — Documentation and versioning.
 - **PRD-0.0.1-v003.md** — Full product vision and requirements.

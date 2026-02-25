@@ -16,11 +16,12 @@
 
     function wrapSection(section) {
       const id = section.id;
-      const heading = section.querySelector("h2, h3");
+      const heading = section.querySelector("h2, h3, h4");
       if (!heading) return;
 
+      const levelClass = section.classList.contains("level4") ? "level4" : section.classList.contains("level3") ? "level3" : "level2";
       const details = document.createElement("details");
-      details.className = "collapsible-section " + (section.classList.contains("level3") ? "level3" : "level2");
+      details.className = "collapsible-section " + levelClass;
       if (id) details.id = id;
       details.open = true;
 
@@ -43,7 +44,8 @@
       section.parentNode.replaceChild(details, section);
     }
 
-    // Process level3 sections first (nested), then level2
+    // Process innermost sections first (level4, then level3, then level2)
+    [].slice.call(main.querySelectorAll("section.level4")).forEach(wrapSection);
     [].slice.call(main.querySelectorAll("section.level3")).forEach(wrapSection);
     [].slice.call(main.querySelectorAll("section.level2")).forEach(wrapSection);
 
