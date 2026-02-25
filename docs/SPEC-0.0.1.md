@@ -10,7 +10,7 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 ### In scope (MVP)
 - **Question storage**: Filesystem-based; each question in its own folder with text and metadata (no DB for question content yet).
 - **Question authoring**: Authors develop questions offline and upload new questions or modifications via the app.
-- **Authentication**: GitHub OAuth via Supabase (learners and question authors).
+- **Authentication**: Email/password with full email confirmation workflow via Supabase (learners and question authors). Optionally Google and/or GitHub OAuth via Supabase; each auth option is implemented and documented separately so the team can ship email/password first and add OAuth later if desired.
 - **Student experience**: Take tests, answer questions (including coding in a sandboxed environment), submit, and see feedback.
 - **Author experience**: Upload new questions; upload modifications to existing questions; view metadata (e.g. created/modified).
 - **Progress and integrity**: Store student progress (attempts, timestamps, question id/version, timing); basic anti-cheat (keystroke timing, copy/paste controls); comprehensive logging.
@@ -19,7 +19,7 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 - Database-backed question bank (questions live on filesystem only).
 - Full tutorial authoring or tutorial flows.
 - Advanced analytics, reporting, or social features.
-- Google OAuth (MVP uses GitHub only).
+- None; all listed auth options (email/password, Google OAuth, GitHub OAuth) are in scope for v0.0.1, but each is optional and can be implemented independently.
 
 ---
 
@@ -51,10 +51,25 @@ Questions are stored in the **filesystem**, not in the database, so that:
 
 ## 3. Authentication
 
-- **Provider**: GitHub OAuth only (MVP).
-- **Backend**: Supabase Auth (session management, user records).
+Authentication in v0.0.1 is **modular**: the tech team may implement one or more of the following. Each option is specified and documented so it can be implemented **individually**; if the team cannot implement all in v0.0.1, they can pick and choose. Most likely, **email/password** is implemented first, then OAuth providers as needed.
+
+### 3.1 Email/password (primary; implement first)
+- **Provider**: Supabase Auth email/password.
+- **Email confirmation**: Full workflow — user signs up → system sends confirmation email → user clicks link (or enters code) → account is confirmed → user can sign in. Confirmation is required before the user can access protected flows.
+- **Backend**: Supabase Auth (session management, user records). No third-party OAuth app setup required.
+- **Behavior**: Users sign up, confirm email, then sign in; session is used for all subsequent requests; student progress and logs are tied to the authenticated user.
+
+### 3.2 Google OAuth (optional)
+- **Provider**: Google OAuth via Supabase Auth. Can be added alongside or after email/password.
+- **Backend**: Same Supabase Auth; enable Google in Supabase Dashboard (or local config) and implement the Google sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.
+
+### 3.3 GitHub OAuth (optional)
+- **Provider**: GitHub OAuth via Supabase Auth. Can be added alongside or after email/password.
+- **Backend**: Same Supabase Auth; enable GitHub in Supabase Dashboard (or local config) and implement the GitHub sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.
+
+### 3.4 Roles and behavior (all providers)
 - **Roles**: Distinguish between **learners** (students) and **question authors** (e.g. via Supabase role, claim, or a simple authors table/flag). Only authors can access upload and question-metadata UIs.
-- **Behavior**: Users sign in with GitHub; session is used for all subsequent requests; student progress and logs are tied to the authenticated user.
+- **Unified behavior**: Regardless of which provider a user signed in with, the app treats them as the same authenticated user; progress and logs are tied to the Supabase user id.
 
 ---
 
@@ -122,7 +137,7 @@ Student progress is stored in **database and/or filesystem** (MVP can choose one
 ## 9. Technical Stack (MVP)
 
 - **Frontend**: Next.js.
-- **Auth & DB**: Supabase (GitHub OAuth, user tables, and tables for tests/sessions/answers if used in MVP).
+- **Auth & DB**: Supabase (email/password with email confirmation; optionally Google and/or GitHub OAuth; user tables and tables for tests/sessions/answers if used in MVP). Each auth method is configured and implemented independently per SETUP.
 - **Hosting**: Vercel (or equivalent) for Next.js and serverless/API routes.
 - **Questions**: Filesystem under a configured root (e.g. in repo or mounted volume); format and metadata as in QUESTION-FORMAT-0.0.1.md.
 - **Execution**: Sandbox implementation TBD (containers, serverless, or managed service).

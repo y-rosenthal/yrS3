@@ -2,7 +2,7 @@
 
 This document describes how to set up and run the Tutorial & Testing System MVP locally (Ubuntu KDE) and deploy to Vercel and Supabase. It is versioned for **SPEC 0.0.1** (see DOC-GUIDE-v001.md). Where possible, instructions use **CLIs** instead of web dashboards.
 
-You will need: a **Supabase** account (for auth and optional storage), a **GitHub** account (for OAuth), and for local code-question grading, **Bash** (normally available on Ubuntu).
+You will need: a **Supabase** account (for auth and optional storage) and, for local code-question grading, **Bash** (normally available on Ubuntu). For **email/password** auth (recommended first), no extra accounts are needed. For **optional** Google or GitHub OAuth, you will need a Google Cloud project and/or a GitHub account to create OAuth apps.
 
 ---
 
@@ -161,9 +161,18 @@ supabase db reset
 
 This applies all migrations in `supabase/migrations/` to the local database.
 
-**GitHub OAuth (local Auth)**
+**Email/password with email confirmation (local Auth) — implement first**
 
-The Supabase CLI does **not** provide a command to configure GitHub or Google OAuth. For local development you set providers in `supabase/config.toml`; for hosted projects you use the Dashboard (Authentication → Providers). The CLI only helps by giving you the Auth base URL for the callback (see below).
+Supabase Auth supports email/password and email confirmation out of the box. For **local** Supabase, the default `config.toml` typically has email signup enabled. To ensure the full confirmation workflow:
+
+1. In `supabase/config.toml`, under `[auth]`, confirm that `enable_signup` is `true` and that `mailer` is configured if you want real confirmation emails (or use the built-in inbucket for local testing — when running `supabase start`, check the CLI output for the Inbucket URL, e.g. `http://127.0.0.1:54324`, where confirmation emails are captured).
+2. No OAuth app or external credentials are required. Implement sign-up and sign-in with `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()` in the app; use the confirmation link or token from the email (or from Inbucket when local) to confirm before allowing full access.
+
+This option can be implemented and tested on its own before adding any OAuth provider.
+
+**GitHub OAuth (local Auth) — optional; implement individually**
+
+The Supabase CLI does **not** provide a command to configure GitHub or Google OAuth. For local development you set providers in `supabase/config.toml`; for hosted projects you use the Dashboard (Authentication → Providers). Implement this **only if** you want GitHub sign-in in addition to (or instead of) email/password. The CLI only helps by giving you the Auth base URL for the callback (see below).
 
 1. **Get your local Auth callback URL** (CLI):
 
@@ -191,9 +200,9 @@ The Supabase CLI does **not** provide a command to configure GitHub or Google OA
 
 4. Restart the stack if it was already running: `supabase stop` then `supabase start`.
 
-**Google OAuth (local Auth)**
+**Google OAuth (local Auth) — optional; implement individually**
 
-Same idea as GitHub: no CLI command; use `config.toml` and a Google OAuth client.
+Same idea as GitHub: no CLI command; use `config.toml` and a Google OAuth client. Implement this **only if** you want Google sign-in in addition to (or instead of) email/password.
 
 1. **Callback URL** — same as above: from `supabase status`, use API URL + `/auth/v1/callback`.
 
@@ -257,11 +266,14 @@ You need a **hosted** Supabase project for auth and (optionally) question storag
 
 #### One-time: create project and auth settings (Dashboard)
 
+Auth is **modular**: implement email/password first (no OAuth setup), then add Google and/or GitHub only if needed. Each provider is configured separately.
+
 1. Create a project: [Supabase Dashboard](https://supabase.com/dashboard) → **New project**. Note the **project ref** (e.g. `abcdefghijklmnop`) from the project URL or settings.
 2. Get URL and anon key: **Project Settings** → **API** → **Project URL** and **anon** (public) key. Put these in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.  
    Project URL format: `https://<project-ref>.supabase.co`.
-3. Enable GitHub OAuth: **Authentication** → **Providers** → **GitHub** → enable and set your GitHub OAuth App client id/secret.
-4. Set redirect URLs: **Authentication** → **URL Configuration** → **Site URL** = `http://localhost:3000`; **Redirect URLs** add `http://localhost:3000/auth/callback`.
+3. **Email/password (implement first):** **Authentication** → **Providers** → **Email** → ensure **Enable Email provider** is on. Under **Auth** → **Email Templates**, configure the confirmation email if desired. **Authentication** → **URL Configuration** → **Site URL** = `http://localhost:3000`; **Redirect URLs** add `http://localhost:3000/auth/callback` (and, if you use email confirmation links that redirect back, e.g. `http://localhost:3000/auth/confirm` or your app’s confirmation route).
+4. **Google OAuth (optional):** **Authentication** → **Providers** → **Google** → enable and set your Google OAuth client id/secret. Only do this if you are implementing Google sign-in.
+5. **GitHub OAuth (optional):** **Authentication** → **Providers** → **GitHub** → enable and set your GitHub OAuth App client id/secret. Only do this if you are implementing GitHub sign-in.
 
 (There is no Supabase CLI command to create a project or to configure auth providers and redirect URLs; those remain in the Dashboard.)
 
@@ -285,7 +297,7 @@ If you prefer not to use the CLI, run the SQL in `supabase/migrations/00001_init
 
 #### Add an author
 
-After your first sign-in with GitHub, add your user as an author. You need your Supabase user UUID (Dashboard → **Authentication** → **Users** → copy your user’s UUID).
+After your first sign-in (email/password or any enabled OAuth provider), add your user as an author. You need your Supabase user UUID (Dashboard → **Authentication** → **Users** → copy your user’s UUID).
 
 **Option A — Dashboard:** **SQL Editor** → run:
 
@@ -353,7 +365,7 @@ TESTS_CONFIG=[{"id":"test-1","title":"Sample Test","description":"First test","q
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Sign in with GitHub, then:
+Open [http://localhost:3000](http://localhost:3000). Sign in (email/password after confirming email, or with Google/GitHub if you enabled those providers), then:
 
 - **Take a test**: use “Take a test” and complete the flow.
 - **Author**: if your user is in the `authors` table, use “Author — Upload & manage questions” to upload new or modified questions.
@@ -445,7 +457,7 @@ Each Supabase project has its own database, auth users, and storage. That way te
 In the [Supabase Dashboard](https://supabase.com/dashboard), create three projects (e.g. `yrS3-dev`, `yrS3-test`, `yrS3-prod`). For each:
 
 - Note the **project ref** and the **Project URL** and **anon key** (Project Settings → API).
-- Enable **GitHub** under Authentication → Providers (use the same or different GitHub OAuth Apps per environment).
+- Enable **Email** (and optionally **Google** and/or **GitHub**) under Authentication → Providers per environment; each auth option can be enabled independently.
 - Set **Authentication** → **URL Configuration**:
   - **Dev project:** Site URL `http://localhost:3000`; Redirect URLs: `http://localhost:3000/auth/callback`.
   - **Test project:** Site URL your Vercel preview URL (e.g. `https://yrS3-*.vercel.app` or a fixed preview domain); Redirect URLs: `https://*.vercel.app/auth/callback` or your exact preview URL plus `/auth/callback`.

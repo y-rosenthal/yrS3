@@ -57,8 +57,22 @@ Each domain may reuse shared infrastructure but can define domain-specific evalu
 ## 5. Functional Requirements
 
 ### 5.1 Authentication
-- Users authenticate via **GitHub OAuth**
-- Authentication, session management, and user records handled by **Supabase**
+v0.0.1 supports **modular authentication**: the tech team can implement one or more of the following, independently. Implementations are described so that options can be added incrementally (e.g. email/password first, then OAuth).
+
+- **Email/password (primary for v0.0.1)**  
+  - Full **email confirmation workflow**: sign up → confirmation email → user confirms → sign in.  
+  - Session management and user records handled by **Supabase**.  
+  - Recommended to implement first; no third-party OAuth setup required.
+
+- **Google OAuth (optional)**  
+  - Sign in with Google via Supabase Auth.  
+  - Can be added after or alongside email/password; each provider is configured and implemented separately.
+
+- **GitHub OAuth (optional)**  
+  - Sign in with GitHub via Supabase Auth.  
+  - Can be added after or alongside email/password; each provider is configured and implemented separately.
+
+All auth options use the same Supabase Auth backend; the app treats authenticated users uniformly regardless of which provider they used to sign in.
 
 ---
 
@@ -144,7 +158,7 @@ The system is decomposed into small, testable components:
 
 ### Core Modules
 - **Auth Module**
-  - GitHub OAuth via Supabase
+  - Email/password with email confirmation via Supabase (primary); optionally Google and/or GitHub OAuth via Supabase. Each auth method is implemented and configured independently so the team can ship email/password first and add OAuth later.
   - Exposes: `getUser()`, `requireAuth()`
 
 - **Test Engine**
@@ -261,7 +275,8 @@ TODO: Decide on sandbox implementation strategy (e.g., container-based vs WASM v
 ## 13. User Stories (v0.1)
 
 ### Authentication
-- As a user, I want to sign in with GitHub.
+- As a user, I want to sign up with email and password and confirm my email before signing in.
+- As a user, I want to sign in with email/password (and optionally with Google or GitHub, if the team enables those providers).
 - As a user, I want my test history associated with my account.
 
 ### Test Taking
