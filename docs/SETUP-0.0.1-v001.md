@@ -1,6 +1,8 @@
 # Setup & Run — SPEC 0.0.1
 
-This document describes how to set up and run the Tutorial & Testing System MVP locally (Ubuntu KDE) and deploy to Vercel and Supabase. It is versioned for **SPEC 0.0.1** (see DOC-GUIDE-v001.md). Where possible, instructions use **CLIs** instead of web dashboards.
+This document describes how to set up and run the Tutorial & Testing System MVP locally (Ubuntu KDE) and deploy to Vercel and Supabase. It is versioned for **SPEC 0.0.1** (see DOC-GUIDE-v001.md).
+
+**Configuration preference:** Use the **CLI as the primary way** to configure and set up the app (Supabase CLI for auth config, migrations, env; Vercel CLI for deploy and env). Where the CLI cannot perform a step (e.g. creating a hosted Supabase project or enabling auth providers on hosted), the document gives **manual/Dashboard** instructions as the alternative.
 
 You will need: a **Supabase** account (for auth and optional storage) and, for local code-question grading, **Bash** (normally available on Ubuntu). For **email/password** auth (recommended first), no extra accounts are needed. For **optional** Google or GitHub OAuth, you will need a Google Cloud project and/or a GitHub account to create OAuth apps.
 
@@ -163,16 +165,32 @@ This applies all migrations in `supabase/migrations/` to the local database.
 
 **Email/password with email confirmation (local Auth) — implement first**
 
-Supabase Auth supports email/password and email confirmation out of the box. For **local** Supabase, the default `config.toml` typically has email signup enabled. To ensure the full confirmation workflow:
+The **CLI is the primary way** to configure local auth: `supabase init` creates `supabase/config.toml`, which controls all auth behavior. There are no CLI subcommands to toggle individual auth options; you edit `config.toml` and restart with `supabase stop` then `supabase start`.
 
-1. In `supabase/config.toml`, under `[auth]`, confirm that `enable_signup` is `true` and that `mailer` is configured if you want real confirmation emails (or use the built-in inbucket for local testing — when running `supabase start`, check the CLI output for the Inbucket URL, e.g. `http://127.0.0.1:54324`, where confirmation emails are captured).
-2. No OAuth app or external credentials are required. Implement sign-up and sign-in with `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()` in the app; use the confirmation link or token from the email (or from Inbucket when local) to confirm before allowing full access.
+1. **Enable email/password and confirmation (CLI config):**  
+   Edit `supabase/config.toml`:
+   - Under `[auth]`: ensure `enable_signup = true`.
+   - Under `[auth.email]`: set `enable_signup = true` and **`enable_confirmations = true`** (default is `false`; this is required for the full confirmation workflow).
+   - Optional: under `[auth.email.template.confirmation]` you can set `subject` and `content_path` to customize the confirmation email.
+
+2. **Where confirmation emails go (local):**  
+   With the default config, the local stack uses **Inbucket** for mail. After `supabase start`, run:
+   ```bash
+   supabase status
+   ```
+   The CLI output includes the **Inbucket** URL (e.g. `http://127.0.0.1:54324`). Open it in a browser to see confirmation emails; users click the link (or use the OTP) to confirm. For production-style SMTP instead, configure `[auth.email.smtp]` in `config.toml` (manual step; see [Supabase Auth config](https://supabase.com/docs/guides/cli/config)).
+
+3. **Apply and restart:**  
+   `supabase stop` then `supabase start` so auth changes take effect.
+
+4. **App implementation:**  
+   No OAuth app or external credentials are needed. Implement sign-up and sign-in with `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()`; use the confirmation link or token from the email (or from Inbucket when local) before allowing full access.
 
 This option can be implemented and tested on its own before adding any OAuth provider.
 
 **GitHub OAuth (local Auth) — optional; implement individually**
 
-The Supabase CLI does **not** provide a command to configure GitHub or Google OAuth. For local development you set providers in `supabase/config.toml`; for hosted projects you use the Dashboard (Authentication → Providers). Implement this **only if** you want GitHub sign-in in addition to (or instead of) email/password. The CLI only helps by giving you the Auth base URL for the callback (see below).
+The CLI helps for local OAuth in two ways: (1) the same `supabase/config.toml` (from `supabase init`) is where you enable and configure GitHub; (2) `supabase status` gives you the API URL, so the callback URL is that base + `/auth/v1/callback`. There is no CLI command (e.g. `supabase auth enable github`); you edit `config.toml` and restart. For **hosted** projects, OAuth is configured only in the Dashboard. Implement this **only if** you want GitHub sign-in in addition to (or instead of) email/password.
 
 1. **Get your local Auth callback URL** (CLI):
 
@@ -264,18 +282,18 @@ Optional:
 
 You need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations. For **separate dev, test, and production** environments using multiple hosted projects (no Docker), see **Section 3.4**.
 
-#### One-time: create project and auth settings (Dashboard)
+#### One-time: create project and auth settings (Dashboard — no CLI)
+
+For a **hosted** Supabase project, the CLI **cannot** create the project or configure auth (providers, email confirmation, redirect URLs). Those steps are done only in the [Supabase Dashboard](https://supabase.com/dashboard). Use the CLI for everything else (link, migrations, `supabase status -o env`).
 
 Auth is **modular**: implement email/password first (no OAuth setup), then add Google and/or GitHub only if needed. Each provider is configured separately.
 
-1. Create a project: [Supabase Dashboard](https://supabase.com/dashboard) → **New project**. Note the **project ref** (e.g. `abcdefghijklmnop`) from the project URL or settings.
+1. Create a project: Dashboard → **New project**. Note the **project ref** (e.g. `abcdefghijklmnop`) from the project URL or settings.
 2. Get URL and anon key: **Project Settings** → **API** → **Project URL** and **anon** (public) key. Put these in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.  
    Project URL format: `https://<project-ref>.supabase.co`.
-3. **Email/password (implement first):** **Authentication** → **Providers** → **Email** → ensure **Enable Email provider** is on. Under **Auth** → **Email Templates**, configure the confirmation email if desired. **Authentication** → **URL Configuration** → **Site URL** = `http://localhost:3000`; **Redirect URLs** add `http://localhost:3000/auth/callback` (and, if you use email confirmation links that redirect back, e.g. `http://localhost:3000/auth/confirm` or your app’s confirmation route).
-4. **Google OAuth (optional):** **Authentication** → **Providers** → **Google** → enable and set your Google OAuth client id/secret. Only do this if you are implementing Google sign-in.
-5. **GitHub OAuth (optional):** **Authentication** → **Providers** → **GitHub** → enable and set your GitHub OAuth App client id/secret. Only do this if you are implementing GitHub sign-in.
-
-(There is no Supabase CLI command to create a project or to configure auth providers and redirect URLs; those remain in the Dashboard.)
+3. **Email/password (implement first):** **Authentication** → **Providers** → **Email** → turn **Enable Email provider** on and, for the full confirmation workflow, turn **Confirm email** on (this is the hosted equivalent of `auth.email.enable_confirmations = true` in local `config.toml`). Under **Authentication** → **Email Templates**, configure the confirmation email if desired. **Authentication** → **URL Configuration** → **Site URL** = `http://localhost:3000`; **Redirect URLs** add `http://localhost:3000/auth/callback` (and, if you use email confirmation links that redirect back, e.g. `http://localhost:3000/auth/confirm` or your app’s confirmation route).
+4. **Google OAuth (optional):** **Authentication** → **Providers** → **Google** → enable and set your Google OAuth client id/secret. Only if implementing Google sign-in.
+5. **GitHub OAuth (optional):** **Authentication** → **Providers** → **GitHub** → enable and set your GitHub OAuth App client id/secret. Only if implementing GitHub sign-in.
 
 #### Link project and push migrations (CLI)
 
