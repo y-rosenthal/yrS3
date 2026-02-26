@@ -25,17 +25,19 @@ Each incremental development phase will have a spec document named SPEC-v0.0.1.m
 or something similar, where the version number for the spec matches the 
 version number of the release.
 
-## PVD documents
+## PRD documents
 
-PVD stands for Product Vision Document. 
-A PVD is a living document that describes the goals for the full system. 
-The names of PVD documents e.g. PVD-0.0.1-v001 represent (a) the SPEC version
-that was active at the time the PVD was modifed, as well as a 2ndary ver number.
-The ver number at the end of the name of a PVD document represents different
-versions of the PVD for a particular incremental development step.
-If the PVD was not modified at a particular incremental development step, then 
-no new PVD version would be created at that step and the PVD version number will remain
-unchanged for that step. Therefore the PVD version numbers could skip numbers, for example
-if the PVD was modified when SPEC-v0.0.1 was created and then again when SPEC-v0.0.5 
-was created then the only versions of the PVD would be PVD-v0.0.1 and PVD-v0.0.5.
+PRD stands for Product Requirements Document.
+In this project, a PRD is a living document that describes the goals and vision for the full system—closer to a product vision than to a minimal "requirements list."
+The project relies heavily on LLM-assisted coding, and **PRD** is a term that LLMs recognize and understand, so the files are named PRD (e.g. `PRD-0.0.1-v001.qmd`) and this guide uses that term for consistency.
+
+The names of PRD documents e.g. PRD-0.0.1-v001 represent (a) the SPEC version
+that was active at the time the PRD was modified, as well as a 2ndary ver number.
+The ver number at the end of the name of a PRD document represents different
+versions of the PRD for a particular incremental development step.
+If the PRD was not modified at a particular incremental development step, then
+no new PRD version would be created at that step and the PRD version number will remain
+unchanged for that step. Therefore the PRD version numbers could skip numbers, for example
+if the PRD was modified when SPEC-v0.0.1 was created and then again when SPEC-v0.0.5
+was created then the only versions of the PRD would be PRD-v0.0.1 and PRD-v0.0.5.
 

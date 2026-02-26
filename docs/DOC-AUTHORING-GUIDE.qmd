@@ -26,7 +26,7 @@ Follow the version numbering scheme described in [DOC-GUIDE-v001.qmd](DOC-GUIDE-
 
 - Use the **-v001**-style suffix in document names when you want to track versions (e.g. `SETUP-0.0.1-v001.qmd`, `DOC-GUIDE-v001.qmd`).
 - SPEC documents are versioned to match releases (e.g. SPEC-0.0.1).
-- PVD and other living docs can carry both a SPEC version and a secondary version in the filename when they are updated.
+- PRD and other living docs can carry both a SPEC version and a secondary version in the filename when they are updated.
 
 Do not encode version numbers in the body of the document (e.g. avoid “see Section 2.3”); use cross-references instead so numbers stay correct when sections change.
 
