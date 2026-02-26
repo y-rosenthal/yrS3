@@ -90,10 +90,20 @@ Press `Ctrl+C` to stop the preview server.
 
 ## Adding or removing chapters
 
-The book’s table of contents is defined in **`docs/_quarto.yml`** under `book.chapters`. To add a new doc:
+The book’s table of contents (TOC) on the left is defined in **`docs/_quarto.yml`** under `book.chapters`. Use the steps below so that TOC entries show the actual filenames as links and, when you have multiple versions of a doc, the most recent appears first.
 
-1. Add the file (e.g. `My-New-Doc.qmd`) to `docs/`.
-2. In `docs/_quarto.yml`, add an entry under the appropriate part, for example:
+### How to add a new doc
+
+1. Add the `.qmd` file (e.g. `My-New-Doc.qmd`) to `docs/`.
+2. Set the document's **YAML `title`** to the **filename** (including `.qmd`). That way the left-margin TOC will use the filename as the link text:
+
+   ```yaml
+   ---
+   title: "My-New-Doc.qmd"
+   ---
+   ```
+
+3. In **`docs/_quarto.yml`**, add the file under the right part in `book.chapters`. Order matters: list items in the order you want them in the TOC:
 
    ```yaml
    chapters:
@@ -104,7 +114,17 @@ The book’s table of contents is defined in **`docs/_quarto.yml`** under `book.
          - My-New-Doc.qmd   # new file
    ```
 
-3. Run `quarto render docs` again.
+4. **When there are multiple versions of the same document** (e.g. `PRD-0.0.1-v003.qmd`, `PRD-0.0.1-v002.qmd`, `PRD-0.0.1-v001.qmd`), list them with the **most recent version at the top** in `_quarto.yml`. So the newest PRD comes first, then older ones:
+
+   ```yaml
+   - part: "PRD"
+     chapters:
+       - PRD-0.0.1-v003.qmd   # most recent first
+       - PRD-0.0.1-v002.qmd
+       - PRD-0.0.1-v001.qmd
+   ```
+
+5. Run `quarto render docs` (or `quarto render` from inside `docs/`) again.
 
 To remove a chapter, delete or comment out its entry in `_quarto.yml` and re-render.
 
