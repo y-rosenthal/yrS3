@@ -1,177 +1,62 @@
-# Supabase CLI
+# yrS3 — Tutorial & Testing System
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 focuses on the **testing component**: users log in, select tests, answer questions (including multiple choice, short answer, and code), submit, and receive scores and feedback. The app supports question authoring and upload, with optional local or hosted Supabase for auth and storage.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## Features (v0.0.1)
 
-This repository contains all the functionality for Supabase CLI.
+- **Testing flow**: Log in → select a test → answer questions → submit → view scores and detailed feedback
+- **Question types**: Multiple choice, short answer, long answer, R code, Bash (automated and AI-assisted grading)
+- **Authoring**: Upload new questions or modifications; questions live in filesystem folders (YAML + prompt per question)
+- **Authentication**: Email/password (with email confirmation) via Supabase; optional Google and GitHub OAuth
+- **Backend**: Supabase for auth and optional storage; run Supabase locally (`supabase start`) or use a hosted project
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+## Tech stack
+
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
+- **Backend / auth**: Supabase (auth; optional database)
+- **Deploy**: Vercel
+- **Requirements**: Node.js 20+
 
 ## Getting started
 
-### Install the CLI
+1. **Clone and install**
 
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+   ```bash
+   git clone <repo-url>
+   cd yrS3
+   npm install
+   ```
 
-```bash
-npm i supabase --save-dev
-```
+2. **Environment variables**
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+   Copy the example env file and fill in your Supabase URL and anon key. Full steps (including creating a hosted or local Supabase project) are in the setup docs:
 
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+   ```
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+3. **Run the app**
 
-<details>
-  <summary><b>macOS</b></summary>
+   ```bash
+   npm run dev
+   ```
 
-  Available via [Homebrew](https://brew.sh). To install:
+   Open [http://localhost:3000](http://localhost:3000). For local Supabase, run `supabase start` and use `supabase status -o env` to get credentials; see the setup guide for details.
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+## Documentation
 
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
+Project docs are in the **`docs/`** folder and are built as a Quarto book. Rendered HTML (after building) is in **`docs/_book/`**.
 
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
+- **DOC-GUIDE** — How to navigate docs and version numbering
+- **SPEC** — Initial MVP scope and technical spec
+- **SETUP** — Full setup and run (local + Vercel/Supabase deploy)
+- **QUESTION-FORMAT** — Question folder layout, metadata, and evaluation
 
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
+To rebuild the docs book from the `docs/` directory:
 
 ```bash
-supabase bootstrap
+quarto render
 ```
 
-Or using npx:
-
-```bash
-npx supabase bootstrap
-```
-
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
-```
+See `docs/QUARTO-DOC-GUIDE.qmd` for Quarto installation and usage.
