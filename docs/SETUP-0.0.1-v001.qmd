@@ -178,11 +178,11 @@ The **CLI is the primary way** to configure local auth: `supabase init` creates 
    - Optional: under `[auth.email.template.confirmation]` you can set `subject` and `content_path` to customize the confirmation email.
 
 2. **Where confirmation emails go (local):**  
-   Supabase has replaced **Inbucket** with **Mailpit** for local email testing; the local stack uses Mailpit to capture outgoing mail. In `config.toml`, the email testing server is still configured under the **`[inbucket]`** section—Supabase kept the same section name for backward compatibility, so existing configs and CLI tooling continue to work. After `supabase start`, run:
+   When you run Supabase locally, the app still “sends” auth-related emails (sign-up confirmation, password reset, magic links, etc.). Instead of delivering them to real mailboxes, the local stack uses a **mail catcher**: a tool that intercepts those messages so you can test the full flow without configuring real SMTP or hitting real users’ inboxes. Supabase used to ship **Inbucket** for this; it has been replaced by **Mailpit**. Both are local email-testing tools that provide a web UI where you can open each captured message and use the links or codes inside (e.g. to confirm an account). The local stack now uses Mailpit for that. In `config.toml`, the email testing server is still configured under the **`[inbucket]`** section—Supabase kept the same section name for backward compatibility, so existing configs and CLI tooling continue to work. After `supabase start`, run:
    ```bash
    supabase status
    ```
-   The CLI output lists **Mailpit** and its URL (e.g. `http://127.0.0.1:54324`). Open that URL in a browser to see confirmation emails; users click the link (or use the OTP) to confirm. For production-style SMTP instead, configure `[auth.email.smtp]` in `config.toml` (manual step; see [Supabase Auth config](https://supabase.com/docs/guides/cli/config)).
+   The CLI output lists **Mailpit** and its URL (e.g. `http://127.0.0.1:54324`). Open that URL in a browser to see all captured emails; use the confirmation link (or OTP) from a message to complete sign-up or reset flows. For production-style SMTP instead (real delivery), configure `[auth.email.smtp]` in `config.toml` (manual step; see [Supabase Auth config](https://supabase.com/docs/guides/cli/config)).
 
 3. **Apply and restart:**  
    `supabase stop` then `supabase start` so auth changes take effect.
