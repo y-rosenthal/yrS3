@@ -30,6 +30,10 @@ Follow the version numbering scheme described in [DOC-GUIDE-v001.qmd](DOC-GUIDE-
 
 Do not encode version numbers in the body of the document (e.g. avoid “see Section 2.3”); use cross-references instead so numbers stay correct when sections change.
 
+## README and the book
+
+The **repository README** is `README.md` in the project root (for GitHub). It is the **single source of truth** for the project overview. The book includes it via `docs/Overview.qmd`; **edit only the root README** so the repo and the book stay in sync.
+
 ## One top-level heading per document (Quarto book standard)
 
 - Each document should have **exactly one** level-1 heading (`#`). That heading is the document’s main title (or the main title is set in the YAML `title` and the single `#` is the same or a short form).

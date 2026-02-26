@@ -11,6 +11,7 @@ book:
   description: "Tutorial & Testing System — specs, setup, and reference."
   chapters:
     - index.qmd
+    - Overview.qmd
     - part: "DOC-GUIDES"
       chapters:
         - DOC-GUIDE-v001.qmd
