@@ -178,17 +178,17 @@ The **CLI is the primary way** to configure local auth: `supabase init` creates 
    - Optional: under `[auth.email.template.confirmation]` you can set `subject` and `content_path` to customize the confirmation email.
 
 2. **Where confirmation emails go (local):**  
-   With the default config, the local stack uses **Inbucket** for mail. After `supabase start`, run:
+   Supabase has replaced **Inbucket** with **Mailpit** for local email testing; the local stack uses Mailpit to capture outgoing mail. In `config.toml`, the email testing server is still configured under the **`[inbucket]`** section—Supabase kept the same section name for backward compatibility, so existing configs and CLI tooling continue to work. After `supabase start`, run:
    ```bash
    supabase status
    ```
-   The CLI output includes the **Inbucket** URL (e.g. `http://127.0.0.1:54324`). Open it in a browser to see confirmation emails; users click the link (or use the OTP) to confirm. For production-style SMTP instead, configure `[auth.email.smtp]` in `config.toml` (manual step; see [Supabase Auth config](https://supabase.com/docs/guides/cli/config)).
+   The CLI output lists **Mailpit** and its URL (e.g. `http://127.0.0.1:54324`). Open that URL in a browser to see confirmation emails; users click the link (or use the OTP) to confirm. For production-style SMTP instead, configure `[auth.email.smtp]` in `config.toml` (manual step; see [Supabase Auth config](https://supabase.com/docs/guides/cli/config)).
 
 3. **Apply and restart:**  
    `supabase stop` then `supabase start` so auth changes take effect.
 
 4. **App implementation:**  
-   No OAuth app or external credentials are needed. Implement sign-up and sign-in with `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()`; use the confirmation link or token from the email (or from Inbucket when local) before allowing full access.
+   No OAuth app or external credentials are needed. Implement sign-up and sign-in with `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()`; use the confirmation link or token from the email (or from Mailpit, which replaced Inbucket for local dev, when running locally) before allowing full access.
 
 This option can be implemented and tested on its own before adding any OAuth provider.
 
