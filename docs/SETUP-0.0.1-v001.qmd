@@ -249,7 +249,7 @@ Same idea as GitHub: no CLI command; use `config.toml` and a Google OAuth client
 supabase stop
 ```
 
-Use `supabase stop --no-backup` to remove local data. For day-to-day development with a hosted project, you can skip this section and use Section 2.3 instead.
+Use `supabase stop --no-backup` to stop the stack and **discard** local database and other local data (no backup is kept). If you are **not** using the local Supabase stack and instead use a **hosted** Supabase project for day-to-day development, skip Section 1.6 and go to **Section 2.3** (Supabase project setup) to link and use your hosted project.
 
 ---
 
