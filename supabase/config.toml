@@ -202,7 +202,7 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -221,6 +221,24 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
+
+###########################################################################
+# YR - the following was added by Cursor in response to this instruction 
+# from SETUP-0.0.1-v001.qmd spec
+#
+#    Optional: under [auth.email.template.confirmation] you can set subject and content_path to customize the confirmation email.
+#
+# I commented it out since there was no [auth.email.template.confirmation] 
+# section in the original file and I'm not sure if this was an LLM hallucination.
+# I kept it here in case I want to revisit later. Note that it's possible
+# based on AI conversations I had that there are defaults in Supabase
+# for these templates and subject line. I'll see if the defaults look good
+# and if I ever want to change them I'll revisit this section.
+###########################################################################
+# # Customize confirmation email (optional)
+# [auth.email.template.confirmation]
+# subject = "Confirm your signup"
+# content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
