@@ -1,6 +1,4 @@
----
-title: "DOC-GUIDE-v001.qmd"
----
+# DOC-GUIDE-v001.qmd
 
 This document describes the various types of documentation files and the
 version numbering scheme.

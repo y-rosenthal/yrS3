@@ -7,28 +7,27 @@ project:
 
 book:
   title: "yrS3 Documentation"
-  author: "yrS3 Project"
   description: "Tutorial & Testing System — specs, setup, and reference."
   chapters:
     - index.qmd
-    - Overview.qmd
-    - part: "DOC-GUIDES"
+#    - README.qmd
+    - part: "Guide to the documentation"
       chapters:
         - DOC-GUIDE-v001.qmd
         - DOC-AUTHORING-GUIDE.qmd
         - QUARTO-DOC-GUIDE.qmd
-    - part: "PRD"
+    - part: "PRD files (vision documents)"
       chapters:
         - PRD-0.0.1-v003.qmd
         - PRD-0.0.1-v002.qmd
         - PRD-0.0.1-v001.qmd
-    - part: "SPEC"
+    - part: "SPEC files for different releases"
       chapters:
         - SPEC-0.0.1.qmd
-    - part: "SETUP"
+    - part: "How to setup and run the system"
       chapters:
         - SETUP-0.0.1-v001.qmd
-    - part: "QUESTION-FORMAT"
+    - part: "Question Format Specification"
       chapters:
         - QUESTION-FORMAT-0.0.1.qmd
 

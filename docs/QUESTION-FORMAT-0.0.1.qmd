@@ -1,8 +1,4 @@
----
-title: "QUESTION-FORMAT-0.0.1.qmd"
----
-
-
+# QUESTION-FORMAT-0.0.1.qmd"
 
 This document defines how questions are stored on the **filesystem** for the initial MVP. It is referenced by SPEC-0.0.1.qmd.
 

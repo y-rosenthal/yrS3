@@ -1,6 +1,4 @@
----
-title: "DOC-AUTHORING-GUIDE.qmd"
----
+# DOC-AUTHORING-GUIDE.qmd
 
 This guide explains how to write and maintain documentation for this system. Follow these conventions so the docs stay consistent, render correctly as a Quarto book, and remain easy to navigate and update.
 

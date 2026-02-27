@@ -1,8 +1,4 @@
----
-title: "SPEC-0.0.1.qmd"
----
-
-
+# SPEC-0.0.1.qmd
 
 Read DOC-GUIDE-v001.qmd for documentation navigation and version numbering.  
 Refer to the latest PRD for the full system vision. This spec defines the **initial MVP** only—a subset of the full system.

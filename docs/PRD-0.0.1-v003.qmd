@@ -1,6 +1,4 @@
----
-title: "PRD-0.0.1-v003.qmd"
----
+# PRD-0.0.1-v003.qmd
 
 See the [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd) file for a description of the naming
 scheme for documentation files in this project.
