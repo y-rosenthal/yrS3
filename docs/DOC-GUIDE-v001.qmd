@@ -9,6 +9,8 @@ version numbering scheme.
 
 The documentation in `docs/` can be rendered as a single **Quarto book** (HTML) for easier reading. To build or rebuild the book after documentation changes, see **[QUARTO-DOC-GUIDE.qmd](QUARTO-DOC-GUIDE.qmd)**. That guide explains how to install the Quarto tools (if needed) and how to regenerate the book. The built book is in `docs/_book/`; open `docs/_book/index.html` in a browser to read it.
 
+In the book, the sidebar (table of contents) lists each chapter, and the page title is usually the same as the document’s heading or filename. **Exception:** the chapter that displays the repository README is built from `Overview.qmd`, which only includes `README.md`. In the sidebar it appears as **README**; on the webpage, the top-level heading is taken directly from `README.md` (e.g. “yrS3 — Tutorial & Testing System”), not from the Overview filename. Edit only `README.md` to change that content; the book updates automatically when rebuilt.
+
 ## v001 version format
 
 In general, any document (including this one) can have a -v001 format style 
