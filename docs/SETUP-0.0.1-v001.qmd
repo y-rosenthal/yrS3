@@ -280,7 +280,7 @@ Optional:
 
 ### Supabase project setup (CLI-first where possible) {#sec-supabase-project-setup}
 
-You need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations. For **separate dev, test, and production** environments using multiple hosted projects (no Docker), see @sec-separate-environments.
+If you prefer a **fully local** backend (including auth), see @sec-running-supabase-locally. Otherwise, you need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations. For **separate dev, test, and production** environments using multiple hosted projects (no Docker), see @sec-separate-environments.
 
 #### One-time: create project and auth settings (Dashboard — no CLI)
 
