@@ -27,6 +27,9 @@ book:
     - part: "How to setup and run the system"
       chapters:
         - SETUP-0.0.1-v001.qmd
+    - part: "Developer guide"
+      chapters:
+        - DEVELOPER-GUIDE-0.0.1-v001.qmd
     - part: "Question Format Specification"
       chapters:
         - QUESTION-FORMAT-0.0.1.qmd
