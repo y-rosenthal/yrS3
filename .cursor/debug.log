@@ -6,3 +6,4 @@
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signin attempt","data":{"mode":"signin","emailLength":20},"timestamp":1772523858202,"hypothesisId":"H2"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signin attempt","data":{"mode":"signin","emailLength":20},"timestamp":1772523888822,"hypothesisId":"H2"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signin attempt","data":{"mode":"signin","emailLength":20},"timestamp":1772523900092,"hypothesisId":"H2"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signin attempt","data":{"mode":"signin","emailLength":20},"timestamp":1772524396151,"hypothesisId":"H2"}
