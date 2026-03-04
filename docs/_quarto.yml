@@ -23,6 +23,7 @@ book:
         - PRD-0.0.1-v001.qmd
     - part: "SPEC files for different releases"
       chapters:
+        - SPEC-QUESTION-SETS-0.0.2.qmd
         - SPEC-0.0.1.qmd
     - part: "How to setup and run the system"
       chapters:
@@ -34,6 +35,7 @@ book:
       chapters:
         - QUESTION-MODULE-SPEC.qmd
         - QUESTION-FORMAT-0.0.1.qmd
+        - QUESTION-SET-FORMAT-0.0.2.qmd
 
 format:
   html:
