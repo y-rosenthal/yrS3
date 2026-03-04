@@ -1,34 +1,37 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { getTestById } from "@/lib/tests-config";
+import { resolveSetIdForSession } from "@/lib/question-sets";
 import { logStudent } from "@/lib/logger";
 
 export async function POST(
-  _request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await requireUser();
-  const { id: testId } = await params;
-  const test = getTestById(testId);
-  if (!test) {
-    return NextResponse.json({ error: "Test not found" }, { status: 404 });
-  }
+  const { id: setIdParam } = await params;
   const supabase = await createClient();
+  const resolved = await resolveSetIdForSession(supabase, setIdParam);
+  if (!resolved) {
+    return NextResponse.json({ error: "Question set not found" }, { status: 404 });
+  }
+  const { setId, questionLogicalIds } = resolved;
+
   const { data: existing } = await supabase
     .from("test_sessions")
     .select("id, attempt_number")
     .eq("user_id", user.id)
-    .eq("test_id", testId)
+    .eq("set_id", setId)
     .order("attempt_number", { ascending: false })
     .limit(1)
     .maybeSingle();
   const attemptNumber = existing ? (existing.attempt_number ?? 0) + 1 : 1;
+
   const { data: session, error } = await supabase
     .from("test_sessions")
     .insert({
       user_id: user.id,
-      test_id: testId,
+      set_id: setId,
       attempt_number: attemptNumber,
     })
     .select("id, started_at")
@@ -37,14 +40,14 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   logStudent("test_start", user.id, {
-    testId,
+    setId,
     sessionId: session.id,
     attemptNumber,
   });
   return NextResponse.json({
     sessionId: session.id,
-    testId,
-    questionIds: test.questionIds,
+    setId,
+    questionIds: questionLogicalIds,
     startedAt: session.started_at,
   });
 }

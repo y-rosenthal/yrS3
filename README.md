@@ -1,10 +1,11 @@
 # yrS3 — Tutorial & Testing System
 
-A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 focuses on the **testing component**: users log in, select tests, answer questions (including multiple choice, short answer, and code), submit, and receive scores and feedback. The app supports question creation and upload, with optional local or hosted Supabase for auth and storage.
+A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 focuses on the **testing component**: users log in, work with **question sets** (take as test, homework, or study list), answer questions (including multiple choice, short answer, and code), submit, and receive scores and feedback. The app supports question creation and upload, and creating question sets by choosing questions (stored in DB and/or filesystem). Optional local or hosted Supabase for auth and storage.
 
 ## Features (v0.0.1)
 
-- **Testing flow**: Log in → select a test → answer questions → submit → view scores and detailed feedback
+- **Question sets**: Create sets of questions (UI or file-based YAML); use any set as a test (answer → submit → view scores and feedback)
+- **Testing flow**: Log in → open a question set → Take as test → answer questions → submit → view scores and detailed feedback
 - **Question types**: Multiple choice, short answer, long answer, R code, Bash (automated and AI-assisted grading)
 - **Authoring**: Upload new questions or modifications; questions live in filesystem folders (YAML + prompt per question)
 - **Authentication**: Email/password (with email confirmation) via Supabase; optional Google and GitHub OAuth
@@ -49,9 +50,10 @@ A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 
 Project docs are in the **`docs/`** folder and are built as a Quarto book. Rendered HTML (after building) is in **`docs/_book/`**.
 
 - **DOC-GUIDE** — How to navigate docs and version numbering
-- **SPEC** — Initial MVP scope and technical spec
+- **SPEC** — Initial MVP scope and technical spec; **SPEC-QUESTION-SETS** — Question sets (DB + file-based)
 - **SETUP** — Full setup and run (local + Vercel/Supabase deploy)
 - **QUESTION-FORMAT** — Question folder layout, metadata, and evaluation
+- **QUESTION-SET-FORMAT** — File-based question set layout (`set.yaml`)
 
 To rebuild the docs book from the `docs/` directory:
 

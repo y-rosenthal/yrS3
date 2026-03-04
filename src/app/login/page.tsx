@@ -107,7 +107,7 @@ function LoginForm() {
             Tutorial & Testing System
           </h1>
           <p className="mt-1.5 text-sm text-zinc-500">
-            Take tests, create questions, track progress
+            Question sets (take as test), create questions, track progress
           </p>
         </div>
 

@@ -13,14 +13,14 @@ export default async function HomePage() {
           Tutorial & Testing System
         </h1>
         <p className="mt-2 text-zinc-600">
-          MVP — Take tests, create and manage questions, track progress.
+          MVP — Question sets (take as test), create and manage questions, track progress.
         </p>
         <nav className="mt-8 flex flex-col gap-4">
           <Link
-            href="/tests"
+            href="/question-sets"
             className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
           >
-            Take a test
+            Question sets — Take as test
           </Link>
           <Link
             href="/questions"

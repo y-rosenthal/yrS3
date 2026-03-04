@@ -276,7 +276,7 @@ Leave `QUESTIONS_STORAGE` unset so the app uses the **filesystem** for questions
 Optional:
 
 - `QUESTIONS_ROOT` — directory for question folders (default: `./questions`)
-- `TESTS_CONFIG` — JSON array of test definitions (see @sec-configure-tests)
+- `QUESTION_SETS_ROOT` — directory for file-based question sets (default: `./question-sets`). See QUESTION-SET-FORMAT-0.0.2.qmd.
 
 ### Supabase project setup (CLI-first where possible) {#sec-supabase-project-setup}
 
@@ -355,14 +355,9 @@ What is 2 + 2?
   text: "5"
 ```
 
-### Configure tests {#sec-configure-tests}
+### Question sets
 
-Set `TESTS_CONFIG` in `.env.local` to include question ids, or add a test that references them. Example:
-
-```bash
-# In .env.local (single line, no line breaks inside the JSON)
-TESTS_CONFIG=[{"id":"test-1","title":"Sample Test","description":"First test","questionIds":["q-mult-001"]}]
-```
+Question sets are stored in the database (and optionally on the filesystem). After running migrations, a seed may create one sample set; or create sets via the UI at **Question sets** → **Create question set**, or add folders under `question-sets/` with a `set.yaml` per set (see QUESTION-SET-FORMAT-0.0.2.qmd).
 
 ### Run the app {#sec-run-the-app}
 
@@ -372,7 +367,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Sign in (email/password after confirming email, or with Google/GitHub if you enabled those providers), then:
 
-- **Take a test**: use “Take a test” and complete the flow.
+- **Question sets**: use "Question sets" to list sets, then "Take as test" on a set to answer and submit. Create sets via "Create question set".
 - **Questions**: use "My questions" or "Upload questions (files)" to create and manage questions. Any user can propose a new version; the version is pending until the question owner approves it.
 
 ---
@@ -411,7 +406,7 @@ vercel env add QUESTIONS_STORAGE production
 
 # Optional
 vercel env add QUESTIONS_BUCKET production
-vercel env add TESTS_CONFIG production
+vercel env add QUESTION_SETS_ROOT production
 vercel env add NEXT_PUBLIC_APP_URL production
 ```
 
@@ -438,7 +433,7 @@ vercel env pull .env.local
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `QUESTIONS_STORAGE` = `supabase`
-   - Optionally `QUESTIONS_BUCKET`, `TESTS_CONFIG`, `NEXT_PUBLIC_APP_URL`
+   - Optionally `QUESTIONS_BUCKET`, `QUESTION_SETS_ROOT`, `NEXT_PUBLIC_APP_URL`
 3. Deploy (automatic on push, or **Deployments** → **Redeploy**).
 
 ### Questions on Vercel
@@ -538,7 +533,7 @@ Any authenticated user can create questions and propose new versions. No separat
 | `QUESTIONS_STORAGE` | No | (filesystem) | Set to `supabase` for Vercel |
 | `QUESTIONS_ROOT` | No | `./questions` | Local path for question folders |
 | `QUESTIONS_BUCKET` | No | `questions` | Supabase Storage bucket name |
-| `TESTS_CONFIG` | No | (one empty test) | JSON array of test definitions |
+| `QUESTION_SETS_ROOT` | No | `./question-sets` | Local path for file-based question sets (set.yaml per folder) |
 | `NEXT_PUBLIC_APP_URL` | No | — | App URL for redirects |
 
 ---

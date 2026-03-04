@@ -85,6 +85,6 @@ This document describes the **question module** implementation: how questions ar
 
 ---
 
-## Tests and test flow
+## Question sets and take-as-test flow
 
-- **Tests config** (`src/lib/tests-config.ts`) uses `questionIds` (logical_ids). When a test is started, the client receives these ids and fetches each via `GET /api/questions/[id]`, which returns the **latest version** (from DB) for that logical_id. On submit, the client sends `questionId` and `version` per answer so the server grades the same version the student saw and stores it in `answers.question_id` and `answers.question_version`.
+- **Question sets** are defined in the database and/or on the filesystem (see [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd) and [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd)). When a user takes a set as a test, the client calls `POST /api/question-sets/[id]/start`, receives `questionIds` (logical_ids), and fetches each via `GET /api/questions/[id]`, which returns the **latest approved version** (from DB) for that logical_id. On submit, the client sends `questionId` and `version` per answer so the server grades the same version the student saw and stores it in `answers.question_id` and `answers.question_version`. Test sessions store `set_id` (uuid) referencing `question_sets.id`.

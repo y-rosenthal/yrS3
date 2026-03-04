@@ -14,7 +14,7 @@ This document gives an overview of everything a developer on this project needs 
 
 **yrS3** is a web-based **tutorial and testing system** for knowledge assessment. Version **0.0.1** focuses on the **testing component**:
 
-- **Learners** log in, select tests, answer questions (multiple choice, short answer, long answer, R code, Bash), submit, and receive scores and feedback.
+- **Learners** log in, open **question sets** (from DB or file), take a set as a test, answer questions (multiple choice, short answer, long answer, R code, Bash), submit, and receive scores and feedback.
 - **Users** can create and upload new questions or modifications; questions live in a filesystem (or Supabase Storage) with one folder per question (YAML + prompt). Any user can propose a new version of any question; the version is **pending** until the question owner approves it.
 - **Auth** is email/password (with email confirmation) via Supabase; optional Google and GitHub OAuth are supported and documented separately.
 
@@ -41,11 +41,12 @@ Questions are stored on the **filesystem** (local dev) or in **Supabase Storage*
 yrS3/
 ├── src/
 │   ├── app/                    # Next.js App Router: pages and API routes
-│   │   ├── api/                # API routes (questions, tests, run-code, auth)
+│   │   ├── api/                # API routes (questions, question-sets, run-code, auth)
 │   │   ├── auth/               # Auth callback
 │   │   ├── author/             # Upload questions (file-based)
 │   │   ├── login/              # Login page
-│   │   ├── tests/              # Test list and take-test flow
+│   │   ├── question-sets/      # Question set list, create, take-as-test flow
+│   │   ├── tests/              # Redirect to question-sets
 │   │   ├── layout.tsx, page.tsx, globals.css
 │   ├── lib/                    # Shared logic
 │   │   ├── auth.ts             # Auth helpers
@@ -53,23 +54,24 @@ yrS3/
 │   │   ├── evaluators/         # Grading: multiple-choice, short-answer, bash, etc.
 │   │   ├── sandbox.ts          # Code execution interface
 │   │   ├── supabase/           # Supabase client and server utilities
-│   │   ├── tests-config.ts     # Load tests from env/config
+│   │   ├── question-sets/      # Question set types, load from DB + filesystem
 │   │   ├── logger.ts           # Audit logging
 │   ├── middleware.ts           # Auth middleware
 ├── docs/                       # Quarto book source (all .qmd files)
 │   ├── _quarto.yml             # Book config and chapter list
 │   ├── index.qmd, DOC-GUIDE, SPEC, SETUP, QUESTION-FORMAT, PRD, etc.
 ├── questions/                  # Default root for question folders (local)
+├── question-sets/              # Optional root for file-based question sets (set.yaml per folder)
 ├── supabase/
 │   ├── config.toml             # Local Supabase auth/config
-│   └── migrations/             # SQL migrations (test_sessions, answers, question_versions, audit_logs, storage)
+│   └── migrations/             # SQL migrations (question_sets, question_set_items, test_sessions, answers, question_versions, audit_logs, storage)
 ├── .env.example                # Copy to .env.local and fill in
 ├── package.json, tsconfig.json, vercel.json
 └── README.md                   # Project overview (single source for GitHub + book)
 ```
 
 - **App entry:** `src/app/` — routes and API handlers.
-- **Business logic:** `src/lib/` — questions, evaluators, auth, Supabase, tests config, logging.
+- **Business logic:** `src/lib/` — questions, question-sets (DB + file), evaluators, auth, Supabase, logging.
 - **Docs:** `docs/` — all documentation; build the book with `quarto render` from `docs/`.
 - **Questions (local):** `questions/` — one folder per question; see [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd).
 
@@ -81,6 +83,8 @@ yrS3/
 |----------|---------|
 | [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd) | How to navigate docs and version numbering |
 | [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd) | MVP scope, behaviour, and technical spec |
+| [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd) | Question sets (DB + file-based), take as test |
+| [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd) | File-based question set layout (`set.yaml`) |
 | [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd) | Install dependencies, env vars, local run, Supabase (local + hosted), deploy to Vercel |
 | [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd) | Question folder layout, `meta.yaml`, prompt file, type-specific files, validation rules |
 | PRD-0.0.1-v\*.qmd | Product vision and full requirements |
@@ -124,7 +128,7 @@ The rendered HTML book is in `docs/_book/` after running `quarto render` from `d
 
 4. **Optional: tests config**
 
-   Set `TESTS_CONFIG` in `.env.local` to a JSON array of test definitions with `id`, `title`, `description`, and `questionIds`. Omit for the default empty test list.
+   Question sets are loaded from the database and/or from the filesystem (see [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd)). Optionally set `QUESTION_SETS_ROOT` to a path for file-based sets; default is `./question-sets`.
 
 5. **Run**
 
@@ -132,7 +136,7 @@ The rendered HTML book is in `docs/_book/` after running `quarto render` from `d
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000). Sign in (after confirming email if using email/password), then take a test or create/upload questions.
+   Open [http://localhost:3000](http://localhost:3000). Sign in (after confirming email if using email/password), then open question sets (take as test) or create question sets and questions.
 
 ---
 
@@ -145,7 +149,7 @@ The rendered HTML book is in `docs/_book/` after running `quarto render` from `d
 | `QUESTIONS_STORAGE` | No | (filesystem) | Set to `supabase` for production (e.g. Vercel) |
 | `QUESTIONS_ROOT` | No | `./questions` | Local path for question folders |
 | `QUESTIONS_BUCKET` | No | `questions` | Supabase Storage bucket when `QUESTIONS_STORAGE=supabase` |
-| `TESTS_CONFIG` | No | (empty) | JSON array of test definitions |
+| `QUESTION_SETS_ROOT` | No | `./question-sets` | Local path for file-based question sets (set.yaml per folder) |
 | `NEXT_PUBLIC_APP_URL` | No | — | App URL for redirects |
 
 Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#sec-env-vars).
@@ -154,12 +158,12 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 
 ## App architecture (code) {#sec-architecture}
 
-- **Routing:** Next.js App Router under `src/app/`. Pages: `/`, `/login`, `/questions`, `/questions/new`, `/author`, `/tests`, `/tests/[id]/take`. API routes under `src/app/api/`.
+- **Routing:** Next.js App Router under `src/app/`. Pages: `/`, `/login`, `/questions`, `/questions/new`, `/author`, `/question-sets`, `/question-sets/new`, `/question-sets/[id]/take`. Legacy `/tests` redirects to `/question-sets`. API routes under `src/app/api/`.
 - **Auth:** Supabase Auth; middleware in `src/middleware.ts`; helpers in `src/lib/auth.ts`; client/server Supabase in `src/lib/supabase/`.
 - **Questions:** Loaded and validated via `src/lib/questions/` (types, parse, validate). Storage is abstracted: `store-fs.ts` for filesystem, `store-supabase.ts` for Supabase Storage; `get-store.ts` picks implementation from `QUESTIONS_STORAGE`. Upload API validates per QUESTION-FORMAT and writes through the store.
 - **Evaluators:** `src/lib/evaluators/` — one module per question type (multiple-choice, short-answer, bash, etc.); each returns score/feedback in a consistent shape. See SPEC for which types are in MVP.
 - **Sandbox:** `src/lib/sandbox.ts` — interface for running user code (e.g. Bash); used by the run-code API and evaluators. SPEC defines isolation and logging requirements.
-- **Tests:** Tests are defined via `TESTS_CONFIG` (or equivalent); `src/lib/tests-config.ts` loads them. Test sessions and answers are stored in Supabase (migrations).
+- **Question sets:** `src/lib/question-sets/` loads sets from the DB and/or filesystem (QUESTION-SET-FORMAT). Create sets via UI or add `set.yaml` under `question-sets/`. Taking a set as a test creates a test session (table `test_sessions` with `set_id`); answers stored in `answers`.
 - **Logging:** `src/lib/logger.ts` — structured audit logs (auth, uploads, test actions, sandbox runs). SPEC defines scope; retention is deployment-specific.
 
 ---
@@ -221,5 +225,5 @@ For the full list of open items and TODOs, see the end of [SPEC-0.0.1.qmd](SPEC-
 - **yrS3** is a tutorial and testing app: learners take tests, users create and upload questions; auth via Supabase, deploy on Vercel.
 - **Code:** Next.js in `src/app/` and `src/lib/`; questions in `questions/` or Supabase Storage; DB and auth in Supabase.
 - **Docs:** All in `docs/`; build with `quarto render`; add chapters in `_quarto.yml`.
-- **Run locally:** `npm install`, `.env.local` with Supabase URL and key, optional `questions/` and `TESTS_CONFIG`, `npm run dev`.
+- **Run locally:** `npm install`, `.env.local` with Supabase URL and key, optional `questions/` and `question-sets/` (file-based sets), `npm run dev`.
 - **Deep dives:** SPEC (scope and behaviour), SETUP (install and deploy), QUESTION-FORMAT (question layout and rules), DOC-GUIDE and DOC-AUTHORING-GUIDE (docs and versioning).

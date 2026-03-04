@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { getQuestionStore } from "@/lib/questions/get-store";
 import { evaluate } from "@/lib/evaluators";
-import { getTestById } from "@/lib/tests-config";
 import { logStudent } from "@/lib/logger";
 
 export async function POST(
@@ -11,11 +10,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await requireUser();
-  const { id: testId } = await params;
-  const test = getTestById(testId);
-  if (!test) {
-    return NextResponse.json({ error: "Test not found" }, { status: 404 });
-  }
+  const { id: setIdParam } = await params;
   const body = await request.json();
   const { sessionId, answers } = body as {
     sessionId: string;
@@ -35,13 +30,19 @@ export async function POST(
   const supabase = await createClient();
   const { data: session } = await supabase
     .from("test_sessions")
-    .select("id, user_id, submitted_at")
+    .select("id, user_id, set_id, submitted_at")
     .eq("id", sessionId)
     .eq("user_id", user.id)
     .single();
   if (!session || session.submitted_at) {
     return NextResponse.json(
       { error: "Session not found or already submitted" },
+      { status: 400 }
+    );
+  }
+  if (session.set_id !== setIdParam) {
+    return NextResponse.json(
+      { error: "Session does not match question set" },
       { status: 400 }
     );
   }
@@ -89,7 +90,7 @@ export async function POST(
     })
     .eq("id", sessionId);
   logStudent("test_submit", user.id, {
-    testId,
+    setId: session.set_id,
     sessionId,
     totalScore,
     maxScore,

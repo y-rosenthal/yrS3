@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import type { TestDef } from "@/lib/tests-config";
 import type { ParsedQuestion } from "@/lib/questions/types";
 import Link from "next/link";
 
-type Props = { test: TestDef };
+type Props = { setId: string; title: string };
 
-export function TakeTestClient({ test }: Props) {
+export function TakeSetClient({ setId, title }: Props) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ParsedQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -25,7 +24,7 @@ export function TakeTestClient({ test }: Props) {
 
   useEffect(() => {
     (async () => {
-      const startRes = await fetch(`/api/tests/${test.id}/start`, {
+      const startRes = await fetch(`/api/question-sets/${encodeURIComponent(setId)}/start`, {
         method: "POST",
       });
       if (!startRes.ok) {
@@ -35,14 +34,14 @@ export function TakeTestClient({ test }: Props) {
       }
       const startData = await startRes.json();
       setSessionId(startData.sessionId);
-      const ids = startData.questionIds ?? test.questionIds ?? [];
+      const ids = startData.questionIds ?? [];
       if (ids.length === 0) {
         setLoading(false);
         return;
       }
       const loaded: ParsedQuestion[] = [];
       for (const id of ids) {
-        const qRes = await fetch(`/api/questions/${id}`);
+        const qRes = await fetch(`/api/questions/${encodeURIComponent(id)}`);
         if (qRes.ok) {
           const q = await qRes.json();
           loaded.push(q);
@@ -51,7 +50,7 @@ export function TakeTestClient({ test }: Props) {
       setQuestions(loaded);
       setLoading(false);
     })();
-  }, [test.id, test.questionIds]);
+  }, [setId]);
 
   async function handleSubmitTest() {
     if (!sessionId) return;
@@ -63,7 +62,7 @@ export function TakeTestClient({ test }: Props) {
         answer: answers[q.id] ?? "",
       })),
     };
-    const res = await fetch(`/api/tests/${test.id}/submit`, {
+    const res = await fetch(`/api/question-sets/${encodeURIComponent(setId)}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -85,7 +84,7 @@ export function TakeTestClient({ test }: Props) {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl">
-        <p className="text-zinc-600">Loading test…</p>
+        <p className="text-zinc-600">Loading…</p>
       </div>
     );
   }
@@ -98,7 +97,7 @@ export function TakeTestClient({ test }: Props) {
           Score: {(result.score * 100).toFixed(0)}% ({result.totalScore} / {result.maxScore})
         </p>
         <ul className="mt-4 space-y-3">
-          {result.results.map((r, i) => (
+          {result.results.map((r) => (
             <li key={r.questionId} className="rounded border border-zinc-200 bg-white p-3">
               <span className="font-mono text-sm text-zinc-500">{r.questionId}</span>
               <span className={r.passed ? " text-green-600" : " text-red-600"}>
@@ -108,8 +107,8 @@ export function TakeTestClient({ test }: Props) {
             </li>
           ))}
         </ul>
-        <Link href="/tests" className="mt-6 inline-block text-zinc-600 hover:underline">
-          Back to tests
+        <Link href="/question-sets" className="mt-6 inline-block text-zinc-600 hover:underline">
+          Back to question sets
         </Link>
       </div>
     );
@@ -118,9 +117,9 @@ export function TakeTestClient({ test }: Props) {
   if (questions.length === 0) {
     return (
       <div className="mx-auto max-w-2xl">
-        <p className="text-zinc-600">This test has no questions yet.</p>
-        <Link href="/tests" className="mt-4 inline-block text-zinc-600 hover:underline">
-          Back to tests
+        <p className="text-zinc-600">This question set has no questions yet.</p>
+        <Link href="/question-sets" className="mt-4 inline-block text-zinc-600 hover:underline">
+          Back to question sets
         </Link>
       </div>
     );
@@ -132,8 +131,8 @@ export function TakeTestClient({ test }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-900">{test.title}</h1>
-        <Link href="/tests" className="text-sm text-zinc-600 hover:underline">
+        <h1 className="text-xl font-semibold text-zinc-900">{title}</h1>
+        <Link href="/question-sets" className="text-sm text-zinc-600 hover:underline">
           Exit
         </Link>
       </div>
@@ -262,7 +261,7 @@ function BashAnswer({
         {running ? "Running…" : "Run code"}
       </button>
       {stdout && (
-        <pre className="rounded border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 whitespace-pre-wrap">
+        <pre className="whitespace-pre-wrap rounded border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700">
           {stdout}
         </pre>
       )}
