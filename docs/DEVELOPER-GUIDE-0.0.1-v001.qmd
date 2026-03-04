@@ -164,7 +164,7 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 
 ---
 
-## Question format and authoring {#sec-question-format}
+## Question format and creation {#sec-question-format}
 
 - **One folder per question;** folder name SHOULD be the question `id`.
 - **Required:** `meta.yaml` (id, type, version) and exactly one of `prompt.md` or `prompt.txt` (prompt.md wins if both exist).

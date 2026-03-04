@@ -126,7 +126,7 @@ Student progress is stored in **database and/or filesystem** (MVP can choose one
 - **Principle**: Log everything that is needed for security, auditing, and debugging.
 - **Scope** (non-exhaustive):
   - **Auth**: sign-in, sign-out, failures.
-  - **Authors**: uploads (new question / modification), metadata views.
+  - **Questions**: uploads (new question / modification), metadata views, approval of pending versions (by owner).
   - **Students**: test start/stop, question view, answer change, code run, submit; optional: keystroke/paste events if collected.
   - **System**: sandbox runs (inputs/outputs hashed or truncated if large), evaluator errors, upload validation failures.
 - **Format and retention**: Logs should be structured (e.g. JSON) and stored in a dedicated store or filesystem; retention period is an MVP/deployment decision.

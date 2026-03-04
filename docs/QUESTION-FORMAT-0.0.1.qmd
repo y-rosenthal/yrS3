@@ -195,8 +195,8 @@ The SPEC defines which types are implemented in the initial MVP.
 
 ## Upload and Versioning
 
-- **New question**: Author or user provides content (via UI or a folder/zip). System creates a new `logical_id` (e.g. UUID), assigns version `1.0.0.0`, and writes files under `questions/{logical_id}/{version}/`. No overwrite of existing version folders.
-- **New version**: Author or owner provides updated content and a **version bump type** (question_major, question_minor, answer_major, answer_minor). System computes the next version string, writes a **new** folder `questions/{logical_id}/{new_version}/`, and does not modify any existing version folder. Only the owner (from the database) may create a new version for a given logical_id.
+- **New question**: Any user provides content (via UI or a folder/zip). System creates a new `logical_id` (e.g. UUID), assigns version `1.0.0.0`, and writes files under `questions/{logical_id}/{version}/`. The version is **approved** (uploader is owner). No overwrite of existing version folders.
+- **New version**: Any user can propose a new version by providing updated content and a **version bump type** (question_major, question_minor, answer_major, answer_minor). System computes the next version string, writes a **new** folder `questions/{logical_id}/{new_version}/`, and does not modify any existing version folder. If the user is the question owner, the version is **approved**; otherwise it is **pending** until the owner approves it. Only approved versions are used in tests.
 - **Validation**: On upload, the system MUST validate presence of `id`, `type`, and `version` in `meta.yaml` (with `version` in four-part form); the presence of exactly one prompt source; and type-specific required files. The `id` in `meta.yaml` MUST match the logical_id (parent folder name) in the path.
 - **Ownership**: Ownership of questions is stored in the database only (not in `meta.yaml`), so the file format remains portable and free of PII.
 
