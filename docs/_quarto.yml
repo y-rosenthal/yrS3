@@ -32,6 +32,7 @@ book:
         - DEVELOPER-GUIDE-0.0.1-v001.qmd
     - part: "Question Format Specification"
       chapters:
+        - QUESTION-MODULE-SPEC.qmd
         - QUESTION-FORMAT-0.0.1.qmd
 
 format:

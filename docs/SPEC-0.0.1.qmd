@@ -9,10 +9,10 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 
 ### In scope (MVP)
 - **Question storage**: Filesystem-based; each question in its own folder with text and metadata (no DB for question content yet).
-- **Question authoring**: Authors develop questions offline and upload new questions or modifications via the app.
-- **Authentication**: Email/password with full email confirmation workflow via Supabase (learners and question authors). Optionally Google and/or GitHub OAuth via Supabase; each auth option is implemented and documented separately so the team can ship email/password first and add OAuth later if desired.
+- **Question creation**: Users create and upload new questions or modifications via the app. Any user can propose a new version of any question; the version is **pending** until the question owner approves it. Only approved versions are used in tests.
+- **Authentication**: Email/password with full email confirmation workflow via Supabase (learners and creators). Optionally Google and/or GitHub OAuth via Supabase; each auth option is implemented and documented separately so the team can ship email/password first and add OAuth later if desired.
 - **Student experience**: Take tests, answer questions (including coding in a sandboxed environment), submit, and see feedback.
-- **Author experience**: Upload new questions; upload modifications to existing questions; view metadata (e.g. created/modified).
+- **Question management**: Create and upload new questions; propose or upload new versions (owner's versions are approved automatically; others are pending until owner approves); view metadata (e.g. created/modified).
 - **Progress and integrity**: Store student progress (attempts, timestamps, question id/version, timing); basic anti-cheat (keystroke timing, copy/paste controls); comprehensive logging.
 
 ### Out of scope (MVP)
@@ -27,7 +27,7 @@ Refer to the latest PRD for the full system vision. This spec defines the **init
 
 ### Rationale
 Questions are stored in the **filesystem**, not in the database, so that:
-- Authors can develop and version questions on their own machine (e.g. with Git).
+- Users can develop and version questions on their own machine (e.g. with Git).
 - Questions can be uploaded as a unit (folder + files) without a DB migration.
 - The same format can later be imported into a DB if the system evolves.
 
@@ -40,11 +40,11 @@ Questions are stored in the **filesystem**, not in the database, so that:
   - **Version** — so modifications can be tracked and linked to student attempts.
 - **Optional metadata**: title, domain, difficulty, rubric reference, etc., as defined in the question format doc.
 
-### Author workflow
-- Author creates/edits the question folder and files locally (no need to be connected to the system).
-- Author **uploads** via the app:
-  - **New question**: upload a folder (or archive) that conforms to the question format; system assigns or validates id and stores under the configured questions root.
-  - **Modification to existing question**: upload updated files for an existing id; system updates files and records a new version (e.g. version number or modified timestamp).
+### Question workflow
+- User creates/edits the question folder and files locally (no need to be connected to the system).
+- User **uploads** via the app:
+  - **New question**: upload a folder (or archive) that conforms to the question format; system assigns or validates id and stores under the configured questions root. Version is **approved** (owner is the uploader).
+  - **Modification to existing question**: upload updated files for an existing id; system stores a new version. If the uploader is the question owner, the version is **approved**; otherwise it is **pending** until the owner approves it. Only approved versions are used in tests.
 - System logs **when** each question was created and when it was last modified (and by whom, if auth provides it).
 
 ---
@@ -68,18 +68,17 @@ Authentication in v0.0.1 is **modular**: the tech team may implement one or more
 - **Backend**: Same Supabase Auth; enable GitHub in Supabase Dashboard (or local config) and implement the GitHub sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.
 
 ### Roles and behavior (all providers)
-- **Roles**: Distinguish between **learners** (students) and **question authors** (e.g. via Supabase role, claim, or a simple authors table/flag). Only authors can access upload and question-metadata UIs.
+- **Roles**: All authenticated users can take tests, create questions, and propose new versions. There is no separate "author" role; question **ownership** is per question (the user who created the first approved version). Only the owner can approve pending versions proposed by others.
 - **Unified behavior**: Regardless of which provider a user signed in with, the app treats them as the same authenticated user; progress and logs are tied to the Supabase user id.
 
 ---
 
-## Frontend — Question Authors
+## Frontend — Question creation and management
 
-- **Upload new questions**: UI to select a question folder (or zip) and upload; server validates per QUESTION-FORMAT-0.0.1.qmd (required files, meta fields, type-specific rules, edge cases). If validation fails, upload is **rejected** and the author receives clear errors; if it passes, the question is stored under the questions root and creation time (and optionally author) is recorded.
-- **Upload modifications**: UI to select an existing question (by id) and upload updated files; server validates per QUESTION-FORMAT-0.0.1.md. If validation fails, upload is **rejected** and no files are changed. If it passes, server replaces/updates only the provided files, leaves omitted required files (e.g. prompt) unchanged, and updates "modified" metadata and version.
-- **Metadata display**: List or detail view of questions showing at least:
-  - Question id, type, version.
-  - When the question was created and when last modified.
+- **Create/upload new questions**: Any authenticated user can create questions (form or file upload). Server validates per QUESTION-FORMAT-0.0.1.qmd. If validation fails, upload is **rejected** with clear errors; if it passes, the question is stored and the version is **approved** (uploader is owner).
+- **Propose new versions**: Any user can propose a new version of any question (form or upload). If the user is the question owner, the version is **approved**; otherwise it is **pending** until the owner approves it. Owner sees "Pending your approval" and can approve or ignore.
+- **Upload modifications**: UI to select an existing question (by id) and upload updated files; server validates per format. Non-owner uploads create a **pending** version; owner uploads create an **approved** version.
+- **Metadata display**: List or detail view of questions showing at least: question id, type, version, status (approved/pending), when created and when last modified.
 - **Logging**: All upload and metadata-view actions are logged (who, when, which question id/version).
 
 ---

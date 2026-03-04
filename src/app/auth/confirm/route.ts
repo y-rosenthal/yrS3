@@ -7,11 +7,12 @@ import { NextResponse } from "next/server";
  * PKCE code_verifier in cookies (set during signUp) is available.
  */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+  const url = new URL(request.url);
+  const { searchParams } = url;
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const origin = request.nextUrl.origin;
+  const origin = url.origin;
 
   if (code) {
     const supabase = await createClient();

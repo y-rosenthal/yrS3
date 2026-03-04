@@ -86,3 +86,21 @@ export interface QuestionMetaListItem {
   created_at?: string;
   modified_at?: string;
 }
+
+/** Key for a specific immutable question version (logical_id + version). */
+export interface VersionKey {
+  logicalId: string;
+  version: string;
+}
+
+/** Payload for creating or updating a multiple_choice question (UI/API). */
+export interface MultipleChoicePayload {
+  type: "multiple_choice";
+  title?: string;
+  domain?: string;
+  prompt: string;
+  options: MultipleChoiceOption[];
+}
+
+/** Union of payloads per question type (MVP: multiple_choice only). */
+export type QuestionPayload = MultipleChoicePayload;

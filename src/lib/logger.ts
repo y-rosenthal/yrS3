@@ -5,7 +5,7 @@
 
 export type LogCategory =
   | "auth"
-  | "author"
+  | "questions"
   | "student"
   | "system"
   | "sandbox";
@@ -38,12 +38,12 @@ export function logAuth(event: string, userId?: string, extra?: Record<string, u
   log({ category: "auth", event, userId, ...extra });
 }
 
-export function logAuthor(
+export function logQuestions(
   event: string,
   userId: string,
   extra?: Record<string, unknown>
 ) {
-  log({ category: "author", event, userId, ...extra });
+  log({ category: "questions", event, userId, ...extra });
 }
 
 export function logStudent(

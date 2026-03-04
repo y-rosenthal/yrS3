@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { requireAuthor } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getQuestionStore } from "@/lib/questions/get-store";
 import { AuthorUploadForm } from "./upload-form";
 
 export default async function AuthorPage() {
-  await requireAuthor();
+  await requireUser();
   const store = await getQuestionStore();
   const questions = await store.list();
 
@@ -13,7 +13,7 @@ export default async function AuthorPage() {
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">
-            Question author
+            Upload questions
           </h1>
           <Link
             href="/"

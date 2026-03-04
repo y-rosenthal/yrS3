@@ -1,0 +1,7 @@
+- id: a
+  text: blue
+  correct: true
+- id: b
+  text: white
+- id: c
+  text: green

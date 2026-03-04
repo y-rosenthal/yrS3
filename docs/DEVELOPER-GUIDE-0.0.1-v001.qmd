@@ -15,7 +15,7 @@ This document gives an overview of everything a developer on this project needs 
 **yrS3** is a web-based **tutorial and testing system** for knowledge assessment. Version **0.0.1** focuses on the **testing component**:
 
 - **Learners** log in, select tests, answer questions (multiple choice, short answer, long answer, R code, Bash), submit, and receive scores and feedback.
-- **Question authors** upload new questions or modifications; questions live in a filesystem (or Supabase Storage) with one folder per question (YAML + prompt).
+- **Users** can create and upload new questions or modifications; questions live in a filesystem (or Supabase Storage) with one folder per question (YAML + prompt). Any user can propose a new version of any question; the version is **pending** until the question owner approves it.
 - **Auth** is email/password (with email confirmation) via Supabase; optional Google and GitHub OAuth are supported and documented separately.
 
 The full product vision is in the PRD documents; the **SPEC** defines the initial MVP scope and technical behaviour.
@@ -43,7 +43,7 @@ yrS3/
 │   ├── app/                    # Next.js App Router: pages and API routes
 │   │   ├── api/                # API routes (questions, tests, run-code, auth)
 │   │   ├── auth/               # Auth callback
-│   │   ├── author/             # Author UI (upload & manage questions)
+│   │   ├── author/             # Upload questions (file-based)
 │   │   ├── login/              # Login page
 │   │   ├── tests/              # Test list and take-test flow
 │   │   ├── layout.tsx, page.tsx, globals.css
@@ -62,7 +62,7 @@ yrS3/
 ├── questions/                  # Default root for question folders (local)
 ├── supabase/
 │   ├── config.toml             # Local Supabase auth/config
-│   └── migrations/             # SQL migrations (authors, test_sessions, answers, audit_logs, storage)
+│   └── migrations/             # SQL migrations (test_sessions, answers, question_versions, audit_logs, storage)
 ├── .env.example                # Copy to .env.local and fill in
 ├── package.json, tsconfig.json, vercel.json
 └── README.md                   # Project overview (single source for GitHub + book)
@@ -132,7 +132,7 @@ The rendered HTML book is in `docs/_book/` after running `quarto render` from `d
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000). Sign in (after confirming email if using email/password), then take a test or use the Author UI if your user is in the `authors` table.
+   Open [http://localhost:3000](http://localhost:3000). Sign in (after confirming email if using email/password), then take a test or create/upload questions.
 
 ---
 
@@ -154,7 +154,7 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 
 ## App architecture (code) {#sec-architecture}
 
-- **Routing:** Next.js App Router under `src/app/`. Pages: `/`, `/login`, `/author`, `/tests`, `/tests/[id]/take`. API routes under `src/app/api/`.
+- **Routing:** Next.js App Router under `src/app/`. Pages: `/`, `/login`, `/questions`, `/questions/new`, `/author`, `/tests`, `/tests/[id]/take`. API routes under `src/app/api/`.
 - **Auth:** Supabase Auth; middleware in `src/middleware.ts`; helpers in `src/lib/auth.ts`; client/server Supabase in `src/lib/supabase/`.
 - **Questions:** Loaded and validated via `src/lib/questions/` (types, parse, validate). Storage is abstracted: `store-fs.ts` for filesystem, `store-supabase.ts` for Supabase Storage; `get-store.ts` picks implementation from `QUESTIONS_STORAGE`. Upload API validates per QUESTION-FORMAT and writes through the store.
 - **Evaluators:** `src/lib/evaluators/` — one module per question type (multiple-choice, short-answer, bash, etc.); each returns score/feedback in a consistent shape. See SPEC for which types are in MVP.
@@ -170,7 +170,7 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 - **Required:** `meta.yaml` (id, type, version) and exactly one of `prompt.md` or `prompt.txt` (prompt.md wins if both exist).
 - **Type-specific:** e.g. `options.yaml` for multiple choice, `solution.sh`/`solution.R` for bash/R, `expected.yaml` or `rubric.yaml` for short/long answer. See [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd) for all types, required files, and edge cases.
 - **Validation:** Upload API and loaders MUST follow QUESTION-FORMAT (required fields, prompt rule, type-specific files, multiple-choice correctness). Invalid uploads are rejected with clear errors.
-- **Authors:** Only users listed in the `public.authors` table can access the Author UI. Add them via SQL after first sign-in (see SETUP).
+- **Questions:** Any authenticated user can create questions and propose new versions. Proposed versions by non-owners are **pending** until the question owner approves them. Only approved versions are used in tests.
 
 ---
 
@@ -178,11 +178,11 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 
 Migrations live in `supabase/migrations/`. The initial migration defines:
 
-- **authors** — `id` (references `auth.users`); only authors can upload/manage questions.
 - **test_sessions** — user, test_id, attempt_number, started_at, submitted_at, score.
 - **answers** — session_id, question_id, question_version, answer_text, evaluation_json, score, timestamps, keystroke_metrics.
 - **audit_logs** — category, event, user_id, payload (structured logging).
-- **Storage bucket** `questions` and RLS for read/write by authenticated users (authors).
+- **question_versions** — logical_id, version, owner_id, type, title, domain, storage_path, status (pending/approved), proposed_by, created_at. Any authenticated user can insert; owner can update (e.g. approve) and delete. Only approved versions are "official."
+- **Storage bucket** `questions` and RLS for read/write by authenticated users.
 
 Apply migrations: `supabase db push` (hosted) or `supabase db reset` (local). RLS policies restrict access per SPEC.
 
@@ -218,7 +218,7 @@ For the full list of open items and TODOs, see the end of [SPEC-0.0.1.qmd](SPEC-
 
 ## Summary {#sec-summary}
 
-- **yrS3** is a tutorial and testing app: learners take tests, authors upload questions; auth via Supabase, deploy on Vercel.
+- **yrS3** is a tutorial and testing app: learners take tests, users create and upload questions; auth via Supabase, deploy on Vercel.
 - **Code:** Next.js in `src/app/` and `src/lib/`; questions in `questions/` or Supabase Storage; DB and auth in Supabase.
 - **Docs:** All in `docs/`; build with `quarto render`; add chapters in `_quarto.yml`.
 - **Run locally:** `npm install`, `.env.local` with Supabase URL and key, optional `questions/` and `TESTS_CONFIG`, `npm run dev`.

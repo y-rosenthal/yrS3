@@ -11,6 +11,7 @@ import type {
   MultipleChoiceOption,
 } from "./types";
 import { QUESTION_TYPES } from "./types";
+import { isValidVersion } from "./version";
 
 export interface ValidationResult {
   valid: boolean;
@@ -51,6 +52,10 @@ export function validateMetaYaml(
   if (!validNonEmptyString(version)) {
     errors.push(
       "meta.yaml: 'version' is required and must be a non-empty string"
+    );
+  } else if (!isValidVersion(version)) {
+    errors.push(
+      "meta.yaml: 'version' must be four-part (Q_MAJ.Q_MIN.A_MAJ.A_MIN, e.g. 1.0.0.0)"
     );
   }
 
@@ -156,6 +161,28 @@ export function validatePromptPresence(files: { name: string }[]): ValidationRes
     return { valid: false, errors: ["Exactly one of prompt.md or prompt.txt is required"] };
   }
   return { valid: true, errors: [] };
+}
+
+/** Validate multiple_choice payload (API create/new version). */
+export function validateMultipleChoicePayload(payload: {
+  type?: unknown;
+  prompt?: unknown;
+  options?: unknown;
+}): ValidationResult {
+  const errors: string[] = [];
+  if (payload.type !== "multiple_choice") {
+    errors.push("type must be 'multiple_choice'");
+  }
+  if (typeof payload.prompt !== "string" || !payload.prompt.trim()) {
+    errors.push("prompt is required and must be a non-empty string");
+  }
+  if (!Array.isArray(payload.options) || payload.options.length === 0) {
+    errors.push("options is required and must be a non-empty array");
+  } else {
+    const optResult = validateOptionsYaml(payload.options, "multiple_choice");
+    if (!optResult.valid) errors.push(...optResult.errors);
+  }
+  return { valid: errors.length === 0, errors };
 }
 
 /** Full validation for an upload (new question). folderName = expected id. */

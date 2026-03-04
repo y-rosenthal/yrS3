@@ -1,19 +1,20 @@
 /**
  * Question store abstraction: list questions and get question content.
- * Implementations: filesystem (local) and Supabase Storage (Vercel).
+ * Versioned layout: one folder per (logical_id, version). Implementations: FS and Supabase Storage.
  */
 
 import type { ParsedQuestion, QuestionMetaListItem } from "./types";
 
 export interface QuestionStore {
   list(): Promise<QuestionMetaListItem[]>;
-  get(id: string): Promise<ParsedQuestion | null>;
-  /** Write question files (for upload). Returns error message or null. */
+  /** Get question content by logical_id and version. */
+  get(logicalId: string, version: string): Promise<ParsedQuestion | null>;
+  /** Write question files for a new version. Never overwrites other versions. Returns error message or null. */
   write(
-    questionId: string,
-    files: { name: string; content: string }[],
-    options?: { isModification?: boolean }
+    logicalId: string,
+    version: string,
+    files: { name: string; content: string }[]
   ): Promise<string | null>;
-  /** Check if a question id exists. */
-  has(id: string): Promise<boolean>;
+  /** Check if (logicalId, version) exists. */
+  has(logicalId: string, version: string): Promise<boolean>;
 }

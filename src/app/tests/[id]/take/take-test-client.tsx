@@ -59,6 +59,7 @@ export function TakeTestClient({ test }: Props) {
       sessionId,
       answers: questions.map((q) => ({
         questionId: q.id,
+        version: q.version,
         answer: answers[q.id] ?? "",
       })),
     };

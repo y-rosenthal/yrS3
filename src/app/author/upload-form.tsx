@@ -9,6 +9,7 @@ type Props = {
 
 export function AuthorUploadForm({ isModification, existingIds = [] }: Props) {
   const [folderName, setFolderName] = useState("");
+  const [version, setVersion] = useState("1.0.0.0");
   const [files, setFiles] = useState<FileList | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -16,7 +17,12 @@ export function AuthorUploadForm({ isModification, existingIds = [] }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!folderName.trim()) {
-      setMessage("Folder name (question id) is required.");
+      setMessage("Folder name (logical id) is required.");
+      setStatus("error");
+      return;
+    }
+    if (!version?.trim()) {
+      setMessage("Version is required (e.g. 1.0.0.0).");
       setStatus("error");
       return;
     }
@@ -29,6 +35,7 @@ export function AuthorUploadForm({ isModification, existingIds = [] }: Props) {
     setMessage("");
     const formData = new FormData();
     formData.set("folderName", folderName.trim());
+    formData.set("version", version.trim());
     formData.set("isModification", String(isModification));
     for (let i = 0; i < files.length; i++) {
       formData.append(files[i].name, files[i]);
@@ -40,8 +47,14 @@ export function AuthorUploadForm({ isModification, existingIds = [] }: Props) {
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       setStatus("ok");
-      setMessage(`Saved: ${data.id}`);
+      const base = `${data.logicalId ?? data.id} v${data.version ?? ""}`;
+      setMessage(
+        data.status === "pending"
+          ? `${base} — Pending approval by the question owner.`
+          : `Saved: ${base}`
+      );
       setFolderName("");
+      setVersion("1.0.0.0");
       setFiles(null);
     } else {
       setStatus("error");
@@ -78,6 +91,16 @@ export function AuthorUploadForm({ isModification, existingIds = [] }: Props) {
             className="mt-1 block w-full max-w-xs rounded border border-zinc-300 px-3 py-2 text-zinc-800"
           />
         )}
+      </div>
+      <div>
+        <label className="block text-sm text-zinc-600">Version (e.g. 1.0.0.0)</label>
+        <input
+          type="text"
+          value={version}
+          onChange={(e) => setVersion(e.target.value)}
+          placeholder="1.0.0.0"
+          className="mt-1 block w-full max-w-xs rounded border border-zinc-300 px-3 py-2 text-zinc-800"
+        />
       </div>
       <div>
         <label className="block text-sm text-zinc-600">Files</label>

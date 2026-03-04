@@ -313,23 +313,10 @@ supabase db push
 
 If you prefer not to use the CLI, run the SQL in `supabase/migrations/00001_initial.sql` manually in the Dashboard **SQL Editor**.
 
-#### Add an author
+#### (Any user can create questions; no author setup required)
 
-After your first sign-in (email/password or any enabled OAuth provider), add your user as an author. You need your Supabase user UUID (Dashboard → **Authentication** → **Users** → copy your user’s UUID).
 
-**Option A — Dashboard:** **SQL Editor** → run:
-
-```sql
-insert into public.authors (id) values ('USER_UUID') on conflict (id) do nothing;
-```
-
-**Option B — psql:** From **Project Settings** → **Database** copy the connection string (URI), then:
-
-```bash
-psql "postgresql://postgres.[ref]:[PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres" -c "insert into public.authors (id) values ('USER_UUID') on conflict (id) do nothing;"
-```
-
-Replace `USER_UUID` with your user id.
+(Apply migrations via Dashboard SQL Editor or `supabase db push`; no author table.)
 
 For a **fully local** Supabase backend instead of a hosted project, see @sec-running-supabase-locally.
 
@@ -386,7 +373,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). Sign in (email/password after confirming email, or with Google/GitHub if you enabled those providers), then:
 
 - **Take a test**: use “Take a test” and complete the flow.
-- **Author**: if your user is in the `authors` table, use “Author — Upload & manage questions” to upload new or modified questions.
+- **Questions**: use "My questions" or "Upload questions (files)" to create and manage questions. Any user can propose a new version; the version is pending until the question owner approves it.
 
 ---
 
@@ -456,7 +443,7 @@ vercel env pull .env.local
 
 ### Questions on Vercel
 
-With `QUESTIONS_STORAGE=supabase`, question files are read/written to the Supabase Storage bucket created by the migration. Authors upload via the Author UI; the app does not use a local `questions` folder in production.
+With `QUESTIONS_STORAGE=supabase`, question files are read/written to the Supabase Storage bucket created by the migration. Users upload via the app; the app does not use a local `questions` folder in production.
 
 ### Separate dev, test, and production environments (hosted Supabase) {#sec-separate-environments}
 
@@ -528,9 +515,9 @@ vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview
 
 **Dashboard:** Project → Settings → Environment Variables → for each variable choose Production, Preview, and/or Development and set the value for each.
 
-**5. Add authors per environment**
+**5. (Optional) Verify question permissions**
 
-In each Supabase project (dev, test, prod), add author users as in @sec-supabase-project-setup (“Add an author”) so the Author UI works in that environment. User IDs can differ between projects.
+Any authenticated user can create questions and propose new versions. No separate role or table is required.
 
 **Summary**
 

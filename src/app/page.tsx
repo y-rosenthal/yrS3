@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getUser, isAuthor } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
 
 export default async function HomePage() {
   const user = await getUser();
   if (!user) redirect("/login");
-
-  const author = await isAuthor();
 
   return (
     <div className="min-h-screen bg-zinc-50 p-8">
@@ -15,7 +13,7 @@ export default async function HomePage() {
           Tutorial & Testing System
         </h1>
         <p className="mt-2 text-zinc-600">
-          MVP — Take tests, author questions, track progress.
+          MVP — Take tests, create and manage questions, track progress.
         </p>
         <nav className="mt-8 flex flex-col gap-4">
           <Link
@@ -24,14 +22,18 @@ export default async function HomePage() {
           >
             Take a test
           </Link>
-          {author && (
-            <Link
-              href="/author"
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
-            >
-              Author — Upload & manage questions
-            </Link>
-          )}
+          <Link
+            href="/questions"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
+          >
+            My questions — Create & manage
+          </Link>
+          <Link
+            href="/author"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
+          >
+            Upload questions (files)
+          </Link>
           <form action="/api/auth/signout" method="post" className="mt-4">
             <button
               type="submit"

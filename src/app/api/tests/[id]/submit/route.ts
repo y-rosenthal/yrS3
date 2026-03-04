@@ -19,7 +19,12 @@ export async function POST(
   const body = await request.json();
   const { sessionId, answers } = body as {
     sessionId: string;
-    answers: Array<{ questionId: string; answer: string; keystrokeMetrics?: unknown }>;
+    answers: Array<{
+      questionId: string;
+      version?: string;
+      answer: string;
+      keystrokeMetrics?: unknown;
+    }>;
   };
   if (!sessionId || !Array.isArray(answers)) {
     return NextResponse.json(
@@ -51,7 +56,8 @@ export async function POST(
     feedback: string;
   }> = [];
   for (const a of answers) {
-    const question = await store.get(a.questionId);
+    const version = a.version ?? "1.0.0.0";
+    const question = await store.get(a.questionId, version);
     if (!question) continue;
     const evalResult = await evaluate(question, a.answer ?? "");
     totalScore += evalResult.score;
