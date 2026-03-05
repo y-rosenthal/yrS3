@@ -10,7 +10,7 @@ function LoginForm() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string | React.ReactNode } | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -62,7 +62,20 @@ function LoginForm() {
         if (data.user && !data.session) {
           setMessage({
             type: "success",
-            text: "Check your email for the confirmation link. (Local dev: open Mailpit at http://127.0.0.1:54324 to get the link.)",
+            text: (
+              <>
+                Check your email for the confirmation link. (Local dev: open{" "}
+                <a
+                  href="http://127.0.0.1:54324"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-green-800"
+                >
+                  Mailpit at http://127.0.0.1:54324
+                </a>{" "}
+                to get the link.)
+              </>
+            ),
           });
         } else if (data.session) {
           router.push("/");
