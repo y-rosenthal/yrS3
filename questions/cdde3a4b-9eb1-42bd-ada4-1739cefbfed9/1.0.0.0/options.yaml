@@ -1,0 +1,7 @@
+- id: a
+  text: alabama
+- id: b
+  text: albany
+  correct: true
+- id: c
+  text: altoona

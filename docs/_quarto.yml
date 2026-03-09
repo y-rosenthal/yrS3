@@ -24,6 +24,7 @@ book:
     - part: "SPEC files for different releases"
       chapters:
         - SPEC-QUESTION-SETS-0.0.2.qmd
+        - SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd
         - SPEC-0.0.1.qmd
     - part: "How to setup and run the system"
       chapters:

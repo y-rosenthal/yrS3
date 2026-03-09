@@ -277,6 +277,8 @@ Optional:
 
 - `QUESTIONS_ROOT` — directory for question folders (default: `./questions`)
 - `QUESTION_SETS_ROOT` — directory for file-based question sets (default: `./question-sets`). See QUESTION-SET-FORMAT-0.0.2.qmd.
+- `QUESTION_SYNC_OWNER_ID` — when using FS for questions, set to a user UUID so that FS-only question versions are imported into the DB when the app first lists questions. See SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd.
+- `QUESTIONS_FS_BACKUP_ROOT` — when `QUESTIONS_STORAGE=supabase`, optional local path to mirror each version for backup.
 
 ### Supabase project setup (CLI-first where possible) {#sec-supabase-project-setup}
 
@@ -433,7 +435,7 @@ vercel env pull .env.local
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `QUESTIONS_STORAGE` = `supabase`
-   - Optionally `QUESTIONS_BUCKET`, `QUESTION_SETS_ROOT`, `NEXT_PUBLIC_APP_URL`
+   - Optionally `QUESTIONS_BUCKET`, `QUESTION_SETS_ROOT`, `QUESTION_SYNC_OWNER_ID`, `QUESTIONS_FS_BACKUP_ROOT`, `NEXT_PUBLIC_APP_URL`
 3. Deploy (automatic on push, or **Deployments** → **Redeploy**).
 
 ### Questions on Vercel
@@ -534,6 +536,8 @@ Any authenticated user can create questions and propose new versions. No separat
 | `QUESTIONS_ROOT` | No | `./questions` | Local path for question folders |
 | `QUESTIONS_BUCKET` | No | `questions` | Supabase Storage bucket name |
 | `QUESTION_SETS_ROOT` | No | `./question-sets` | Local path for file-based question sets (set.yaml per folder) |
+| `QUESTION_SYNC_OWNER_ID` | No | — | When using FS for questions: UUID of user to assign when importing FS-only versions into the DB (required for sync import). See SPEC-DB-FS-QUESTION-SYNC. |
+| `QUESTIONS_FS_BACKUP_ROOT` | No | — | When `QUESTIONS_STORAGE=supabase`: local path to mirror each question version for backup (content + db_meta.yaml). |
 | `NEXT_PUBLIC_APP_URL` | No | — | App URL for redirects |
 
 ---
@@ -542,4 +546,5 @@ Any authenticated user can create questions and propose new versions. No separat
 
 - **DOC-GUIDE-v001.qmd** — Documentation and versioning
 - **SPEC-0.0.1.qmd** — MVP scope and behaviour
-- **QUESTION-FORMAT-0.0.1.qmd** — Question folder layout and validation rules
+- **SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd** — DB–FS question sync, dual-write, and backup
+- **QUESTION-FORMAT-0.0.1.qmd** — Question folder layout, validation rules, and optional db_meta.yaml

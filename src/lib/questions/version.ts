@@ -36,6 +36,22 @@ export function isValidVersion(version: string): boolean {
 }
 
 /**
+ * Compare two version strings. Returns negative if a < b, zero if equal, positive if a > b.
+ * Invalid versions are always considered less than valid ones so they sort last when ordering by version descending.
+ */
+export function compareVersion(a: string, b: string): number {
+  const pa = parseVersion(a);
+  const pb = parseVersion(b);
+  if (pa === null && pb === null) return 0;
+  if (pa === null) return -1;
+  if (pb === null) return 1;
+  if (pa.qMaj !== pb.qMaj) return pa.qMaj - pb.qMaj;
+  if (pa.qMin !== pb.qMin) return pa.qMin - pb.qMin;
+  if (pa.aMaj !== pb.aMaj) return pa.aMaj - pb.aMaj;
+  return pa.aMin - pb.aMin;
+}
+
+/**
  * Serialize version parts back to string.
  */
 export function formatVersion(parts: VersionParts): string {

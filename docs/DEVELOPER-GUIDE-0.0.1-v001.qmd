@@ -31,7 +31,7 @@ The full product vision is in the PRD documents; the **SPEC** defines the initia
 | **Deploy** | Vercel |
 | **Requirements** | Node.js 20+ |
 
-Questions are stored on the **filesystem** (local dev) or in **Supabase Storage** (e.g. on Vercel). Code execution for R/Bash questions uses a sandbox; see [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd) for constraints.
+Questions use the **database** as the source of truth (ownership, status, listing). Content is stored on the **filesystem** (local dev) or in **Supabase Storage** (e.g. on Vercel); when using FS, the app can mirror DB metadata in an optional `db_meta.yaml` per version and sync FS with DB (import FS-only, DB wins on conflict). See [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd). Code execution for R/Bash questions uses a sandbox; see [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd) for constraints.
 
 ---
 
@@ -84,6 +84,7 @@ yrS3/
 | [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd) | How to navigate docs and version numbering |
 | [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd) | MVP scope, behaviour, and technical spec |
 | [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd) | Question sets (DB + file-based), take as test |
+| [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd) | DB–FS question sync, dual-write, backup, and `db_meta.yaml` |
 | [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd) | File-based question set layout (`set.yaml`) |
 | [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd) | Install dependencies, env vars, local run, Supabase (local + hosted), deploy to Vercel |
 | [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd) | Question folder layout, `meta.yaml`, prompt file, type-specific files, validation rules |
@@ -126,9 +127,9 @@ The rendered HTML book is in `docs/_book/` after running `quarto render` from `d
 
    Add at least one question (see [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd)); the SETUP guide has a minimal multiple-choice example.
 
-4. **Optional: tests config**
+4. **Question sets and sync**
 
-   Question sets are loaded from the database and/or from the filesystem (see [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd)). Optionally set `QUESTION_SETS_ROOT` to a path for file-based sets; default is `./question-sets`.
+   Question sets are loaded from the database and/or from the filesystem (see [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd)). Optionally set `QUESTION_SETS_ROOT` to a path for file-based sets; default is `./question-sets`. When using FS for questions, set `QUESTION_SYNC_OWNER_ID` (a user UUID) so that FS-only question versions are imported into the DB on first list; see [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd).
 
 5. **Run**
 
@@ -150,6 +151,8 @@ The rendered HTML book is in `docs/_book/` after running `quarto render` from `d
 | `QUESTIONS_ROOT` | No | `./questions` | Local path for question folders |
 | `QUESTIONS_BUCKET` | No | `questions` | Supabase Storage bucket when `QUESTIONS_STORAGE=supabase` |
 | `QUESTION_SETS_ROOT` | No | `./question-sets` | Local path for file-based question sets (set.yaml per folder) |
+| `QUESTION_SYNC_OWNER_ID` | No | — | When using FS for questions: UUID of user to assign when importing FS-only versions into the DB (required for sync import) |
+| `QUESTIONS_FS_BACKUP_ROOT` | No | — | When `QUESTIONS_STORAGE=supabase`: local path to mirror each version for backup (content + db_meta.yaml) |
 | `NEXT_PUBLIC_APP_URL` | No | — | App URL for redirects |
 
 Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#sec-env-vars).
@@ -160,10 +163,10 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 
 - **Routing:** Next.js App Router under `src/app/`. Pages: `/`, `/login`, `/questions`, `/questions/new`, `/author`, `/question-sets`, `/question-sets/new`, `/question-sets/[id]/take`. Legacy `/tests` redirects to `/question-sets`. API routes under `src/app/api/`.
 - **Auth:** Supabase Auth; middleware in `src/middleware.ts`; helpers in `src/lib/auth.ts`; client/server Supabase in `src/lib/supabase/`.
-- **Questions:** Loaded and validated via `src/lib/questions/` (types, parse, validate). Storage is abstracted: `store-fs.ts` for filesystem, `store-supabase.ts` for Supabase Storage; `get-store.ts` picks implementation from `QUESTIONS_STORAGE`. Upload API validates per QUESTION-FORMAT and writes through the store.
+- **Questions:** Loaded and validated via `src/lib/questions/` (types, parse, validate). The **database** is the source of truth for listing and ownership; storage (FS or Supabase) holds content. `store-fs.ts`, `store-supabase.ts`, and `get-store.ts` abstract storage; `store-db.ts` and `sync-questions.ts` handle DB and FS–DB sync. On create/update/approve, the app dual-writes to the DB and to the FS (optional `db_meta.yaml` per version for ownership/status). When using FS and `QUESTION_SYNC_OWNER_ID`, `GET /api/questions` runs sync once (import FS-only, DB wins on conflict) then lists from the DB. See SPEC-DB-FS-QUESTION-SYNC.
 - **Evaluators:** `src/lib/evaluators/` — one module per question type (multiple-choice, short-answer, bash, etc.); each returns score/feedback in a consistent shape. See SPEC for which types are in MVP.
 - **Sandbox:** `src/lib/sandbox.ts` — interface for running user code (e.g. Bash); used by the run-code API and evaluators. SPEC defines isolation and logging requirements.
-- **Question sets:** `src/lib/question-sets/` loads sets from the DB and/or filesystem (QUESTION-SET-FORMAT). Create sets via UI or add `set.yaml` under `question-sets/`. Taking a set as a test creates a test session (table `test_sessions` with `set_id`); answers stored in `answers`.
+- **Question sets:** `src/lib/question-sets/` loads sets from the DB and/or filesystem (QUESTION-SET-FORMAT). Create sets via UI or add `set.yaml` under `question-sets/`. Taking a set as a test creates a test session (table `test_sessions` with `set_id` referencing `question_sets.id`); answers stored in `answers`.
 - **Logging:** `src/lib/logger.ts` — structured audit logs (auth, uploads, test actions, sandbox runs). SPEC defines scope; retention is deployment-specific.
 
 ---
@@ -180,12 +183,14 @@ Full details and deployment notes: [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd#s
 
 ## Database (Supabase) {#sec-database}
 
-Migrations live in `supabase/migrations/`. The initial migration defines:
+Migrations live in `supabase/migrations/`. The schema includes:
 
-- **test_sessions** — user, test_id, attempt_number, started_at, submitted_at, score.
+- **question_sets** — id, title, description, created_at (question set definitions).
+- **question_set_items** — question_set_id, question_logical_id, order (items in a set).
+- **test_sessions** — user_id, set_id (references question_sets.id), attempt_number, started_at, submitted_at, score.
 - **answers** — session_id, question_id, question_version, answer_text, evaluation_json, score, timestamps, keystroke_metrics.
 - **audit_logs** — category, event, user_id, payload (structured logging).
-- **question_versions** — logical_id, version, owner_id, type, title, domain, storage_path, status (pending/approved), proposed_by, created_at. Any authenticated user can insert; owner can update (e.g. approve) and delete. Only approved versions are "official."
+- **question_versions** — logical_id, version, owner_id, type, title, domain, storage_path, status (pending/approved), proposed_by, created_at. Source of truth for listing and ownership; content in storage. Any authenticated user can insert; owner can update (e.g. approve) and delete. Only approved versions are "official."
 - **Storage bucket** `questions` and RLS for read/write by authenticated users.
 
 Apply migrations: `supabase db push` (hosted) or `supabase db reset` (local). RLS policies restrict access per SPEC.

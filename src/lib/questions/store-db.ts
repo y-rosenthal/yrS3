@@ -195,6 +195,20 @@ export async function isOwnerOfQuestion(
 }
 
 /**
+ * List all question version rows (no owner filter). Used for sync and for DB-driven question listing.
+ */
+export async function listAllQuestionVersions(
+  supabase: SupabaseClient
+): Promise<{ data: QuestionVersionRow[]; error: Error | null }> {
+  const { data, error } = await supabase
+    .from("question_versions")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return { data: [], error };
+  return { data: (data ?? []) as QuestionVersionRow[], error: null };
+}
+
+/**
  * List distinct logical_ids for an owner with their latest approved version (one row per logical_id).
  * Only approved versions count as "my questions".
  */

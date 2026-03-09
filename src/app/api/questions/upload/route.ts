@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getQuestionStore } from "@/lib/questions/get-store";
 import { validateQuestionUpload, isValidVersion } from "@/lib/questions";
 import { getQuestionOwner, insertQuestionVersion } from "@/lib/questions/store-db";
+import { dualWriteToFs } from "@/lib/questions/dual-write";
 import yaml from "js-yaml";
 import { logQuestions } from "@/lib/logger";
 
@@ -212,6 +213,16 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    await dualWriteToFs({
+      logicalId,
+      version,
+      dbRow: {
+        owner_id: isNewQuestion ? user.id : questionOwner!,
+        status: isOwner ? "approved" : "pending",
+        proposed_by: isOwner ? null : user.id,
+      },
+      contentFiles: files,
+    });
     // #region agent log
     fetch("http://127.0.0.1:7243/ingest/8ff7ff1e-218b-4b2b-b613-6784eb826cca", {
       method: "POST",

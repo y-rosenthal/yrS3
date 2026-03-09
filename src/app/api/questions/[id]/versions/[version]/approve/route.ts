@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getQuestionVersion, approveVersion, isOwnerOfQuestion } from "@/lib/questions/store-db";
+import { dualWriteToFs } from "@/lib/questions/dual-write";
 
 /**
  * POST /api/questions/[id]/versions/[version]/approve
@@ -36,6 +37,15 @@ export async function POST(
     if (error) {
       return NextResponse.json({ error: "Failed to approve" }, { status: 500 });
     }
+    await dualWriteToFs({
+      logicalId,
+      version,
+      dbRow: {
+        owner_id: row.owner_id,
+        status: "approved",
+        proposed_by: row.proposed_by,
+      },
+    });
     return NextResponse.json({ ok: true, logicalId, version, status: "approved" });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;

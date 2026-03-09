@@ -2,7 +2,7 @@
 
 This document describes the **question module** implementation: how questions are represented, validated, stored, and exposed via API. It is intended for developers and for updating the system when QUESTION-FORMAT or the PRD changes.
 
-**References:** [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd), [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd), [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd).
+**References:** [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd), [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd), [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd), [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd) (DB–FS sync and dual-write).
 
 ---
 
@@ -27,6 +27,10 @@ This document describes the **question module** implementation: how questions ar
 | `src/lib/questions/store-supabase.ts` | Supabase Storage implementation: same versioned path layout. |
 | `src/lib/questions/store-db.ts` | DB layer for `question_versions`: insert, list by owner, get by (logical_id, version), get latest version, ownership check. |
 | `src/lib/questions/get-store.ts` | Returns the appropriate store (FS or Supabase) based on env `QUESTIONS_STORAGE`. |
+| `src/lib/questions/db-meta-fs.ts` | Read/write optional `db_meta.yaml` (owner_id, status, proposed_by) per version folder. |
+| `src/lib/questions/write-to-fs.ts` | Write a full version (content files + db_meta.yaml) to a given FS root (dual-write and sync). |
+| `src/lib/questions/dual-write.ts` | After DB insert/update/approve, write db_meta to FS and optionally full version to backup root. |
+| `src/lib/questions/sync-questions.ts` | Sync FS with DB: import FS-only, DB wins on conflict (move to _conflicts, write DB version). |
 | `src/lib/questions/index.ts` | Re-exports public types and functions. |
 
 ---
@@ -34,8 +38,8 @@ This document describes the **question module** implementation: how questions ar
 ## Storage layout
 
 - **Path pattern:** `{root}/{logical_id}/{version}/` (e.g. `questions/550e8400-e29b-41d4-a716-446655440000/1.0.0.0/`).
-- **Contents per version folder:** `meta.yaml`, `prompt.md` (or `prompt.txt`), and type-specific files (e.g. `options.yaml` for multiple_choice).
-- **Immutability:** Each (logical_id, version) is written once; no overwrite of existing version folders. New versions are new folders.
+- **Contents per version folder:** `meta.yaml`, `prompt.md` (or `prompt.txt`), and type-specific files (e.g. `options.yaml` for multiple_choice). Optionally **db_meta.yaml** (owner_id, status, proposed_by) for app metadata; see SPEC-DB-FS-QUESTION-SYNC.
+- **Immutability:** Each (logical_id, version) is written once; no overwrite of existing version folders. New versions are new folders. Reserved path `_conflicts/` holds FS copies that were overwritten when DB won during sync.
 
 ---
 
@@ -59,7 +63,7 @@ This document describes the **question module** implementation: how questions ar
 | `GET /api/questions/[id]?version=` | Any authenticated | Get question by logical_id. If `version` omitted, latest **approved** from DB then load from storage. |
 | `GET /api/questions/my` | Any authenticated | List current user's questions (latest approved version per logical_id) from DB. |
 | `GET /api/questions/pending` | Any authenticated | List pending versions that the current user (as owner) can approve. |
-| `GET /api/questions` | Any authenticated | List all questions from storage (legacy list view). |
+| `GET /api/questions` | Any authenticated | List all questions from DB (latest approved per logical_id). When storage is FS and QUESTION_SYNC_OWNER_ID is set, sync runs first (import FS-only, DB wins on conflict), then list. |
 | `POST /api/questions/upload` | Any authenticated | Upload files for a version (form: folderName=logicalId, version, files). New question → approved; new version by non-owner → pending. No overwrite. |
 
 ---

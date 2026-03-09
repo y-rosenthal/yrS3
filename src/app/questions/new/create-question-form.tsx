@@ -169,16 +169,7 @@ export function CreateQuestionForm({
           </div>
         )}
         <div>
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-zinc-700">Options *</label>
-            <button
-              type="button"
-              onClick={addOption}
-              className="text-sm text-zinc-600 hover:underline"
-            >
-              Add option
-            </button>
-          </div>
+          <label className="block text-sm font-medium text-zinc-700">Options *</label>
           <ul className="mt-2 space-y-2">
             {options.map((opt, i) => (
               <li key={i} className="flex items-center gap-2 rounded border border-zinc-200 bg-white p-2">
@@ -206,6 +197,13 @@ export function CreateQuestionForm({
               </li>
             ))}
           </ul>
+          <button
+            type="button"
+            onClick={addOption}
+            className="mt-2 text-sm text-zinc-600 hover:underline"
+          >
+            Add option
+          </button>
         </div>
         <button
           type="submit"

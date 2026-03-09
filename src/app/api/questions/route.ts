@@ -6,15 +6,55 @@ import {
   serializeQuestion,
   validateMultipleChoicePayload,
   INITIAL_VERSION,
+  compareVersion,
 } from "@/lib/questions";
-import { insertQuestionVersion } from "@/lib/questions/store-db";
+import { listAllQuestionVersions, insertQuestionVersion } from "@/lib/questions/store-db";
+import { dualWriteToFs } from "@/lib/questions/dual-write";
+import { syncFsWithDb } from "@/lib/questions/sync-questions";
 import { logQuestions } from "@/lib/logger";
+
+/** Shared promise so concurrent GETs all wait for the same sync before listing (avoids race where sync is in progress but others read stale DB). */
+let syncPromise: Promise<void> | null = null;
 
 export async function GET() {
   try {
     const user = await requireUser();
-    const store = await getQuestionStore();
-    const list = await store.list();
+    const supabase = await createClient();
+
+    if (
+      process.env.QUESTIONS_STORAGE !== "supabase" &&
+      process.env.QUESTION_SYNC_OWNER_ID
+    ) {
+      syncPromise =
+        syncPromise ??
+        syncFsWithDb(supabase)
+          .then(() => undefined)
+          .catch((e) => {
+            syncPromise = null;
+            throw e;
+          });
+      await syncPromise;
+    }
+
+    const { data: allRows, error } = await listAllQuestionVersions(supabase);
+    if (error) {
+      return NextResponse.json({ error: "Failed to list questions" }, { status: 500 });
+    }
+    const approved = (allRows ?? []).filter((r) => r.status === "approved");
+    const byLogicalId = new Map<string, (typeof approved)[0]>();
+    approved.sort((a, b) => compareVersion(b.version, a.version));
+    for (const row of approved) {
+      if (!byLogicalId.has(row.logical_id)) {
+        byLogicalId.set(row.logical_id, row);
+      }
+    }
+    const list = Array.from(byLogicalId.values()).map((r) => ({
+      id: r.logical_id,
+      type: r.type,
+      version: r.version,
+      title: r.title ?? undefined,
+      domain: r.domain ?? undefined,
+    }));
     logQuestions("metadata_list", user.id, { count: list.length });
     return NextResponse.json(list);
   } catch (e) {
@@ -79,6 +119,12 @@ export async function POST(request: NextRequest) {
     if (dbError) {
       return NextResponse.json({ error: "Database insert failed" }, { status: 500 });
     }
+    await dualWriteToFs({
+      logicalId,
+      version,
+      dbRow: { owner_id: user.id, status: "approved", proposed_by: null },
+      contentFiles: files,
+    });
     return NextResponse.json({ logicalId, version });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;

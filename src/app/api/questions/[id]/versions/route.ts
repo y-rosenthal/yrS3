@@ -13,6 +13,7 @@ import {
   getQuestionOwner,
   insertQuestionVersion,
 } from "@/lib/questions/store-db";
+import { dualWriteToFs } from "@/lib/questions/dual-write";
 
 export async function POST(
   request: NextRequest,
@@ -97,6 +98,16 @@ export async function POST(
     if (dbError) {
       return NextResponse.json({ error: "Database insert failed" }, { status: 500 });
     }
+    await dualWriteToFs({
+      logicalId,
+      version: nextVersion,
+      dbRow: {
+        owner_id: ownerId,
+        status: isOwner ? "approved" : "pending",
+        proposed_by: isOwner ? null : user.id,
+      },
+      contentFiles: files,
+    });
     return NextResponse.json({
       logicalId,
       version: nextVersion,
