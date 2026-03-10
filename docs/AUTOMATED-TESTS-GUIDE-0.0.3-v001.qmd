@@ -107,7 +107,7 @@ These rules reduce brittleness and keep the suite useful when refactoring or whe
 
 ## Configuration and layout {#sec-config}
 
-- **Config file:** `vitest.config.ts` (or `vitest.config.mts`) at repo root. Include `src/**/*.test.ts` and `src/**/*.test.tsx`; preserve path alias `@/*` → `./src/*`; exclude `node_modules` and `.next`.
+- **Config file:** `vitest.config.mts` at repo root (ESM) so Vitest uses Vite’s ESM API and avoids the CJS deprecation warning. Scripts pass `--config vitest.config.mts`. Include `src/**/*.test.ts` and `src/**/*.test.tsx`; preserve path alias `@/*` → `./src/*`; exclude `node_modules` and `.next`.
 - **Placement:** Colocated `*.test.ts` next to the module under test (e.g. `version.test.ts` beside `version.ts`).
 - **Scripts:** `package.json` should define `"test": "vitest"` and `"test:run": "vitest run"`.
 
