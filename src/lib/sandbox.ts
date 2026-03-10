@@ -10,8 +10,18 @@ export interface RunResult {
   timedOut?: boolean;
 }
 
+export interface RunBashOptions {
+  /** Working directory for the bash process (e.g. extracted zip root). */
+  cwd?: string;
+}
+
 export interface SandboxRunner {
-  runBash(code: string, stdin?: string, timeoutMs?: number): Promise<RunResult>;
+  runBash(
+    code: string,
+    stdin?: string,
+    timeoutMs?: number,
+    options?: RunBashOptions
+  ): Promise<RunResult>;
   runR?(code: string, timeoutMs?: number): Promise<RunResult>;
 }
 
@@ -23,14 +33,17 @@ export function createLocalBashRunner(): SandboxRunner {
     async runBash(
       code: string,
       stdin?: string,
-      timeoutMs: number = DEFAULT_TIMEOUT_MS
+      timeoutMs: number = DEFAULT_TIMEOUT_MS,
+      options?: RunBashOptions
     ): Promise<RunResult> {
       const { spawn } = await import("child_process");
+      const spawnOpts: { stdio: ("pipe")[]; env: NodeJS.ProcessEnv; cwd?: string } = {
+        stdio: ["pipe", "pipe", "pipe"],
+        env: { ...process.env, PATH: "/usr/bin:/bin" },
+      };
+      if (options?.cwd) spawnOpts.cwd = options.cwd;
       return new Promise((resolve) => {
-        const proc = spawn("bash", ["-c", code], {
-          stdio: ["pipe", "pipe", "pipe"],
-          env: { ...process.env, PATH: "/usr/bin:/bin" },
-        });
+        const proc = spawn("bash", ["-c", code], spawnOpts);
         let stdout = "";
         let stderr = "";
         proc.stdout?.on("data", (d) => (stdout += d.toString()));

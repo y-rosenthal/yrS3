@@ -19,6 +19,7 @@ export interface SetYaml {
   title?: string;
   description?: string;
   question_logical_ids?: unknown;
+  sandbox_zip_ref?: string;
 }
 
 function parseSetYaml(content: string, folderName: string): QuestionSet | null {
@@ -39,8 +40,17 @@ function parseSetYaml(content: string, folderName: string): QuestionSet | null {
         ? raw.description.trim()
         : null,
     questionLogicalIds: ids,
+    sandboxZipRef:
+      typeof raw.sandbox_zip_ref === "string" && raw.sandbox_zip_ref.trim()
+        ? raw.sandbox_zip_ref.trim()
+        : null,
     source: "file",
   };
+}
+
+/** Returns the filesystem path to a question set folder (for resolving sandbox zip etc.). */
+export function getQuestionSetFolderPath(id: string): string {
+  return path.join(getQuestionSetsRoot(), id);
 }
 
 export async function listQuestionSetsFromFs(): Promise<QuestionSetListItem[]> {

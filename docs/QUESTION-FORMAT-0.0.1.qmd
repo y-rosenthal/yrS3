@@ -30,12 +30,13 @@ Minimal metadata that identifies and classifies the question. Keep this file sho
 
 **Optional (recommended):**
 
-| Field         | Type   | Description |
-|---------------|--------|-------------|
-| `title`       | string | Short title for admin UIs. |
-| `domain`      | string | Knowledge domain (e.g. `bash`, `r`, `regex`, `excel`, `html`, `css`). |
-| `created_at`  | string | ISO 8601 date (user or system on first upload). |
-| `modified_at` | string | ISO 8601 date (system on each modification upload). |
+| Field             | Type   | Description |
+|-------------------|--------|-------------|
+| `title`           | string | Short title for admin UIs. |
+| `domain`          | string | Knowledge domain (e.g. `bash`, `r`, `regex`, `excel`, `html`, `css`). |
+| `sandbox_zip_ref` | string | (bash only) Filename or path to a zip for the sandbox folder tree. |
+| `created_at`      | string | ISO 8601 date (user or system on first upload). |
+| `modified_at`     | string | ISO 8601 date (system on each modification upload). |
 
 **Version semantics (four-part, required from day one):**
 
@@ -137,8 +138,14 @@ Same as short answer: **`expected.yaml`** and/or **`rubric.yaml`**. Use `rubric.
 
 - **`solution.R`** or **`solution.sh`** (required) — reference solution. Used to generate or compare outputs.
 - **`tests.yaml`** (optional) — explicit test inputs/scenarios. If absent, the system may derive tests from the solution or another spec.
+- **`meta.yaml`** may include optional **`sandbox_zip_ref`** (bash only) — filename or path to a zip containing the sandbox folder tree. The system extracts this zip and runs the script with that directory as the working directory; per-test `setup` in `tests.yaml` still runs after the zip is applied.
 
 Keep `tests.yaml` as one scenario per list item so tests can be added or removed without editing a big structure.
+
+### Bash predict output (`type: bash_predict_output`)
+
+- **`script.sh`** (required) — the script shown to the student. The student predicts its output without running it.
+- **`expected.yaml`** (required) — stored expected output (e.g. `answer: "..."`) for **editor review**. At grading time the system runs the script and uses the **computed** output as the key; if it differs from the stored value, the system logs a mismatch and uses the computed value for grading.
 
 Example for Bash:
 
@@ -178,16 +185,17 @@ Exact keys (e.g. `stdin`, `inputs`, `setup`) depend on the evaluator; the format
 
 Use lowercase. Canonical list:
 
-| Type              | Description                    |
-|-------------------|--------------------------------|
-| `multiple_choice` | Single correct choice          |
-| `short_answer`    | Short text, single/multiple expected answers or rubric |
-| `long_answer`     | Longer text, rubric or expected answer |
-| `r`               | R code                         |
-| `bash`            | Bash commands/script           |
-| `excel_formula`   | (optional in MVP)              |
-| `html`            | (optional in MVP)              |
-| `css`             | (optional in MVP)              |
+| Type                  | Description                    |
+|-----------------------|--------------------------------|
+| `multiple_choice`     | Single correct choice          |
+| `short_answer`        | Short text, single/multiple expected answers or rubric |
+| `long_answer`         | Longer text, rubric or expected answer |
+| `r`                   | R code                         |
+| `bash`                | Bash (write code; auto-check output) |
+| `bash_predict_output` | Bash (predict output; no terminal; grading uses runtime-computed key) |
+| `excel_formula`       | (optional in MVP)              |
+| `html`                | (optional in MVP)              |
+| `css`                 | (optional in MVP)              |
 
 The SPEC defines which types are implemented in the initial MVP.
 

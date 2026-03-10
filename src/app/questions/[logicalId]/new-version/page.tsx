@@ -1,35 +1,27 @@
+import React from "react";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getQuestionStore } from "@/lib/questions/get-store";
 import { getLatestQuestionVersion } from "@/lib/questions/store-db";
 import { CreateQuestionForm } from "../../new/create-question-form";
+import { CreateBashForm } from "../../new/create-bash-form";
+import { CreateBashPredictOutputForm } from "../../new/create-bash-predict-output-form";
 import { notFound } from "next/navigation";
 
 type Props = { params: Promise<{ logicalId: string }> };
 
 export default async function NewVersionPage({ params }: Props) {
-  const user = await requireUser();
+  await requireUser();
   const { logicalId } = await params;
   const supabase = await createClient();
   const { data: row, error } = await getLatestQuestionVersion(supabase, logicalId);
   if (error || !row) notFound();
   const store = await getQuestionStore();
   const question = await store.get(logicalId, row.version);
-  if (!question || question.type !== "multiple_choice") notFound();
+  if (!question) notFound();
 
-  const initialData = {
-    title: question.title,
-    domain: question.domain,
-    prompt: question.prompt,
-    options: question.options?.map((o) => ({
-      id: o.id,
-      text: o.text,
-      correct: o.id === question.correctId || o.correct === true,
-    })),
-  };
-
-  return (
+  const wrapper = (form: React.ReactNode) => (
     <div className="min-h-screen bg-zinc-50 p-8">
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between">
@@ -42,13 +34,65 @@ export default async function NewVersionPage({ params }: Props) {
           Current version: {row.version}. Edit below and choose how the version should bump. If you
           are not the question owner, your new version will be pending until they approve it.
         </p>
-        <CreateQuestionForm
-          className="mt-6"
-          logicalId={logicalId}
-          versionBump
-          initialData={initialData}
-        />
+        <div className="mt-6">{form}</div>
       </div>
     </div>
   );
+
+  if (question.type === "multiple_choice") {
+    const initialData = {
+      title: question.title,
+      domain: question.domain,
+      prompt: question.prompt,
+      options: question.options?.map((o) => ({
+        id: o.id,
+        text: o.text,
+        correct: o.id === question.correctId || o.correct === true,
+      })),
+    };
+    return wrapper(
+      <CreateQuestionForm
+        logicalId={logicalId}
+        versionBump
+        initialData={initialData}
+      />
+    );
+  }
+
+  if (question.type === "bash") {
+    const initialData = {
+      title: question.title,
+      domain: question.domain,
+      prompt: question.prompt,
+      solutionScript: question.solutionScript,
+      tests: question.tests,
+      sandboxZipRef: question.sandboxZipRef,
+    };
+    return wrapper(
+      <CreateBashForm
+        logicalId={logicalId}
+        versionBump
+        initialData={initialData}
+      />
+    );
+  }
+
+  if (question.type === "bash_predict_output") {
+    const initialData = {
+      title: question.title,
+      domain: question.domain,
+      prompt: question.prompt,
+      scriptSource: question.scriptSource,
+      expectedOutput: question.expected?.answer ?? "",
+    };
+    return wrapper(
+      <CreateBashPredictOutputForm
+        logicalId={logicalId}
+        versionBump
+        initialData={initialData}
+      />
+    );
+  }
+
+  notFound();
 }

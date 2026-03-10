@@ -169,5 +169,15 @@ export function createFsQuestionStore(): QuestionStore {
         return false;
       }
     },
+
+    async getVersionFolderPath(logicalId: string, version: string): Promise<string | null> {
+      const dir = versionDir(root, logicalId, version);
+      try {
+        const stat = await fs.stat(dir);
+        return stat.isDirectory() ? dir : null;
+      } catch {
+        return null;
+      }
+    },
   };
 }

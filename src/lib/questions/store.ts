@@ -17,4 +17,6 @@ export interface QuestionStore {
   ): Promise<string | null>;
   /** Check if (logicalId, version) exists. */
   has(logicalId: string, version: string): Promise<boolean>;
+  /** Optional: path to version folder (FS store only; for sandbox zip resolution). */
+  getVersionFolderPath?(logicalId: string, version: string): Promise<string | null>;
 }

@@ -1,0 +1,5 @@
+id: sample-bash-predict-002
+type: bash_predict_output
+version: "1.0.0.0"
+title: Predict ls output
+domain: bash

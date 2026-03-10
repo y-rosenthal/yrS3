@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { CreateQuestionForm } from "./create-question-form";
+import { CreateQuestionByType } from "./create-question-by-type";
 
 export default async function NewQuestionPage() {
   await requireUser();
@@ -15,9 +15,9 @@ export default async function NewQuestionPage() {
           </Link>
         </div>
         <p className="mt-2 text-zinc-600">
-          Multiple choice only for now. Add prompt and options; mark exactly one as correct.
+          Choose the question type: multiple choice, Bash (write code, auto-check), or Bash predict output (explain output, no terminal).
         </p>
-        <CreateQuestionForm className="mt-6" />
+        <CreateQuestionByType className="mt-6" />
       </div>
     </div>
   );

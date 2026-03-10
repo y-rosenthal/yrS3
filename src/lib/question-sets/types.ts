@@ -8,6 +8,8 @@ export interface QuestionSet {
   title: string;
   description?: string | null;
   questionLogicalIds: string[];
+  /** Optional zip filename (or path) for shared sandbox folder tree for bash questions in this set. */
+  sandboxZipRef?: string | null;
   /** When listing: whether this set came from DB or filesystem. */
   source?: "db" | "file";
 }

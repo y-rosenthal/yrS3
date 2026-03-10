@@ -1,0 +1,5 @@
+id: sample-bash-001
+type: bash
+version: "1.0.0.0"
+title: List files in current directory
+domain: bash

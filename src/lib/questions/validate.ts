@@ -147,6 +147,14 @@ export function validateTypeSpecificFiles(
         errors.push("type 'bash' requires solution.sh");
       }
       break;
+    case "bash_predict_output":
+      if (!fileNames.has("script.sh")) {
+        errors.push("type 'bash_predict_output' requires script.sh");
+      }
+      if (!fileNames.has("expected.yaml")) {
+        errors.push("type 'bash_predict_output' requires expected.yaml");
+      }
+      break;
     default:
       break;
   }
@@ -181,6 +189,71 @@ export function validateMultipleChoicePayload(payload: {
   } else {
     const optResult = validateOptionsYaml(payload.options, "multiple_choice");
     if (!optResult.valid) errors.push(...optResult.errors);
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * sandboxZipRef must be a simple filename only (no path separators or traversal).
+ * Prevents path traversal when resolving zip path under the question version folder.
+ */
+export function isSafeSandboxZipRef(ref: string): boolean {
+  if (typeof ref !== "string" || !ref.trim()) return false;
+  const trimmed = ref.trim();
+  if (trimmed.includes("..") || trimmed.includes("/") || trimmed.includes("\\")) {
+    return false;
+  }
+  return true;
+}
+
+/** Validate bash (Type A) payload (API create/new version). */
+export function validateBashPayload(payload: {
+  type?: unknown;
+  prompt?: unknown;
+  solutionScript?: unknown;
+  tests?: unknown;
+  sandboxZipRef?: unknown;
+}): ValidationResult {
+  const errors: string[] = [];
+  if (payload.type !== "bash") {
+    errors.push("type must be 'bash'");
+  }
+  if (typeof payload.prompt !== "string" || !payload.prompt.trim()) {
+    errors.push("prompt is required and must be a non-empty string");
+  }
+  if (typeof payload.solutionScript !== "string" || !payload.solutionScript.trim()) {
+    errors.push("solutionScript is required and must be a non-empty string");
+  }
+  if (payload.tests != null && !Array.isArray(payload.tests)) {
+    errors.push("tests must be an array when provided");
+  }
+  if (payload.sandboxZipRef != null && payload.sandboxZipRef !== "") {
+    if (typeof payload.sandboxZipRef !== "string" || !isSafeSandboxZipRef(payload.sandboxZipRef)) {
+      errors.push("sandboxZipRef must be a simple filename (no path separators or '..')");
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+/** Validate bash_predict_output (Type B) payload (API create/new version). */
+export function validateBashPredictOutputPayload(payload: {
+  type?: unknown;
+  prompt?: unknown;
+  scriptSource?: unknown;
+  expectedOutput?: unknown;
+}): ValidationResult {
+  const errors: string[] = [];
+  if (payload.type !== "bash_predict_output") {
+    errors.push("type must be 'bash_predict_output'");
+  }
+  if (typeof payload.prompt !== "string" || !payload.prompt.trim()) {
+    errors.push("prompt is required and must be a non-empty string");
+  }
+  if (typeof payload.scriptSource !== "string" || !payload.scriptSource.trim()) {
+    errors.push("scriptSource is required and must be a non-empty string");
+  }
+  if (typeof payload.expectedOutput !== "string") {
+    errors.push("expectedOutput is required (may be empty string)");
   }
   return { valid: errors.length === 0, errors };
 }

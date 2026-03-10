@@ -2,11 +2,18 @@ import type { ParsedQuestion } from "@/lib/questions/types";
 import type { EvaluationResult } from "./types";
 import { getSandboxRunner } from "@/lib/sandbox";
 
+export interface EvaluationContext {
+  /** Working directory for bash runs (e.g. extracted sandbox zip root). */
+  sandboxCwd?: string;
+}
+
 export async function evaluateBash(
   question: ParsedQuestion,
-  answer: string
+  answer: string,
+  context?: EvaluationContext
 ): Promise<EvaluationResult> {
   const runner = getSandboxRunner();
+  const runOpts = context?.sandboxCwd ? { cwd: context.sandboxCwd } : undefined;
   const maxScore = 1;
   const tests = question.tests ?? [{ description: "Default", stdin: "" }];
   const solutionOutputs: string[] = [];
@@ -23,7 +30,7 @@ export async function evaluateBash(
     const stdin = test.stdin ?? "";
     const setup = test.setup ? test.setup + "\n" : "";
     const fullScript = setup + solutionScript;
-    const result = await runner.runBash(fullScript, stdin, 5000);
+    const result = await runner.runBash(fullScript, stdin, 5000, runOpts);
     solutionOutputs.push(result.stdout.trim());
   }
   let passed = 0;
@@ -31,7 +38,7 @@ export async function evaluateBash(
   for (let i = 0; i < tests.length; i++) {
     const stdin = tests[i].stdin ?? "";
     const setup = tests[i].setup ? tests[i].setup + "\n" : "";
-    const userResult = await runner.runBash(setup + answer, stdin, 5000);
+    const userResult = await runner.runBash(setup + answer, stdin, 5000, runOpts);
     const expected = solutionOutputs[i];
     const actual = userResult.stdout.trim();
     if (expected === actual) {

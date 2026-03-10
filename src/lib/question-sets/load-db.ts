@@ -11,6 +11,7 @@ export interface QuestionSetRow {
   description: string | null;
   owner_id: string | null;
   created_at: string;
+  sandbox_zip_ref?: string | null;
 }
 
 export interface QuestionSetItemRow {
@@ -25,7 +26,7 @@ export async function listQuestionSetsFromDb(
 ): Promise<QuestionSetListItem[]> {
   const { data: sets, error } = await supabase
     .from("question_sets")
-    .select("id, title, description")
+    .select("id, title, description, sandbox_zip_ref")
     .order("created_at", { ascending: false });
   if (error || !sets?.length) return [];
 
@@ -53,7 +54,7 @@ export async function getQuestionSetFromDb(
 ): Promise<QuestionSet | null> {
   const { data: row, error } = await supabase
     .from("question_sets")
-    .select("id, title, description")
+    .select("id, title, description, sandbox_zip_ref")
     .eq("id", id)
     .maybeSingle();
   if (error || !row) return null;
@@ -67,12 +68,14 @@ export async function getQuestionSetFromDb(
 
   const questionLogicalIds = (items ?? [])
     .map((i) => (i as QuestionSetItemRow).question_logical_id);
+  const r = row as QuestionSetRow;
 
   return {
-    id: (row as QuestionSetRow).id,
-    title: (row as QuestionSetRow).title,
-    description: (row as QuestionSetRow).description,
+    id: r.id,
+    title: r.title,
+    description: r.description,
     questionLogicalIds,
+    sandboxZipRef: r.sandbox_zip_ref ?? null,
     source: "db",
   };
 }
@@ -88,6 +91,7 @@ export async function insertQuestionSet(
     description?: string | null;
     questionLogicalIds: string[];
     ownerId?: string | null;
+    sandboxZipRef?: string | null;
   }
 ): Promise<QuestionSet | null> {
   const { data: setRow, error: setError } = await supabase
@@ -96,8 +100,9 @@ export async function insertQuestionSet(
       title: payload.title,
       description: payload.description ?? null,
       owner_id: payload.ownerId ?? null,
+      sandbox_zip_ref: payload.sandboxZipRef ?? null,
     })
-    .select("id, title, description")
+    .select("id, title, description, sandbox_zip_ref")
     .single();
   if (setError || !setRow) return null;
 
@@ -115,11 +120,13 @@ export async function insertQuestionSet(
     }
   }
 
+  const r = setRow as QuestionSetRow;
   return {
     id: setId,
-    title: (setRow as QuestionSetRow).title,
-    description: (setRow as QuestionSetRow).description,
+    title: r.title,
+    description: r.description,
     questionLogicalIds: payload.questionLogicalIds,
+    sandboxZipRef: r.sandbox_zip_ref ?? null,
     source: "db",
   };
 }

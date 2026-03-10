@@ -188,6 +188,27 @@ export function TakeSetClient({ setId, title }: Props) {
               }
             />
           )}
+          {q.type === "bash_predict_output" && (
+            <>
+              {q.scriptSource && (
+                <div className="mb-3 rounded border border-zinc-200 bg-zinc-50 p-3">
+                  <p className="mb-1 text-sm font-medium text-zinc-600">Script (predict its output):</p>
+                  <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm text-zinc-800">
+                    {q.scriptSource}
+                  </pre>
+                </div>
+              )}
+              <textarea
+                value={answers[q.id] ?? ""}
+                onChange={(e) =>
+                  setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                }
+                rows={6}
+                className="w-full rounded border border-zinc-300 px-3 py-2 font-mono text-sm text-zinc-800"
+                placeholder="Enter the output the script would produce (no terminal access)"
+              />
+            </>
+          )}
         </div>
       </div>
       <div className="mt-6 flex gap-4">

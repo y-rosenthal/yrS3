@@ -1,0 +1,3 @@
+- description: Default
+  stdin: ""
+  setup: "mkdir -p tmpdir && cd tmpdir && touch a b c"

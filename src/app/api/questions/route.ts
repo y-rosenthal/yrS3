@@ -5,6 +5,8 @@ import { getQuestionStore } from "@/lib/questions/get-store";
 import {
   serializeQuestion,
   validateMultipleChoicePayload,
+  validateBashPayload,
+  validateBashPredictOutputPayload,
   INITIAL_VERSION,
   compareVersion,
 } from "@/lib/questions";
@@ -66,18 +68,52 @@ export async function GET() {
   }
 }
 
+function validatePayload(payload: Record<string, unknown>): { valid: boolean; errors: string[] } {
+  const type = payload.type;
+  if (type === "multiple_choice") return validateMultipleChoicePayload(payload);
+  if (type === "bash") return validateBashPayload(payload);
+  if (type === "bash_predict_output") return validateBashPredictOutputPayload(payload);
+  return { valid: false, errors: ["type must be multiple_choice, bash, or bash_predict_output"] };
+}
+
+function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
+  const type = body.type;
+  if (type === "bash") {
+    return {
+      type: "bash",
+      title: body.title,
+      domain: body.domain,
+      prompt: body.prompt,
+      solutionScript: body.solutionScript,
+      tests: body.tests,
+      sandboxZipRef: body.sandboxZipRef,
+    };
+  }
+  if (type === "bash_predict_output") {
+    return {
+      type: "bash_predict_output",
+      title: body.title,
+      domain: body.domain,
+      prompt: body.prompt,
+      scriptSource: body.scriptSource,
+      expectedOutput: body.expectedOutput,
+    };
+  }
+  return {
+    type: "multiple_choice",
+    title: body.title,
+    domain: body.domain,
+    prompt: body.prompt,
+    options: body.options,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
-    const body = await request.json();
-    const payload = body as {
-      type?: string;
-      title?: string;
-      domain?: string;
-      prompt?: string;
-      options?: Array<{ id: string; text: string; correct?: boolean }>;
-    };
-    const validation = validateMultipleChoicePayload(payload);
+    const body = (await request.json()) as Record<string, unknown>;
+    const payload = buildPayload(body);
+    const validation = validatePayload(payload);
     if (!validation.valid) {
       return NextResponse.json(
         { error: "Validation failed", details: validation.errors },
@@ -88,13 +124,7 @@ export async function POST(request: NextRequest) {
     const version = INITIAL_VERSION;
     const now = new Date().toISOString();
     const { files, error: serError } = serializeQuestion(
-      {
-        type: "multiple_choice",
-        title: payload.title,
-        domain: payload.domain,
-        prompt: payload.prompt!,
-        options: payload.options!,
-      },
+      payload as Parameters<typeof serializeQuestion>[0],
       { logicalId, version, created_at: now, modified_at: now }
     );
     if (serError) {
@@ -111,9 +141,9 @@ export async function POST(request: NextRequest) {
       logical_id: logicalId,
       version,
       owner_id: user.id,
-      type: "multiple_choice",
-      title: payload.title ?? null,
-      domain: payload.domain ?? null,
+      type: (payload as { type: string }).type,
+      title: (payload as { title?: string }).title ?? null,
+      domain: (payload as { domain?: string }).domain ?? null,
       storage_path: storagePath,
     });
     if (dbError) {

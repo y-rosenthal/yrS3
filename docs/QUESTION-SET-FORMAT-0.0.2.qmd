@@ -38,6 +38,7 @@ Each question set folder MUST contain a file named **`set.yaml`**. This file hol
 | Field | Type | Description |
 |-------|------|-------------|
 | `description` | string | Short description of the set (e.g. for the list UI). |
+| `sandbox_zip_ref` | string | Filename or path to a zip containing a shared sandbox folder tree for bash (Type A) questions in this set. When present, it can be used as the default for questions that do not define their own `sandbox_zip_ref`. |
 | `created_at` | string | ISO 8601 date (user or system). |
 | `modified_at` | string | ISO 8601 date (user or system on edit). |
 

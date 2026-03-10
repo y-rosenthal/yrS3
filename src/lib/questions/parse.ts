@@ -118,6 +118,20 @@ export function parseQuestion(
         question.tests = [];
       }
     }
+    if (meta.sandbox_zip_ref) question.sandboxZipRef = meta.sandbox_zip_ref;
+  }
+
+  if (meta.type === "bash_predict_output") {
+    const scriptFile = files.find((f) => f.name === "script.sh");
+    if (scriptFile) question.scriptSource = scriptFile.content;
+    const expFile = files.find((f) => f.name === "expected.yaml");
+    if (expFile) {
+      try {
+        question.expected = yaml.load(expFile.content) as ExpectedYaml;
+      } catch {
+        // ignore
+      }
+    }
   }
 
   return { question };

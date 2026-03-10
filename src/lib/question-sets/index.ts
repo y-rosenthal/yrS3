@@ -50,6 +50,7 @@ export async function resolveSetIdForSession(
     title: set.title,
     description: set.description,
     questionLogicalIds: set.questionLogicalIds,
+    sandboxZipRef: set.sandboxZipRef ?? undefined,
   });
   if (!created) return null;
   return { setId: created.id, questionLogicalIds: created.questionLogicalIds };

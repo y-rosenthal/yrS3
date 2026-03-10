@@ -8,6 +8,7 @@ export const QUESTION_TYPES = [
   "long_answer",
   "r",
   "bash",
+  "bash_predict_output",
   "excel_formula",
   "html",
   "css",
@@ -23,6 +24,8 @@ export interface MetaYaml {
   domain?: string;
   created_at?: string;
   modified_at?: string;
+  /** bash: optional reference to zip file for sandbox folder tree (filename or path). */
+  sandbox_zip_ref?: string;
 }
 
 export interface MultipleChoiceOption {
@@ -73,6 +76,10 @@ export interface ParsedQuestion {
   rubric?: RubricYaml;
   solutionScript?: string; // bash: solution.sh content, r: solution.R content
   tests?: TestCaseYaml[];
+  /** bash: optional ref to zip for sandbox folder tree (simple filename only; no path separators or '..'). */
+  sandboxZipRef?: string;
+  /** bash_predict_output: script shown to student; grading uses run output. */
+  scriptSource?: string;
   /** Raw file names present (for storage) */
   _files?: string[];
 }
@@ -102,5 +109,29 @@ export interface MultipleChoicePayload {
   options: MultipleChoiceOption[];
 }
 
-/** Union of payloads per question type (MVP: multiple_choice only). */
-export type QuestionPayload = MultipleChoicePayload;
+/** Payload for creating or updating a bash (Type A: write code) question. */
+export interface BashPayload {
+  type: "bash";
+  title?: string;
+  domain?: string;
+  prompt: string;
+  solutionScript: string;
+  tests?: TestCaseYaml[];
+  sandboxZipRef?: string;
+}
+
+/** Payload for creating or updating a bash_predict_output (Type B: predict output) question. */
+export interface BashPredictOutputPayload {
+  type: "bash_predict_output";
+  title?: string;
+  domain?: string;
+  prompt: string;
+  scriptSource: string;
+  expectedOutput: string;
+}
+
+/** Union of payloads per question type. */
+export type QuestionPayload =
+  | MultipleChoicePayload
+  | BashPayload
+  | BashPredictOutputPayload;

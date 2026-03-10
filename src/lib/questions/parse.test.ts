@@ -173,4 +173,40 @@ describe("parseQuestion", () => {
     expect(result.error).toBeUndefined();
     expect(result.question.expected).toEqual({ answer: "42" });
   });
+
+  it("parses bash_predict_output with script.sh and expected.yaml", () => {
+    const result = parseQuestion(
+      "bpo",
+      files([
+        {
+          name: "meta.yaml",
+          content: "id: bpo\ntype: bash_predict_output\nversion: 1.0.0.0\n",
+        },
+        { name: "prompt.md", content: "What output?" },
+        { name: "script.sh", content: "echo hello" },
+        { name: "expected.yaml", content: 'answer: "hello"\n' },
+      ])
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.question.type).toBe("bash_predict_output");
+    expect(result.question.scriptSource).toBe("echo hello");
+    expect(result.question.expected).toEqual({ answer: "hello" });
+  });
+
+  it("parses bash with sandbox_zip_ref from meta", () => {
+    const result = parseQuestion(
+      "b",
+      files([
+        {
+          name: "meta.yaml",
+          content: 'id: b\ntype: bash\nversion: 1.0.0.0\nsandbox_zip_ref: tree.zip\n',
+        },
+        { name: "prompt.md", content: "Do something" },
+        { name: "solution.sh", content: "ls -la" },
+      ])
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.question.type).toBe("bash");
+    expect(result.question.sandboxZipRef).toBe("tree.zip");
+  });
 });

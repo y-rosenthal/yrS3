@@ -5,7 +5,10 @@ import {
   validatePromptPresence,
   validateTypeSpecificFiles,
   validateMultipleChoicePayload,
+  validateBashPayload,
+  validateBashPredictOutputPayload,
   validateQuestionUpload,
+  isSafeSandboxZipRef,
 } from "./validate";
 
 describe("validateMetaYaml", () => {
@@ -209,11 +212,161 @@ describe("validateTypeSpecificFiles", () => {
     expect(result.errors).toContain("type 'bash' requires solution.sh");
   });
 
+  it("requires script.sh and expected.yaml for type bash_predict_output", () => {
+    const result = validateTypeSpecificFiles("bash_predict_output", [{ name: "meta.yaml" }]);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("type 'bash_predict_output' requires script.sh");
+    expect(result.errors).toContain("type 'bash_predict_output' requires expected.yaml");
+  });
+
+  it("passes for bash_predict_output with script.sh and expected.yaml", () => {
+    const result = validateTypeSpecificFiles("bash_predict_output", [
+      { name: "meta.yaml" },
+      { name: "script.sh" },
+      { name: "expected.yaml" },
+    ]);
+    expect(result.valid).toBe(true);
+  });
+
   it("passes for short_answer with no extra files required", () => {
     expect(validateTypeSpecificFiles("short_answer", [])).toEqual({
       valid: true,
       errors: [],
     });
+  });
+});
+
+describe("validateBashPayload", () => {
+  it("requires type bash", () => {
+    const result = validateBashPayload({
+      type: "multiple_choice",
+      prompt: "Q",
+      solutionScript: "echo x",
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("type must be 'bash'");
+  });
+
+  it("requires non-empty prompt and solutionScript", () => {
+    expect(validateBashPayload({ type: "bash", prompt: "", solutionScript: "x" }).valid).toBe(false);
+    expect(validateBashPayload({ type: "bash", prompt: "Q", solutionScript: "" }).valid).toBe(false);
+  });
+
+  it("returns valid for correct payload", () => {
+    const result = validateBashPayload({
+      type: "bash",
+      prompt: "Write ls",
+      solutionScript: "ls -1",
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects sandboxZipRef with path separators or traversal", () => {
+    expect(
+      validateBashPayload({
+        type: "bash",
+        prompt: "Q",
+        solutionScript: "ls",
+        sandboxZipRef: "../evil.zip",
+      }).valid
+    ).toBe(false);
+    expect(
+      validateBashPayload({
+        type: "bash",
+        prompt: "Q",
+        solutionScript: "ls",
+        sandboxZipRef: "subdir/tree.zip",
+      }).valid
+    ).toBe(false);
+    expect(
+      validateBashPayload({
+        type: "bash",
+        prompt: "Q",
+        solutionScript: "ls",
+        sandboxZipRef: "..\\etc\\passwd",
+      }).valid
+    ).toBe(false);
+  });
+
+  it("accepts valid sandboxZipRef (simple filename)", () => {
+    const result = validateBashPayload({
+      type: "bash",
+      prompt: "Q",
+      solutionScript: "ls",
+      sandboxZipRef: "tree.zip",
+    });
+    expect(result.valid).toBe(true);
+  });
+});
+
+describe("isSafeSandboxZipRef", () => {
+  it("returns false for path traversal or separators", () => {
+    expect(isSafeSandboxZipRef("../x.zip")).toBe(false);
+    expect(isSafeSandboxZipRef("a/b.zip")).toBe(false);
+    expect(isSafeSandboxZipRef("a\\b.zip")).toBe(false);
+    expect(isSafeSandboxZipRef("..")).toBe(false);
+  });
+
+  it("returns true for simple filenames", () => {
+    expect(isSafeSandboxZipRef("tree.zip")).toBe(true);
+    expect(isSafeSandboxZipRef("my-sandbox.zip")).toBe(true);
+  });
+
+  it("returns false for empty or non-string", () => {
+    expect(isSafeSandboxZipRef("")).toBe(false);
+    expect(isSafeSandboxZipRef("   ")).toBe(false);
+  });
+});
+
+describe("validateBashPredictOutputPayload", () => {
+  it("requires type bash_predict_output", () => {
+    const result = validateBashPredictOutputPayload({
+      type: "bash",
+      prompt: "Q",
+      scriptSource: "echo x",
+      expectedOutput: "x",
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("type must be 'bash_predict_output'");
+  });
+
+  it("requires non-empty prompt and scriptSource", () => {
+    expect(
+      validateBashPredictOutputPayload({
+        type: "bash_predict_output",
+        prompt: "",
+        scriptSource: "echo x",
+        expectedOutput: "x",
+      }).valid
+    ).toBe(false);
+    expect(
+      validateBashPredictOutputPayload({
+        type: "bash_predict_output",
+        prompt: "Q",
+        scriptSource: "",
+        expectedOutput: "x",
+      }).valid
+    ).toBe(false);
+  });
+
+  it("requires expectedOutput (may be empty string)", () => {
+    const result = validateBashPredictOutputPayload({
+      type: "bash_predict_output",
+      prompt: "Q",
+      scriptSource: "echo x",
+      expectedOutput: undefined as unknown as string,
+    });
+    expect(result.valid).toBe(false);
+  });
+
+  it("returns valid for correct payload", () => {
+    const result = validateBashPredictOutputPayload({
+      type: "bash_predict_output",
+      prompt: "What output?",
+      scriptSource: "echo hello",
+      expectedOutput: "hello",
+    });
+    expect(result.valid).toBe(true);
   });
 });
 
