@@ -32,6 +32,9 @@ book:
     - part: "Developer guide"
       chapters:
         - DEVELOPER-GUIDE-0.0.1-v001.qmd
+    - part: "Technical reference"
+      chapters:
+        - TECH-STACK-0.0.3-v001.md
     - part: "Question Format Specification"
       chapters:
         - QUESTION-MODULE-SPEC.qmd
