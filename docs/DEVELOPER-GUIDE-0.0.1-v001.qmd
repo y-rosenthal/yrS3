@@ -24,14 +24,12 @@ The full product vision is in the PRD documents; the **SPEC** defines the initia
 
 ## Tech stack {#sec-tech-stack}
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS |
-| **Auth & optional DB** | Supabase (auth; optional database and storage) |
-| **Deploy** | Vercel |
-| **Requirements** | Node.js 20+ |
+Canonical tech stack reference: [TECH-STACK-0.0.3-v001.md](TECH-STACK-0.0.3-v001.md).
 
-Questions use the **database** as the source of truth (ownership, status, listing). Content is stored on the **filesystem** (local dev) or in **Supabase Storage** (e.g. on Vercel); when using FS, the app can mirror DB metadata in an optional `db_meta.yaml` per version and sync FS with DB (import FS-only, DB wins on conflict). See [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd). Code execution for R/Bash questions uses a sandbox; see [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd) for constraints.
+This Developer Guide stays focused on **how to work in the repo** (where things live, how to run, and where to extend). For stack-specific details (versions, dependencies, env, data/storage modes), use TECH-STACK.
+
+- **DB↔FS question sync / dual-write / backup**: [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd)
+- **MVP scope + evaluator/sandbox constraints**: [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd)
 
 ---
 
@@ -87,6 +85,7 @@ yrS3/
 | [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd) | DB–FS question sync, dual-write, backup, and `db_meta.yaml` |
 | [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd) | File-based question set layout (`set.yaml`) |
 | [SETUP-0.0.1-v001.qmd](SETUP-0.0.1-v001.qmd) | Install dependencies, env vars, local run, Supabase (local + hosted), deploy to Vercel |
+| [TECH-STACK-0.0.3-v001.md](TECH-STACK-0.0.3-v001.md) | Technical stack snapshot (frameworks, dependencies, data/storage modes, env, commands) |
 | [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd) | Question folder layout, `meta.yaml`, prompt file, type-specific files, validation rules |
 | PRD-0.0.1-v\*.qmd | Product vision and full requirements |
 | [QUARTO-DOC-GUIDE.qmd](QUARTO-DOC-GUIDE.qmd) | Install Quarto and render the docs book |
