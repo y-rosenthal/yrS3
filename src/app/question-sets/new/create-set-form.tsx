@@ -21,17 +21,50 @@ export function CreateSetForm() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
+
+  async function loadQuestions() {
+    const res = await fetch("/api/questions");
+    if (res.ok) {
+      const data = await res.json();
+      setQuestions(Array.isArray(data) ? data : []);
+    }
+  }
 
   useEffect(() => {
     (async () => {
-      const res = await fetch("/api/questions");
-      if (res.ok) {
-        const data = await res.json();
-        setQuestions(Array.isArray(data) ? data : []);
-      }
+      await loadQuestions();
       setLoading(false);
     })();
   }, []);
+
+  async function handleSyncFromFolder() {
+    setSyncMessage("");
+    setSyncLoading(true);
+    try {
+      const res = await fetch("/api/admin/sync-questions", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSyncMessage(data.error ?? "Sync failed");
+        return;
+      }
+      const imported = data.imported ?? 0;
+      const errors = Array.isArray(data.errors) ? data.errors : [];
+      await loadQuestions();
+      if (imported > 0) {
+        setSyncMessage(`Synced ${imported} question(s) from the questions/ folder.`);
+      } else if (errors.length > 0) {
+        setSyncMessage(errors.slice(0, 3).join("; ") + (errors.length > 3 ? "…" : ""));
+      } else {
+        setSyncMessage("Sync completed. No new questions imported (folder may be empty or already in sync).");
+      }
+    } catch (e) {
+      setSyncMessage(e instanceof Error ? e.message : "Sync failed");
+    } finally {
+      setSyncLoading(false);
+    }
+  }
 
   function toggleQuestion(id: string) {
     setSelectedIds((prev) => {
@@ -108,14 +141,44 @@ export function CreateSetForm() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          Questions to include
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label className="block text-sm font-medium text-zinc-700">
+            Questions to include
+          </label>
+          {questions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => loadQuestions()}
+              className="text-sm text-zinc-600 hover:text-zinc-800 underline"
+            >
+              Refresh list
+            </button>
+          )}
+        </div>
         <p className="mt-1 text-sm text-zinc-500">
           Select the questions to add to this set. Order is the order they will appear when taking as a test.
         </p>
         {questions.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-500">No questions available. Create or upload questions first.</p>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-zinc-500">No questions available. Create or upload questions first.</p>
+            <p className="text-sm text-zinc-500">
+              If you have question files in the <code className="rounded bg-zinc-100 px-1">questions/</code> folder,
+              sync them into the database first (requires login).
+            </p>
+            <button
+              type="button"
+              onClick={handleSyncFromFolder}
+              disabled={syncLoading}
+              className="rounded border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+            >
+              {syncLoading ? "Syncing…" : "Sync questions from folder"}
+            </button>
+            {syncMessage && (
+              <p className={`text-sm ${syncMessage.startsWith("Synced") ? "text-green-700" : "text-amber-700"}`}>
+                {syncMessage}
+              </p>
+            )}
+          </div>
         ) : (
           <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded border border-zinc-200 bg-white p-2">
             {questions.map((q) => (

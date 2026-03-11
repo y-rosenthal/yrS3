@@ -1,1 +1,2 @@
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773246989973,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773248818552,"hypothesisId":"H1"}

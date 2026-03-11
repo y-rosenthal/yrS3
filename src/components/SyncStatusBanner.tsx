@@ -18,13 +18,28 @@ export function SyncStatusBanner() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
+  function refetchSyncStatus() {
     fetch("/api/sync-status")
       .then((r) => r.json())
       .then(setSyncStatus)
       .catch(() => setSyncStatus(null));
+  }
+
+  useEffect(() => {
+    refetchSyncStatus();
   }, []);
+
+  async function handleSyncNow() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/sync-questions", { method: "POST" });
+      if (res.ok) refetchSyncStatus();
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   if (!syncStatus || dismissed) return null;
 
@@ -74,7 +89,17 @@ export function SyncStatusBanner() {
             </ul>
           )}
           {isSkipped && (
-            <p className="mt-2 text-sm text-amber-700">{REMEDIATION}</p>
+            <>
+              <p className="mt-2 text-sm text-amber-700">{REMEDIATION}</p>
+              <button
+                type="button"
+                onClick={handleSyncNow}
+                disabled={syncing}
+                className="mt-2 rounded border border-amber-300 bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-200 disabled:opacity-50"
+              >
+                {syncing ? "Syncing…" : "Sync questions now"}
+              </button>
+            </>
           )}
         </div>
         <button
