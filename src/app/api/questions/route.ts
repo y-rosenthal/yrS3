@@ -12,31 +12,12 @@ import {
 } from "@/lib/questions";
 import { listAllQuestionVersions, insertQuestionVersion } from "@/lib/questions/store-db";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
-import { syncFsWithDb } from "@/lib/questions/sync-questions";
 import { logQuestions } from "@/lib/logger";
-
-/** Shared promise so concurrent GETs all wait for the same sync before listing (avoids race where sync is in progress but others read stale DB). */
-let syncPromise: Promise<void> | null = null;
 
 export async function GET() {
   try {
     const user = await requireUser();
     const supabase = await createClient();
-
-    if (
-      process.env.QUESTIONS_STORAGE !== "supabase" &&
-      process.env.QUESTION_SYNC_OWNER_ID
-    ) {
-      syncPromise =
-        syncPromise ??
-        syncFsWithDb(supabase)
-          .then(() => undefined)
-          .catch((e) => {
-            syncPromise = null;
-            throw e;
-          });
-      await syncPromise;
-    }
 
     const { data: allRows, error } = await listAllQuestionVersions(supabase);
     if (error) {

@@ -1,3 +1,10 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
 # SPEC: Database–Filesystem Question Sync (v0.0.3)
 
 This spec describes how question data is kept in sync between the **database** (source of truth for all application behavior) and the **filesystem** (mirror/backup). It covers dual-write on create/update, the optional `db_meta.yaml` file that keeps ownership and status separate from question content, and the sync algorithm when DB and FS disagree.
@@ -62,7 +69,7 @@ Dual-write is best-effort: FS write failures do not fail the API request.
 
 Sync runs:
 
-- **Lazy:** On the first `GET /api/questions` when using filesystem storage and `QUESTION_SYNC_OWNER_ID` is set (once per process).
+- **At startup:** When the server starts, if using filesystem storage, `QUESTION_SYNC_OWNER_ID` is set, and a Supabase service role key is available (`SUPABASE_SERVICE_ROLE_KEY` or `SERVICE_ROLE_KEY`). Runs before any user logs in.
 - **Explicit:** Via `POST /api/admin/sync-questions` (authenticated).
 
 **Steps:**
@@ -82,13 +89,14 @@ Sync runs:
 | `QUESTIONS_ROOT` | Root for question version folders (default: `./questions`). |
 | `QUESTIONS_STORAGE` | Omit or unset for filesystem; set to `supabase` for Supabase Storage. |
 | `QUESTION_SYNC_OWNER_ID` | UUID of the user to assign when importing FS-only versions into the DB. Required for sync import. |
+| `SUPABASE_SERVICE_ROLE_KEY` or `SERVICE_ROLE_KEY` | Required for startup sync (so the app can read/write `question_versions` without a user session). |
 | `QUESTIONS_FS_BACKUP_ROOT` | Optional. When `QUESTIONS_STORAGE=supabase`, mirror each version to this path (content + `db_meta.yaml`). |
 
 ---
 
 ## API and listing
 
-- **`GET /api/questions`** — Lists from the **database**: latest approved version per logical_id, shape `{ id, type, version, title, domain }`. When FS storage and `QUESTION_SYNC_OWNER_ID` are set, sync runs once per process before listing.
+- **`GET /api/questions`** — Lists from the **database**: latest approved version per logical_id, shape `{ id, type, version, title, domain }`. Sync is run at server startup (see above), not on this request.
 - **`POST /api/admin/sync-questions`** — Runs sync and returns `{ imported, conflictsResolved, errors }`.
 
 All other question operations (get by id, my questions, take test) already use the DB; only sync and content loading read/write the FS.
