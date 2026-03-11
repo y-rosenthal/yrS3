@@ -44,7 +44,10 @@ This spec defines two features for the yrS3 tutorial and testing system. It is w
 | `SUPABASE_SERVICE_ROLE_KEY` or `SERVICE_ROLE_KEY` | A | Startup sync | Required for instrumentation to call Supabase (no user session). Local: from `supabase status -o env`. |
 | `QUESTIONS_STORAGE` | A | When to run sync | If set to `"supabase"`, FS sync is not run; leave unset for filesystem storage. |
 | `NEXT_PUBLIC_SUPABASE_URL` | A | Admin client + seed | Required for Supabase. |
-| `LOG_FILE_PATH` (or similar) | B | Log file location | Optional; default e.g. `logs/app.log` relative to project root. |
+| `LOG_FILE_PATH` | B | Log file location | Optional; default `logs/app.log` relative to project root. |
+| `SYSTEM_MESSAGE_STORE_SIZE` | B | In-memory store cap | Max messages kept in memory (default 1000). Older messages can be loaded from the log file 100 at a time. |
+| `SYSTEM_MESSAGE_LOAD_OLDER_BATCH` | B | Load older batch size | Number of older messages to fetch per "Load older" request (default 100). |
+| `NEXT_PUBLIC_LOGS_REFRESH_INTERVAL_MS` | B | System log UI refresh | Auto-refresh interval for `/logs` in ms (default 4000). |
 
 ---
 
@@ -184,9 +187,10 @@ flowchart LR
 #### Step B.3.2 — System-message store
 
 - **Create** `src/lib/system-messages.ts`.
-  - In-memory store holding the last N messages (e.g. 50–100). Each entry: `{ id: string, level: 'error' | 'warning' | 'info' | 'debug', timestamp: string (ISO), message: string, stack?: string, context?: Record<string, unknown>, route?: string }`.
-  - Export a function to **add** a message (and optionally a **getter** that accepts an optional level filter, e.g. `getMessages(level?: 'error' | 'warning' | 'info' | 'debug')` or multiple levels, returning the list, newest first).
-  - When `report(level, messageOrError, context)` is called, push to this store (and write to the log file). Same process-only guarantee as sync-status; persisting to DB is an optional follow-up.
+  - In-memory store holding the last N messages (configurable via `SYSTEM_MESSAGE_STORE_SIZE`, default 1000). Each entry: `{ id: string, level: 'error' | 'warning' | 'info' | 'debug', timestamp: string (ISO), message: string, stack?: string, context?: Record<string, unknown>, route?: string }`.
+  - When full, drop oldest when appending. When the user requests older messages (e.g. "Load older" on the /logs page), load from the log file in batches (configurable via `SYSTEM_MESSAGE_LOAD_OLDER_BATCH`, default 100) and **expand** the in-memory store (do not remove newest messages).
+  - Export a function to **add** a message and a **getter** with optional level filter; export **getOlderMessages(olderThanId, levelFilter?)** that reads the log file and returns the next batch of older messages, merging them into the store.
+  - When `report(level, messageOrError, context)` is called, push to this store (and write to the log file with `id` in each line so older messages can be loaded). Same process-only guarantee as sync-status; persisting to DB is an optional follow-up.
 
 #### Step B.3.3 — API for logs
 
@@ -269,7 +273,7 @@ Implementers should use this as a checklist. Order of implementation should foll
 ## Notes for implementers
 
 - **Sync-status store:** Holds only the **last** sync outcome (one object). Each new run or skip overwrites it. No history.
-- **System-message store:** Bounded list (e.g. 50–100 entries). When full, drop oldest when appending. Newest first when returning.
+- **System-message store:** Bounded list (default 1000; `SYSTEM_MESSAGE_STORE_SIZE`). When full, drop oldest when appending. User can load older messages from the log file in batches (`SYSTEM_MESSAGE_LOAD_OLDER_BATCH`, default 100); each batch expands the in-memory store. Newest first when returning. Log file lines must include `id` for load-older. System log UI auto-refresh interval: `NEXT_PUBLIC_LOGS_REFRESH_INTERVAL_MS` (default 4000).
 - **Log file:** Default path e.g. `logs/app.log` (relative to project root). Create the directory if it does not exist. Append-only; one JSON object per line. Do not throw from `report()` if file write fails; still add to in-memory store.
 - **Documentation:** If you add or edit any `.qmd` file in `docs/`, follow the repository rules in `AGENTS.md`: exactly one H1 at the top, required documentation guard comment before the first heading, no `title` in YAML, no hard-coded section numbers.
 - **Order of work:** Implement Part A fully (sync owner, seed, sync-status, banner, docs), then Part B (report, log file, system-message store, logs API, error.tsx, UI, integration in routes). Part C checklist can be used to verify nothing is missed.

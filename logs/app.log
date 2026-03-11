@@ -1,0 +1,10 @@
+{"id":"37d0a9f3-ecab-4c23-99e5-a0dbdfee9a64","level":"info","timestamp":"2026-03-11T15:42:59.494Z","message":"test message"}
+{"id":"69774c12-89ee-4ed9-9ac5-bfad28f263a6","level":"error","timestamp":"2026-03-11T15:42:59.517Z","message":"oops"}
+{"id":"5ec24bbd-03a8-49d5-91aa-915e47fe37e7","level":"error","timestamp":"2026-03-11T15:42:59.509Z","message":"fail","stack":"Error: fail\n  at line 1"}
+{"id":"a85eb437-5ef8-495c-afdb-9a418a25a633","level":"info","timestamp":"2026-03-11T15:42:59.519Z","message":"info"}
+{"id":"61fd8990-1acc-4ce8-bcb3-25fdfe703512","level":"warning","timestamp":"2026-03-11T15:42:59.518Z","message":"warn"}
+{"id":"d9349139-4177-4a4d-b2c4-79c8619a4ccf","level":"info","timestamp":"2026-03-11T15:43:45.723Z","message":"test message"}
+{"id":"444aa378-6a08-430d-aec7-dab9a5a0249d","level":"warning","timestamp":"2026-03-11T15:43:45.731Z","message":"warn"}
+{"id":"a9b60f53-0804-4c2b-86cd-2a9726a1403c","level":"error","timestamp":"2026-03-11T15:43:45.727Z","message":"fail","stack":"Error: fail\n  at line 1"}
+{"id":"b573c3d3-d0f3-4221-9017-e9aff1789f36","level":"info","timestamp":"2026-03-11T15:43:45.731Z","message":"info"}
+{"id":"11888e66-2e83-4434-8d7f-ff86ce0db06a","level":"error","timestamp":"2026-03-11T15:43:45.730Z","message":"oops"}

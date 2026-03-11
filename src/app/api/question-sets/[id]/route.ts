@@ -18,6 +18,10 @@ export async function GET(
     return NextResponse.json(set);
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    const { reportError } = await import("@/lib/report");
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "GET /api/question-sets/[id]",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

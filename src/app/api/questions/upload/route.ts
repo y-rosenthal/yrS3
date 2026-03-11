@@ -7,6 +7,7 @@ import { getQuestionOwner, insertQuestionVersion } from "@/lib/questions/store-d
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 import yaml from "js-yaml";
 import { logQuestions } from "@/lib/logger";
+import { reportError } from "@/lib/report";
 
 export async function POST(request: NextRequest) {
   try {
@@ -249,6 +250,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "POST /api/questions/upload",
+    });
     return NextResponse.json(
       { error: "Unauthorized or upload failed" },
       { status: 401 }

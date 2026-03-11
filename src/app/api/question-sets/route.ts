@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { listQuestionSets, insertQuestionSet } from "@/lib/question-sets";
+import { reportError } from "@/lib/report";
 
 export async function GET() {
   try {
@@ -11,6 +12,9 @@ export async function GET() {
     return NextResponse.json(sets);
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "GET /api/question-sets",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
@@ -46,6 +50,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(set);
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "POST /api/question-sets",
+    });
     return NextResponse.json({ error: "Unauthorized or request failed" }, { status: 401 });
   }
 }

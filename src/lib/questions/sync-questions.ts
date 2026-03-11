@@ -17,6 +17,7 @@ import {
   readVersionFilesFromFs,
 } from "./store-fs";
 import { writeDbMeta, readDbMeta } from "./db-meta-fs";
+import { getSyncOwnerId } from "./sync-owner";
 import { writeQuestionVersionToFs } from "./write-to-fs";
 import { parseQuestion } from "./parse";
 import { serializeParsedQuestion } from "./serialize";
@@ -44,7 +45,6 @@ export interface SyncResult {
  */
 export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult> {
   const result: SyncResult = { imported: 0, conflictsResolved: 0, errors: [] };
-  const syncOwnerId = process.env.QUESTION_SYNC_OWNER_ID;
   const root = getQuestionsRootPath();
 
   const { data: dbRows, error: dbErr } = await listAllQuestionVersions(supabase);
@@ -75,11 +75,12 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
     const dbRow = dbMap.get(key);
 
     if (!dbRow) {
-      // FS-only: import into DB
-      if (!syncOwnerId) {
-        result.errors.push(`QUESTION_SYNC_OWNER_ID not set; skip import ${logicalId}/${version}`);
-        continue;
-      }
+      // FS-only: import into DB; use db_meta.owner_id when present, else sync owner (env or default)
+      const fsMeta = await readDbMeta(root, logicalId, version);
+      const ownerId =
+        fsMeta?.owner_id && fsMeta.owner_id.trim() !== ""
+          ? fsMeta.owner_id
+          : getSyncOwnerId();
       const files = await readVersionFilesFromFs(root, logicalId, version);
       if (!files || files.length === 0) {
         result.errors.push(`Could not read FS ${logicalId}/${version}`);
@@ -94,7 +95,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
       const { error: insertErr } = await insertQuestionVersion(supabase, {
         logical_id: logicalId,
         version,
-        owner_id: syncOwnerId,
+        owner_id: ownerId,
         type: question.type,
         title: question.title ?? null,
         domain: question.domain ?? null,
@@ -107,7 +108,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
         continue;
       }
       await writeDbMeta(root, logicalId, version, {
-        owner_id: syncOwnerId,
+        owner_id: ownerId,
         status: "approved",
         proposed_by: null,
       });

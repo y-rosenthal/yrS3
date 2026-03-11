@@ -13,6 +13,7 @@ import {
 import { listAllQuestionVersions, insertQuestionVersion } from "@/lib/questions/store-db";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 import { logQuestions } from "@/lib/logger";
+import { reportError } from "@/lib/report";
 
 export async function GET() {
   try {
@@ -42,6 +43,9 @@ export async function GET() {
     return NextResponse.json(list);
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "GET /api/questions",
+    });
     return NextResponse.json(
       { error: "Unauthorized or failed to list questions" },
       { status: 401 }
@@ -105,7 +109,7 @@ export async function POST(request: NextRequest) {
     const version = INITIAL_VERSION;
     const now = new Date().toISOString();
     const { files, error: serError } = serializeQuestion(
-      payload as Parameters<typeof serializeQuestion>[0],
+      payload as unknown as Parameters<typeof serializeQuestion>[0],
       { logicalId, version, created_at: now, modified_at: now }
     );
     if (serError) {
@@ -139,6 +143,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ logicalId, version });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "POST /api/questions",
+    });
     return NextResponse.json({ error: "Unauthorized or request failed" }, { status: 401 });
   }
 }

@@ -97,7 +97,7 @@ export async function POST(
     }
     const now = new Date().toISOString();
     const { files, error: serError } = serializeQuestion(
-      payload as Parameters<typeof serializeQuestion>[0],
+      payload as unknown as Parameters<typeof serializeQuestion>[0],
       { logicalId, version: nextVersion, created_at: now, modified_at: now }
     );
     if (serError) {
@@ -144,6 +144,10 @@ export async function POST(
     });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    const { reportError } = await import("@/lib/report");
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "POST /api/questions/[id]/versions",
+    });
     return NextResponse.json({ error: "Unauthorized or request failed" }, { status: 401 });
   }
 }

@@ -34,6 +34,12 @@ export default async function HomePage() {
           >
             Upload questions (files)
           </Link>
+          <Link
+            href="/logs"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
+          >
+            System log
+          </Link>
           <form action="/api/auth/signout" method="post" className="mt-4">
             <button
               type="submit"

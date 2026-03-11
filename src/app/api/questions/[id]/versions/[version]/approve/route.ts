@@ -49,6 +49,10 @@ export async function POST(
     return NextResponse.json({ ok: true, logicalId, version, status: "approved" });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    const { reportError } = await import("@/lib/report");
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "POST /api/questions/[id]/versions/[version]/approve",
+    });
     return NextResponse.json({ error: "Unauthorized or request failed" }, { status: 401 });
   }
 }

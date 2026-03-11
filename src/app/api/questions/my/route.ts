@@ -14,6 +14,10 @@ export async function GET() {
     return NextResponse.json(data ?? []);
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+    const { reportError } = await import("@/lib/report");
+    reportError(e instanceof Error ? e : new Error(String(e)), {
+      route: "GET /api/questions/my",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

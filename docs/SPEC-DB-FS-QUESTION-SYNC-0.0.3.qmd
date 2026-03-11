@@ -76,9 +76,11 @@ Sync runs:
 
 1. **List DB** — All rows from `question_versions` (logical_id, version, type, title, domain, owner_id, status, proposed_by, storage_path).
 2. **List FS** — All `(logical_id, version)` under the questions root that have a `meta.yaml`, **excluding** any path under `_conflicts`.
-3. **FS-only** — For each FS version not in the DB: parse content from FS, insert into DB with `owner_id = QUESTION_SYNC_OWNER_ID`, `status = approved`, `storage_path = {logical_id}/{version}`; then write `db_meta.yaml` to that version folder.
+3. **FS-only** — For each FS version not in the DB: read `db_meta.yaml` if present; if it has a non-empty `owner_id`, use that for this version; otherwise use the sync owner (env `QUESTION_SYNC_OWNER_ID` or the seeded default question owner with fixed UUID). Parse content from FS, insert into DB with that `owner_id`, `status = approved`, `storage_path = {logical_id}/{version}`; then write `db_meta.yaml` to that version folder.
 4. **In both** — For each version present in both DB and FS, compare metadata (type, title, domain, owner_id, status, proposed_by). If identical, skip. If different, **DB wins**: load content from the store (before moving), move the FS version folder to `_conflicts/{logical_id}/{version}_{timestamp}`, then write the DB version (content + `db_meta.yaml`) to the normal path.
 5. **DB-only (optional)** — If desired, export DB-only versions to the FS backup root so the FS eventually mirrors the full DB. (Implementation may do this when backup root is set and primary is Supabase.)
+
+When using the **default** sync owner (no `QUESTION_SYNC_OWNER_ID` set), the app uses a single seeded user (fixed UUID). Without running the seed (e.g. hosted Supabase), startup sync is skipped and the UI shows a banner with remediation steps; set `QUESTION_SYNC_OWNER_ID` to a valid user UUID to enable sync.
 
 ---
 
@@ -88,7 +90,7 @@ Sync runs:
 |----------|---------|
 | `QUESTIONS_ROOT` | Root for question version folders (default: `./questions`). |
 | `QUESTIONS_STORAGE` | Omit or unset for filesystem; set to `supabase` for Supabase Storage. |
-| `QUESTION_SYNC_OWNER_ID` | UUID of the user to assign when importing FS-only versions into the DB. Required for sync import. |
+| `QUESTION_SYNC_OWNER_ID` | UUID of the user to assign when importing FS-only versions into the DB. Optional when using the seeded default question owner (same fixed UUID in seed and app); if set, overrides the default. Without seed (e.g. hosted Supabase), set this to a valid user UUID for startup sync. |
 | `SUPABASE_SERVICE_ROLE_KEY` or `SERVICE_ROLE_KEY` | Required for startup sync (so the app can read/write `question_versions` without a user session). |
 | `QUESTIONS_FS_BACKUP_ROOT` | Optional. When `QUESTIONS_STORAGE=supabase`, mirror each version to this path (content + `db_meta.yaml`). |
 

@@ -8,6 +8,21 @@ You will need: a **Supabase** account (for auth and optional storage) and, for l
 
 # Setup and run
 
+## Quick setup (after a new release) {#sec-quick-setup}
+
+If you are already developing the system and have your environment set up, use this checklist when you pull or receive a new release. You do **not** need to reinstall Node, Docker, or the Supabase CLI unless a release explicitly requires a newer version.
+
+1. **Get the latest code** — e.g. `git pull`.
+2. **Install or update dependencies** — `npm install`.
+3. **Database**
+   - **Local Supabase:** If the release includes new migrations or seed changes, run `supabase db reset` to apply migrations and re-run the seed (this wipes local DB data). To apply only new migrations without wiping, use `supabase db push`.
+   - **Hosted Supabase:** When there are new migrations, run `supabase db push` from the project root (with the project linked).
+4. **Environment** — Ensure `.env.local` exists and has any new variables; compare with `.env.example` and add or update keys as needed (see @sec-environment-variables).
+5. **Start the dev server** — `npm run dev`.
+6. Open [http://localhost:3000](http://localhost:3000).
+
+If you use **local Supabase**, start it before the dev server: `supabase start` (and `supabase stop` when you are done). For full first-time setup or when you change machine or stack, see the sections below.
+
 ## Installing required software (Ubuntu / Plasma KDE) {#sec-installing-software}
 
 Install the following on your machine. These steps assume Ubuntu (or a similar Debian-based distribution) with Plasma KDE.
@@ -277,7 +292,7 @@ Optional:
 
 - `QUESTIONS_ROOT` — directory for question folders (default: `./questions`)
 - `QUESTION_SETS_ROOT` — directory for file-based question sets (default: `./question-sets`). See QUESTION-SET-FORMAT-0.0.2.qmd.
-- `QUESTION_SYNC_OWNER_ID` — when using FS for questions, set to a user UUID so that FS-only question versions are imported into the DB when the app first lists questions. See SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd.
+- `QUESTION_SYNC_OWNER_ID` — optional when using the seeded default question owner (e.g. after `supabase db reset`); if set, overrides the default. For out-of-the-box FS question import, run `supabase db reset` and copy `supabase status -o env` into `.env.local`. Default question owner for local login: email `default-question-owner@system.local`, password `default-question-owner-password`. See SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd.
 - `QUESTIONS_FS_BACKUP_ROOT` — when `QUESTIONS_STORAGE=supabase`, optional local path to mirror each version for backup.
 
 ### Supabase project setup (CLI-first where possible) {#sec-supabase-project-setup}
@@ -536,9 +551,15 @@ Any authenticated user can create questions and propose new versions. No separat
 | `QUESTIONS_ROOT` | No | `./questions` | Local path for question folders |
 | `QUESTIONS_BUCKET` | No | `questions` | Supabase Storage bucket name |
 | `QUESTION_SETS_ROOT` | No | `./question-sets` | Local path for file-based question sets (set.yaml per folder) |
-| `QUESTION_SYNC_OWNER_ID` | No | — | When using FS for questions: UUID of user to assign when importing FS-only versions into the DB (required for sync import). See SPEC-DB-FS-QUESTION-SYNC. |
+| `QUESTION_SYNC_OWNER_ID` | No | (seeded default) | When using FS for questions: UUID of user for FS-only import. Optional after `supabase db reset` (seed creates default question owner). If set, overrides the default. See SPEC-DB-FS-QUESTION-SYNC. |
 | `QUESTIONS_FS_BACKUP_ROOT` | No | — | When `QUESTIONS_STORAGE=supabase`: local path to mirror each question version for backup (content + db_meta.yaml). |
 | `NEXT_PUBLIC_APP_URL` | No | — | App URL for redirects |
+| `LOG_FILE_PATH` | No | `logs/app.log` | System log file path (SPEC 0.0.5). |
+| `SYSTEM_MESSAGE_STORE_SIZE` | No | 1000 | Max system messages kept in memory; older messages load from log file. |
+| `SYSTEM_MESSAGE_LOAD_OLDER_BATCH` | No | 100 | Number of older messages loaded per "Load older" on /logs page. |
+| `NEXT_PUBLIC_LOGS_REFRESH_INTERVAL_MS` | No | 4000 | System log page auto-refresh interval (ms). |
+
+See `.env.example` in the repo root for full comments on all options.
 
 ---
 
