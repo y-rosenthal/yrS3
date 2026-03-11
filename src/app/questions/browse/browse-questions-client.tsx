@@ -70,7 +70,7 @@ export function BrowseQuestionsClient() {
       ) : questions.length === 0 ? (
         <p className="text-zinc-500">No questions found.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(32rem,1fr)_minmax(0,1fr)]">
           <AvailableQuestionsTable
             questions={questions}
             selectedIndex={selectedIndex}

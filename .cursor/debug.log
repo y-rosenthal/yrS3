@@ -5,3 +5,4 @@
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":12},"timestamp":1773250893717,"hypothesisId":"H1"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773258016728,"hypothesisId":"H1"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773258782518,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773260810325,"hypothesisId":"H1"}

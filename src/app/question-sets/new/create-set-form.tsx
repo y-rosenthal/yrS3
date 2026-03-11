@@ -219,11 +219,12 @@ export function CreateSetForm() {
             )}
           </div>
         ) : (
-          <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(32rem,1fr)_minmax(0,1fr)]">
             <AvailableQuestionsTable
               questions={questions}
               selectedIndex={detailIndex}
               onSelectIndex={setDetailIndex}
+              highlightQuestionIds={selectedIds}
               ariaLabel="Questions to include"
               actionColumn={(q) => {
                 const inSet = selectedIds.includes(q.id);

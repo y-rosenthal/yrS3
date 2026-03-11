@@ -17,14 +17,22 @@ type Props = {
   onSelectIndex: (index: number) => void;
   /** Optional column content per row (e.g. "Add to set" button). Stops propagation on click. */
   actionColumn?: (question: QuestionListEntry, index: number) => React.ReactNode;
+  /** Optional: question IDs to visually highlight (e.g. "added to set"). Rows with matching id get a highlight style. */
+  highlightQuestionIds?: string[] | Set<string>;
   ariaLabel?: string;
 };
+
+function isHighlighted(id: string, highlightIds: string[] | Set<string> | undefined): boolean {
+  if (!highlightIds) return false;
+  return Array.isArray(highlightIds) ? highlightIds.includes(id) : highlightIds.has(id);
+}
 
 export function AvailableQuestionsTable({
   questions,
   selectedIndex,
   onSelectIndex,
   actionColumn,
+  highlightQuestionIds,
   ariaLabel = "Questions list",
 }: Props) {
   const tableWrapperRef = useRef<HTMLDivElement>(null);
@@ -65,7 +73,7 @@ export function AvailableQuestionsTable({
       onKeyDown={handleKeyDown}
       className="min-w-0 overflow-x-auto rounded-lg border border-zinc-200 bg-white outline-none focus:ring-2 focus:ring-zinc-300"
     >
-      <table className="min-w-full divide-y divide-zinc-200">
+      <table className="min-w-[48rem] w-full divide-y divide-zinc-200">
         <thead>
           <tr>
             <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
@@ -91,7 +99,9 @@ export function AvailableQuestionsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
-          {questions.map((q, idx) => (
+          {questions.map((q, idx) => {
+            const highlighted = isHighlighted(q.id, highlightQuestionIds);
+            return (
             <tr
               key={q.id}
               ref={(el) => {
@@ -99,10 +109,15 @@ export function AvailableQuestionsTable({
               }}
               role="row"
               aria-selected={selectedIndex === idx}
+              aria-pressed={highlighted}
               tabIndex={-1}
               onClick={() => onSelectIndex(idx)}
               className={`cursor-pointer hover:bg-zinc-50 ${
                 selectedIndex === idx ? "bg-zinc-100" : ""
+              } ${
+                highlighted
+                  ? "border-l-4 border-l-green-500 bg-green-50/70"
+                  : ""
               }`}
             >
               <td className="px-4 py-2 font-mono text-sm text-zinc-800">
@@ -140,7 +155,8 @@ export function AvailableQuestionsTable({
                 </td>
               )}
             </tr>
-          ))}
+          );
+          })}
         </tbody>
       </table>
     </div>
