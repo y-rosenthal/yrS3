@@ -28,7 +28,7 @@ export default async function AuthorPage() {
         </section>
         <section className="mt-8">
           <h2 className="text-lg font-medium text-zinc-800">Upload modification</h2>
-          <AuthorUploadForm isModification={true} existingIds={questions.map((q) => q.id)} />
+          <AuthorUploadForm isModification={true} existingIds={[...new Set(questions.map((q) => q.id))]} />
         </section>
         <section className="mt-8">
           <h2 className="text-lg font-medium text-zinc-800">Questions</h2>
