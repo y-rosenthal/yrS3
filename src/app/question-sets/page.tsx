@@ -47,12 +47,22 @@ export default async function QuestionSetsPage() {
                       {set.source === "file" && " · from file"}
                     </p>
                   </div>
-                  <Link
-                    href={`/question-sets/${encodeURIComponent(set.id)}/take`}
-                    className="shrink-0 rounded bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700"
-                  >
-                    Take as test
-                  </Link>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {set.source === "db" && (
+                      <Link
+                        href={`/question-sets/${encodeURIComponent(set.id)}/edit`}
+                        className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                      >
+                        Edit
+                      </Link>
+                    )}
+                    <Link
+                      href={`/question-sets/${encodeURIComponent(set.id)}/take`}
+                      className="rounded bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700"
+                    >
+                      Take as test
+                    </Link>
+                  </div>
                 </div>
               </li>
             ))

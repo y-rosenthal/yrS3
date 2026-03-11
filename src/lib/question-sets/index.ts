@@ -49,6 +49,7 @@ export async function resolveSetIdForSession(
   const created = await insertQuestionSet(supabase, {
     title: set.title,
     description: set.description,
+    instructions: set.instructions ?? undefined,
     questionLogicalIds: set.questionLogicalIds,
     sandboxZipRef: set.sandboxZipRef ?? undefined,
   });
@@ -56,6 +57,6 @@ export async function resolveSetIdForSession(
   return { setId: created.id, questionLogicalIds: created.questionLogicalIds };
 }
 
-export type { QuestionSet, QuestionSetListItem };
-export { listQuestionSetsFromDb, getQuestionSetFromDb, insertQuestionSet } from "./load-db";
+export type { QuestionSet, QuestionSetListItem, QuestionSetFile } from "./types";
+export { listQuestionSetsFromDb, getQuestionSetFromDb, insertQuestionSet, updateQuestionSet } from "./load-db";
 export { listQuestionSetsFromFs, getQuestionSetFromFs } from "./load-fs";

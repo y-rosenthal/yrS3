@@ -23,9 +23,10 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
     const body = await request.json();
-    const { title, description, questionLogicalIds } = body as {
+    const { title, description, instructions, questionLogicalIds } = body as {
       title?: string;
       description?: string;
+      instructions?: string;
       questionLogicalIds?: string[];
     };
     if (!title || typeof title !== "string" || !title.trim()) {
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
     const set = await insertQuestionSet(supabase, {
       title: title.trim(),
       description: description?.trim() ?? null,
+      instructions: instructions?.trim() ?? null,
       questionLogicalIds: ids,
       ownerId: user.id,
     });

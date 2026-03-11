@@ -3,11 +3,18 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { ParsedQuestion } from "@/lib/questions/types";
+import type { QuestionSetFile } from "@/lib/question-sets";
 import Link from "next/link";
 
-type Props = { setId: string; title: string };
+type Props = {
+  setId: string;
+  title: string;
+  instructions?: string | null;
+  files?: QuestionSetFile[];
+  setSource?: "db" | "file";
+};
 
-export function TakeSetClient({ setId, title }: Props) {
+export function TakeSetClient({ setId, title, instructions, files = [], setSource = "db" }: Props) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ParsedQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -128,6 +135,11 @@ export function TakeSetClient({ setId, title }: Props) {
   const q = questions[currentIndex];
   const isLast = currentIndex === questions.length - 1;
 
+  const downloadUrl = (f: QuestionSetFile) =>
+    setSource === "file"
+      ? `/api/question-sets/${encodeURIComponent(setId)}/file/${encodeURIComponent(f.filename)}`
+      : `/api/question-sets/${encodeURIComponent(setId)}/files/${encodeURIComponent(f.id)}`;
+
   return (
     <div className="mx-auto w-full max-w-[1600px]">
       <div className="flex items-center justify-between">
@@ -136,7 +148,36 @@ export function TakeSetClient({ setId, title }: Props) {
           Exit
         </Link>
       </div>
-      <p className="mt-1 text-sm text-zinc-500">
+      {instructions && (
+        <div className="mt-3 rounded-lg border border-zinc-200 bg-amber-50/50 p-4">
+          <h2 className="text-sm font-medium text-zinc-800">Instructions</h2>
+          <div className="mt-1 prose prose-sm max-w-none text-zinc-700">
+            <ReactMarkdown>{instructions}</ReactMarkdown>
+          </div>
+        </div>
+      )}
+      {files.length > 0 && (
+        <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-4">
+          <h2 className="text-sm font-medium text-zinc-800">Attached files</h2>
+          <ul className="mt-2 space-y-1">
+            {files.map((f) => (
+              <li key={f.id}>
+                <a
+                  href={downloadUrl(f)}
+                  download={f.filename}
+                  className="text-sm text-zinc-700 underline hover:text-zinc-900"
+                >
+                  {f.filename}
+                </a>
+                {f.description && (
+                  <span className="ml-2 text-xs text-zinc-500">— {f.description}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="mt-3 text-sm text-zinc-500">
         Question {currentIndex + 1} of {questions.length}
       </p>
       {error && <p className="mt-2 text-red-600">{error}</p>}

@@ -3,12 +3,13 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { QuestionSet, QuestionSetListItem } from "./types";
+import type { QuestionSet, QuestionSetFile, QuestionSetListItem } from "./types";
 
 export interface QuestionSetRow {
   id: string;
   title: string;
   description: string | null;
+  instructions: string | null;
   owner_id: string | null;
   created_at: string;
   sandbox_zip_ref?: string | null;
@@ -26,7 +27,7 @@ export async function listQuestionSetsFromDb(
 ): Promise<QuestionSetListItem[]> {
   const { data: sets, error } = await supabase
     .from("question_sets")
-    .select("id, title, description, sandbox_zip_ref")
+    .select("id, title, description, instructions, sandbox_zip_ref")
     .order("created_at", { ascending: false });
   if (error || !sets?.length) return [];
 
@@ -54,7 +55,7 @@ export async function getQuestionSetFromDb(
 ): Promise<QuestionSet | null> {
   const { data: row, error } = await supabase
     .from("question_sets")
-    .select("id, title, description, sandbox_zip_ref")
+    .select("id, title, description, instructions, sandbox_zip_ref")
     .eq("id", id)
     .maybeSingle();
   if (error || !row) return null;
@@ -66,6 +67,17 @@ export async function getQuestionSetFromDb(
     .order("position", { ascending: true });
   if (itemsError) return null;
 
+  const { data: fileRows } = await supabase
+    .from("question_set_files")
+    .select("id, filename, description, stored_path")
+    .eq("question_set_id", id);
+  const files: QuestionSetFile[] = (fileRows ?? []).map((f) => ({
+    id: (f as { id: string }).id,
+    filename: (f as { filename: string }).filename,
+    description: (f as { description: string | null }).description ?? null,
+    storedPath: (f as { stored_path: string }).stored_path,
+  }));
+
   const questionLogicalIds = (items ?? [])
     .map((i) => (i as QuestionSetItemRow).question_logical_id);
   const r = row as QuestionSetRow;
@@ -74,8 +86,10 @@ export async function getQuestionSetFromDb(
     id: r.id,
     title: r.title,
     description: r.description,
+    instructions: r.instructions ?? null,
     questionLogicalIds,
     sandboxZipRef: r.sandbox_zip_ref ?? null,
+    files,
     source: "db",
   };
 }
@@ -89,6 +103,7 @@ export async function insertQuestionSet(
   payload: {
     title: string;
     description?: string | null;
+    instructions?: string | null;
     questionLogicalIds: string[];
     ownerId?: string | null;
     sandboxZipRef?: string | null;
@@ -99,10 +114,11 @@ export async function insertQuestionSet(
     .insert({
       title: payload.title,
       description: payload.description ?? null,
+      instructions: payload.instructions ?? null,
       owner_id: payload.ownerId ?? null,
       sandbox_zip_ref: payload.sandboxZipRef ?? null,
     })
-    .select("id, title, description, sandbox_zip_ref")
+    .select("id, title, description, instructions, sandbox_zip_ref")
     .single();
   if (setError || !setRow) return null;
 
@@ -125,8 +141,27 @@ export async function insertQuestionSet(
     id: setId,
     title: r.title,
     description: r.description,
+    instructions: r.instructions ?? null,
     questionLogicalIds: payload.questionLogicalIds,
     sandboxZipRef: r.sandbox_zip_ref ?? null,
+    files: [],
     source: "db",
   };
+}
+
+/**
+ * Update a question set (e.g. instructions). Only updates provided fields.
+ */
+export async function updateQuestionSet(
+  supabase: SupabaseClient,
+  id: string,
+  updates: { instructions?: string | null }
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("question_sets")
+    .update({
+      ...(updates.instructions !== undefined && { instructions: updates.instructions ?? null }),
+    })
+    .eq("id", id);
+  return !error;
 }

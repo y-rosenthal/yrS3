@@ -6,7 +6,7 @@
 import fs from "fs/promises";
 import path from "path";
 import yaml from "js-yaml";
-import type { QuestionSet, QuestionSetListItem } from "./types";
+import type { QuestionSet, QuestionSetFile, QuestionSetListItem } from "./types";
 
 function getQuestionSetsRoot(): string {
   const root = process.env.QUESTION_SETS_ROOT;
@@ -14,12 +14,19 @@ function getQuestionSetsRoot(): string {
   return path.resolve(process.cwd(), "question-sets");
 }
 
+export interface SetYamlAttachedFile {
+  filename?: string;
+  description?: string;
+}
+
 export interface SetYaml {
   id?: string;
   title?: string;
   description?: string;
+  instructions?: string;
   question_logical_ids?: unknown;
   sandbox_zip_ref?: string;
+  attached_files?: unknown;
 }
 
 function parseSetYaml(content: string, folderName: string): QuestionSet | null {
@@ -32,6 +39,19 @@ function parseSetYaml(content: string, folderName: string): QuestionSet | null {
         (x): x is string => typeof x === "string" && x.trim().length > 0
       )
     : [];
+  const attachedFiles: QuestionSetFile[] = Array.isArray(raw.attached_files)
+    ? (raw.attached_files as SetYamlAttachedFile[])
+        .filter((f) => f && typeof f.filename === "string" && f.filename.trim())
+        .map((f, i) => ({
+          id: `file-${folderName}-${i}-${f.filename!.trim()}`,
+          filename: f.filename!.trim(),
+          description:
+            typeof f.description === "string" && f.description.trim()
+              ? f.description.trim()
+              : null,
+          storedPath: path.join(folderName, "files", f.filename!.trim()),
+        }))
+    : [];
   return {
     id: raw.id.trim(),
     title: raw.title.trim(),
@@ -39,11 +59,16 @@ function parseSetYaml(content: string, folderName: string): QuestionSet | null {
       typeof raw.description === "string" && raw.description.trim()
         ? raw.description.trim()
         : null,
+    instructions:
+      typeof raw.instructions === "string" && raw.instructions.trim()
+        ? raw.instructions.trim()
+        : null,
     questionLogicalIds: ids,
     sandboxZipRef:
       typeof raw.sandbox_zip_ref === "string" && raw.sandbox_zip_ref.trim()
         ? raw.sandbox_zip_ref.trim()
         : null,
+    files: attachedFiles.length > 0 ? attachedFiles : undefined,
     source: "file",
   };
 }
