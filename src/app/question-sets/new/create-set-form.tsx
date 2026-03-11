@@ -1,25 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { QuestionListEntry } from "@/app/components/available-questions-table";
+import { AvailableQuestionsTable } from "@/app/components/available-questions-table";
 import { QuestionDetailPanel } from "@/app/components/question-detail-panel";
 import { SelectedQuestionCard } from "@/app/components/selected-question-card";
-
-interface QuestionOption {
-  id: string;
-  type: string;
-  version: string;
-  title?: string;
-  domain?: string;
-  tags?: string[];
-}
+import { TagFilterBar } from "@/app/components/tag-filter-bar";
 
 export function CreateSetForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [questions, setQuestions] = useState<QuestionOption[]>([]);
+  const [questions, setQuestions] = useState<QuestionListEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +23,6 @@ export function CreateSetForm() {
   const [tagFilter, setTagFilter] = useState("");
   const [appliedTagFilter, setAppliedTagFilter] = useState<string[]>([]);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
-  const listWrapperRef = useRef<HTMLDivElement>(null);
 
   async function loadQuestions(tags?: string[]) {
     const filter = tags ?? appliedTagFilter;
@@ -91,23 +84,20 @@ export function CreateSetForm() {
       ? questions[detailIndex]
       : null;
 
-  const handleListKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (questions.length === 0) return;
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setDetailIndex((prev) =>
-          prev === null ? 0 : Math.min(prev + 1, questions.length - 1)
-        );
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setDetailIndex((prev) =>
-          prev === null ? questions.length - 1 : Math.max(0, prev - 1)
-        );
-      }
-    },
-    [questions.length]
-  );
+  function applyTagFilter() {
+    const tags = tagFilter
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    setAppliedTagFilter(tags);
+    loadQuestions(tags);
+  }
+
+  function clearTagFilter() {
+    setTagFilter("");
+    setAppliedTagFilter([]);
+    loadQuestions([]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -190,50 +180,23 @@ export function CreateSetForm() {
         <p className="mt-1 text-sm text-zinc-500">
           Click &quot;Add to set&quot; to add a question to your set. Use the selected list below to review and remove. Order in that list is the order questions will appear when taking the test.
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <label htmlFor="tag-filter-set" className="text-sm text-zinc-600">
-            Filter by tags:
-          </label>
-          <input
-            id="tag-filter-set"
-            type="text"
-            value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const tags = tagFilter.split(",").map((t) => t.trim()).filter(Boolean);
-                setAppliedTagFilter(tags);
-              }
-            }}
-            placeholder="e.g. bash, intro"
-            className="rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-800 w-40"
+        <div className="mt-2">
+          <TagFilterBar
+            tagFilter={tagFilter}
+            onTagFilterChange={setTagFilter}
+            appliedTags={appliedTagFilter}
+            onApply={applyTagFilter}
+            onClear={clearTagFilter}
+            label="Filter by tags:"
+            inputPlaceholder="e.g. bash, intro"
+            clearLabel="Clear"
           />
-          <button
-            type="button"
-            onClick={async () => {
-              const tags = tagFilter.split(",").map((t) => t.trim()).filter(Boolean);
-              setAppliedTagFilter(tags);
-              await loadQuestions(tags);
-            }}
-            className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
-          >
-            Apply
-          </button>
-          {appliedTagFilter.length > 0 && (
-            <button
-              type="button"
-              onClick={async () => {
-                setTagFilter("");
-                setAppliedTagFilter([]);
-                await loadQuestions([]);
-              }}
-              className="text-sm text-zinc-500 hover:underline"
-            >
-              Clear
-            </button>
-          )}
         </div>
+        {appliedTagFilter.length > 0 && (
+          <p className="text-sm text-zinc-500">
+            Showing questions with all tags: {appliedTagFilter.join(", ")}
+          </p>
+        )}
         {questions.length === 0 ? (
           <div className="mt-2 space-y-2">
             <p className="text-sm text-zinc-500">No questions available. Create or upload questions first.</p>
@@ -257,65 +220,29 @@ export function CreateSetForm() {
           </div>
         ) : (
           <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-            <div
-              ref={listWrapperRef}
-              tabIndex={0}
-              role="listbox"
-              aria-label="Questions to include"
-              onKeyDown={handleListKeyDown}
-              className="min-w-0 overflow-x-auto rounded border border-zinc-200 bg-white p-2 outline-none focus:ring-2 focus:ring-zinc-300"
-            >
-              <ul className="space-y-2">
-                {questions.map((q, idx) => {
-                  const inSet = selectedIds.includes(q.id);
-                  return (
-                    <li
-                      key={q.id}
-                      role="option"
-                      aria-selected={detailIndex === idx}
-                      onClick={() => setDetailIndex(idx)}
-                      className={`flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-50 ${
-                        detailIndex === idx ? "bg-zinc-100" : ""
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!inSet) addToSet(q.id);
-                        }}
-                        disabled={inSet}
-                        className="shrink-0 rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-default disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500"
-                        aria-label={inSet ? "Already in set" : `Add question ${q.id} to set`}
-                      >
-                        {inSet ? "In set" : "Add to set"}
-                      </button>
-                      <span className="min-w-0 font-mono text-sm text-zinc-800">
-                        {q.id}
-                      </span>
-                      {q.title && (
-                        <span className="text-sm text-zinc-600">
-                          — {q.title}
-                        </span>
-                      )}
-                      <span className="text-xs text-zinc-400">{q.type}</span>
-                      {q.tags && q.tags.length > 0 && (
-                        <span className="flex flex-wrap gap-1">
-                          {q.tags.map((t) => (
-                            <span
-                              key={t}
-                              className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600"
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            <AvailableQuestionsTable
+              questions={questions}
+              selectedIndex={detailIndex}
+              onSelectIndex={setDetailIndex}
+              ariaLabel="Questions to include"
+              actionColumn={(q) => {
+                const inSet = selectedIds.includes(q.id);
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!inSet) addToSet(q.id);
+                    }}
+                    disabled={inSet}
+                    className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-default disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500"
+                    aria-label={inSet ? "Already in set" : `Add question ${q.id} to set`}
+                  >
+                    {inSet ? "In set" : "Add to set"}
+                  </button>
+                );
+              }}
+            />
             <div className="min-h-[200px] min-w-0">
               <QuestionDetailPanel
                 questionId={detailQuestion?.id ?? null}
