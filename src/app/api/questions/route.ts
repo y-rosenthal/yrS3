@@ -8,36 +8,37 @@ import {
   validateBashPayload,
   validateBashPredictOutputPayload,
   INITIAL_VERSION,
-  compareVersion,
 } from "@/lib/questions";
-import { listAllQuestionVersions, insertQuestionVersion } from "@/lib/questions/store-db";
+import { listApprovedQuestionsForListing, insertQuestionVersion } from "@/lib/questions/store-db";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 import { logQuestions } from "@/lib/logger";
 import { reportError } from "@/lib/report";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireUser();
     const supabase = await createClient();
 
-    const { data: allRows, error } = await listAllQuestionVersions(supabase);
+    const tagsParam = request.nextUrl.searchParams.get("tags");
+    const tags =
+      tagsParam?.trim()
+        ? tagsParam
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : undefined;
+
+    const { data: rows, error } = await listApprovedQuestionsForListing(supabase, { tags });
     if (error) {
       return NextResponse.json({ error: "Failed to list questions" }, { status: 500 });
     }
-    const approved = (allRows ?? []).filter((r) => r.status === "approved");
-    const byLogicalId = new Map<string, (typeof approved)[0]>();
-    approved.sort((a, b) => compareVersion(b.version, a.version));
-    for (const row of approved) {
-      if (!byLogicalId.has(row.logical_id)) {
-        byLogicalId.set(row.logical_id, row);
-      }
-    }
-    const list = Array.from(byLogicalId.values()).map((r) => ({
+    const list = (rows ?? []).map((r) => ({
       id: r.logical_id,
       type: r.type,
       version: r.version,
       title: r.title ?? undefined,
       domain: r.domain ?? undefined,
+      tags: r.tags ?? [],
     }));
     logQuestions("metadata_list", user.id, { count: list.length });
     return NextResponse.json(list);
@@ -63,11 +64,13 @@ function validatePayload(payload: Record<string, unknown>): { valid: boolean; er
 
 function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
   const type = body.type;
+  const tags = Array.isArray(body.tags) ? (body.tags as string[]).filter((t) => typeof t === "string" && t.trim()) : undefined;
   if (type === "bash") {
     return {
       type: "bash",
       title: body.title,
       domain: body.domain,
+      tags,
       prompt: body.prompt,
       solutionScript: body.solutionScript,
       tests: body.tests,
@@ -79,6 +82,7 @@ function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
       type: "bash_predict_output",
       title: body.title,
       domain: body.domain,
+      tags,
       prompt: body.prompt,
       scriptSource: body.scriptSource,
       expectedOutput: body.expectedOutput,
@@ -88,6 +92,7 @@ function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
     type: "multiple_choice",
     title: body.title,
     domain: body.domain,
+    tags,
     prompt: body.prompt,
     options: body.options,
   };
@@ -122,6 +127,7 @@ export async function POST(request: NextRequest) {
     }
     const supabase = await createClient();
     const storagePath = `${logicalId}/${version}`;
+    const payloadTags = (payload as { tags?: string[] }).tags;
     const { error: dbError } = await insertQuestionVersion(supabase, {
       logical_id: logicalId,
       version,
@@ -129,6 +135,7 @@ export async function POST(request: NextRequest) {
       type: (payload as { type: string }).type,
       title: (payload as { title?: string }).title ?? null,
       domain: (payload as { domain?: string }).domain ?? null,
+      tags: payloadTags?.length ? payloadTags : [],
       storage_path: storagePath,
     });
     if (dbError) {

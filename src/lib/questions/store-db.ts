@@ -4,6 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { compareVersion } from "./version";
 
 export type QuestionVersionStatus = "pending" | "approved";
 
@@ -15,6 +16,7 @@ export interface QuestionVersionRow {
   type: string;
   title: string | null;
   domain: string | null;
+  tags: string[] | null;
   storage_path: string;
   status: QuestionVersionStatus;
   proposed_by: string | null;
@@ -28,6 +30,7 @@ export interface InsertQuestionVersion {
   type: string;
   title?: string | null;
   domain?: string | null;
+  tags?: string[] | null;
   storage_path: string;
   status?: QuestionVersionStatus;
   proposed_by?: string | null;
@@ -49,6 +52,7 @@ export async function insertQuestionVersion(
       type: row.type,
       title: row.title ?? null,
       domain: row.domain ?? null,
+      tags: row.tags ?? [],
       storage_path: row.storage_path,
       status: row.status ?? "approved",
       proposed_by: row.proposed_by ?? null,
@@ -206,6 +210,35 @@ export async function listAllQuestionVersions(
     .order("created_at", { ascending: false });
   if (error) return { data: [], error };
   return { data: (data ?? []) as QuestionVersionRow[], error: null };
+}
+
+/**
+ * List approved questions for listing (browse, create-set picker): one per logical_id (latest version).
+ * Optional tag filter: only questions whose tags array contains all of the given tags.
+ */
+export async function listApprovedQuestionsForListing(
+  supabase: SupabaseClient,
+  opts: { tags?: string[] } = {}
+): Promise<{ data: QuestionVersionRow[]; error: Error | null }> {
+  let query = supabase
+    .from("question_versions")
+    .select("*")
+    .eq("status", "approved")
+    .order("created_at", { ascending: false });
+  if (opts.tags?.length) {
+    query = query.contains("tags", opts.tags);
+  }
+  const { data, error } = await query;
+  if (error) return { data: [], error };
+  const rows = (data ?? []) as QuestionVersionRow[];
+  rows.sort((a, b) => compareVersion(b.version, a.version));
+  const byLogicalId = new Map<string, QuestionVersionRow>();
+  for (const row of rows) {
+    if (!byLogicalId.has(row.logical_id)) {
+      byLogicalId.set(row.logical_id, row);
+    }
+  }
+  return { data: Array.from(byLogicalId.values()), error: null };
 }
 
 /**

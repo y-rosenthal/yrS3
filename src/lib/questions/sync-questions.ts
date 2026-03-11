@@ -99,6 +99,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
         type: question.type,
         title: question.title ?? null,
         domain: question.domain ?? null,
+        tags: question.tags ?? [],
         storage_path: storagePath,
         status: "approved",
         proposed_by: null,
@@ -120,6 +121,11 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
     const fsFiles = await readVersionFilesFromFs(root, logicalId, version);
     if (!fsFiles) continue;
     const { question: fsQuestion } = parseQuestion(logicalId, fsFiles);
+    const fsTags = fsQuestion?.tags ?? [];
+    const dbTags = dbRow.tags ?? [];
+    const sameTags =
+      fsTags.length === dbTags.length &&
+      fsTags.every((t) => dbTags.includes(t));
     const fsMeta = fsQuestion
       ? {
           type: fsQuestion.type,
@@ -138,6 +144,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
       fsMeta.type === dbMeta.type &&
       fsMeta.title === dbMeta.title &&
       fsMeta.domain === dbMeta.domain &&
+      sameTags &&
       (!fsDbMeta ||
         (fsDbMeta.owner_id === dbRow.owner_id &&
           fsDbMeta.status === dbRow.status &&

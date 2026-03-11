@@ -10,6 +10,7 @@ interface QuestionOption {
   version: string;
   title?: string;
   domain?: string;
+  tags?: string[];
 }
 
 export function CreateSetForm() {
@@ -23,9 +24,16 @@ export function CreateSetForm() {
   const [error, setError] = useState("");
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
+  const [appliedTagFilter, setAppliedTagFilter] = useState<string[]>([]);
 
-  async function loadQuestions() {
-    const res = await fetch("/api/questions");
+  async function loadQuestions(tags?: string[]) {
+    const filter = tags ?? appliedTagFilter;
+    const url =
+      filter.length > 0
+        ? `/api/questions?tags=${encodeURIComponent(filter.join(","))}`
+        : "/api/questions";
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       setQuestions(Array.isArray(data) ? data : []);
@@ -34,7 +42,7 @@ export function CreateSetForm() {
 
   useEffect(() => {
     (async () => {
-      await loadQuestions();
+      await loadQuestions([]);
       setLoading(false);
     })();
   }, []);
@@ -158,6 +166,50 @@ export function CreateSetForm() {
         <p className="mt-1 text-sm text-zinc-500">
           Select the questions to add to this set. Order is the order they will appear when taking as a test.
         </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <label htmlFor="tag-filter-set" className="text-sm text-zinc-600">
+            Filter by tags:
+          </label>
+          <input
+            id="tag-filter-set"
+            type="text"
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const tags = tagFilter.split(",").map((t) => t.trim()).filter(Boolean);
+                setAppliedTagFilter(tags);
+              }
+            }}
+            placeholder="e.g. bash, intro"
+            className="rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-800 w-40"
+          />
+          <button
+            type="button"
+            onClick={async () => {
+              const tags = tagFilter.split(",").map((t) => t.trim()).filter(Boolean);
+              setAppliedTagFilter(tags);
+              await loadQuestions(tags);
+            }}
+            className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
+          >
+            Apply
+          </button>
+          {appliedTagFilter.length > 0 && (
+            <button
+              type="button"
+              onClick={async () => {
+                setTagFilter("");
+                setAppliedTagFilter([]);
+                await loadQuestions([]);
+              }}
+              className="text-sm text-zinc-500 hover:underline"
+            >
+              Clear
+            </button>
+          )}
+        </div>
         {questions.length === 0 ? (
           <div className="mt-2 space-y-2">
             <p className="text-sm text-zinc-500">No questions available. Create or upload questions first.</p>
@@ -195,6 +247,18 @@ export function CreateSetForm() {
                     <span className="text-sm text-zinc-600">— {q.title}</span>
                   )}
                   <span className="text-xs text-zinc-400">{q.type}</span>
+                  {q.tags && q.tags.length > 0 && (
+                    <span className="flex flex-wrap gap-1">
+                      {q.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </label>
               </li>
             ))}

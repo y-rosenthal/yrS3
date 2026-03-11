@@ -29,6 +29,12 @@ export default async function HomePage() {
             My questions — Create & manage
           </Link>
           <Link
+            href="/questions/browse"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
+          >
+            Browse questions
+          </Link>
+          <Link
             href="/author"
             className="rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-800 hover:bg-zinc-50"
           >
