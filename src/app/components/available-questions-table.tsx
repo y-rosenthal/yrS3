@@ -83,6 +83,11 @@ export function AvailableQuestionsTable({
       <table className="min-w-[48rem] w-full divide-y divide-zinc-200">
         <thead>
           <tr>
+            {actionColumn && (
+              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                Action
+              </th>
+            )}
             <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
               ID
             </th>
@@ -98,11 +103,6 @@ export function AvailableQuestionsTable({
             <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
               Tags
             </th>
-            {actionColumn && (
-              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
-                Action
-              </th>
-            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
@@ -127,6 +127,14 @@ export function AvailableQuestionsTable({
                   : ""
               }`}
             >
+              {actionColumn && (
+                <td
+                  className="px-4 py-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {actionColumn(q, idx)}
+                </td>
+              )}
               <td className="px-4 py-2 font-mono text-sm text-zinc-800">
                 {q.id}
               </td>
@@ -153,14 +161,6 @@ export function AvailableQuestionsTable({
                   <span className="text-sm text-zinc-400">—</span>
                 )}
               </td>
-              {actionColumn && (
-                <td
-                  className="px-4 py-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {actionColumn(q, idx)}
-                </td>
-              )}
             </tr>
           );
           })}

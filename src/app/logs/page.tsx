@@ -7,7 +7,7 @@ export default async function LogsPage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-zinc-50 px-[1em] py-6">
       <SystemLogView />
     </div>
   );

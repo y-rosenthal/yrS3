@@ -83,7 +83,7 @@ export function TakeSetClient({ setId, title }: Props) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-[1600px]">
         <p className="text-zinc-600">Loading…</p>
       </div>
     );
@@ -91,7 +91,7 @@ export function TakeSetClient({ setId, title }: Props) {
 
   if (submitted && result) {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-[1600px]">
         <h1 className="text-2xl font-semibold text-zinc-900">Results</h1>
         <p className="mt-2 text-zinc-600">
           Score: {(result.score * 100).toFixed(0)}% ({result.totalScore} / {result.maxScore})
@@ -116,7 +116,7 @@ export function TakeSetClient({ setId, title }: Props) {
 
   if (questions.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-[1600px]">
         <p className="text-zinc-600">This question set has no questions yet.</p>
         <Link href="/question-sets" className="mt-4 inline-block text-zinc-600 hover:underline">
           Back to question sets
@@ -129,7 +129,7 @@ export function TakeSetClient({ setId, title }: Props) {
   const isLast = currentIndex === questions.length - 1;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto w-full max-w-[1600px]">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-900">{title}</h1>
         <Link href="/question-sets" className="text-sm text-zinc-600 hover:underline">

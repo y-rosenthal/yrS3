@@ -7,8 +7,8 @@ export default async function HomePage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-zinc-50 px-[1em] py-6">
+      <div className="mx-auto w-full max-w-[1600px]">
         <h1 className="text-2xl font-semibold text-zinc-900">
           Tutorial & Testing System
         </h1>

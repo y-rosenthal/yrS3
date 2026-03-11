@@ -21,7 +21,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 p-8">
+    <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 px-[1em] py-6">
       <h2 className="text-lg font-semibold text-red-700">Something went wrong</h2>
       <p className="text-sm text-zinc-600">{error.message}</p>
       <button

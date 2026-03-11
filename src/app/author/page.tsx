@@ -9,8 +9,8 @@ export default async function AuthorPage() {
   const questions = await store.list();
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-screen bg-zinc-50 px-[1em] py-6">
+      <div className="mx-auto w-full max-w-[1600px]">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">
             Upload questions

@@ -16,7 +16,7 @@ export default async function TakeQuestionSetPage({
   if (!set) notFound();
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8">
+    <div className="min-h-screen bg-zinc-50 px-[1em] py-6">
       <TakeSetClient setId={set.id} title={set.title} />
     </div>
   );
