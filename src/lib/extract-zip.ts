@@ -13,6 +13,11 @@ const execFileAsync = promisify(execFile);
 
 export async function extractZipToTemp(zipPath: string): Promise<string> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "yrs3-sandbox-"));
-  await execFileAsync("unzip", ["-q", "-o", zipPath, "-d", tmpDir]);
-  return tmpDir;
+  try {
+    await execFileAsync("unzip", ["-q", "-o", zipPath, "-d", tmpDir]);
+    return tmpDir;
+  } catch (err) {
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    throw err;
+  }
 }
