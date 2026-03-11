@@ -75,6 +75,7 @@ export function BrowseQuestionsClient() {
             questions={questions}
             selectedIndex={selectedIndex}
             onSelectIndex={setSelectedIndex}
+            onClearSelection={() => setSelectedIndex(null)}
             ariaLabel="Questions list"
           />
           <div className="min-h-[200px] min-w-0 lg:sticky lg:top-4">

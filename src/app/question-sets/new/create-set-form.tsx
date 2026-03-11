@@ -224,6 +224,7 @@ export function CreateSetForm() {
               questions={questions}
               selectedIndex={detailIndex}
               onSelectIndex={setDetailIndex}
+              onClearSelection={() => setDetailIndex(null)}
               highlightQuestionIds={selectedIds}
               ariaLabel="Questions to include"
               actionColumn={(q) => {

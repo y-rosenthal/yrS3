@@ -19,6 +19,8 @@ type Props = {
   actionColumn?: (question: QuestionListEntry, index: number) => React.ReactNode;
   /** Optional: question IDs to visually highlight (e.g. "added to set"). Rows with matching id get a highlight style. */
   highlightQuestionIds?: string[] | Set<string>;
+  /** Optional: called when Escape is pressed to clear selection. */
+  onClearSelection?: () => void;
   ariaLabel?: string;
 };
 
@@ -33,6 +35,7 @@ export function AvailableQuestionsTable({
   onSelectIndex,
   actionColumn,
   highlightQuestionIds,
+  onClearSelection,
   ariaLabel = "Questions list",
 }: Props) {
   const tableWrapperRef = useRef<HTMLDivElement>(null);
@@ -40,6 +43,10 @@ export function AvailableQuestionsTable({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClearSelection?.();
+        return;
+      }
       if (questions.length === 0) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -53,7 +60,7 @@ export function AvailableQuestionsTable({
         );
       }
     },
-    [questions.length, selectedIndex, onSelectIndex]
+    [questions.length, selectedIndex, onSelectIndex, onClearSelection]
   );
 
   useEffect(() => {
