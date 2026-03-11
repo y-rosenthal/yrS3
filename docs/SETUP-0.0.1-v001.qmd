@@ -14,10 +14,10 @@ If you are already developing the system and have your environment set up, use t
 
 1. **Get the latest code** — e.g. `git pull`.
 2. **Install or update dependencies** — `npm install`.
-3. **Database**
+3. **Local Supabase** — If using local Supabase, run `supabase start` (and `supabase stop` when done).
+4. **Database**
    - **Local Supabase:** If the release includes new migrations or seed changes, run `supabase db reset` to apply migrations and re-run the seed (this wipes local DB data). To apply only new migrations without wiping, use `supabase db push`.
    - **Hosted Supabase:** When there are new migrations, run `supabase db push` from the project root (with the project linked).
-4. **Local Supabase** — If using local Supabase, run `supabase start` (and `supabase stop` when done).
 5. **Environment** — Ensure `.env.local` exists and has any new variables; compare with `.env.example` and add or update keys as needed (see @sec-environment-variables).
 6. **Start the dev server** — `npm run dev`.
 7. Open [http://localhost:3000](http://localhost:3000).
