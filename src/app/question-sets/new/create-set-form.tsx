@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { QuestionDetailPanel } from "@/app/components/question-detail-panel";
+import { SelectedQuestionCard } from "@/app/components/selected-question-card";
 
 interface QuestionOption {
   id: string;
@@ -19,7 +20,7 @@ export function CreateSetForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<QuestionOption[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -77,13 +78,12 @@ export function CreateSetForm() {
     }
   }
 
-  function toggleQuestion(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  function addToSet(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  }
+
+  function removeFromSet(id: string) {
+    setSelectedIds((prev) => prev.filter((x) => x !== id));
   }
 
   const detailQuestion =
@@ -117,9 +117,7 @@ export function CreateSetForm() {
       return;
     }
     setSubmitting(true);
-    const questionLogicalIds = [
-      ...new Set(questions.filter((q) => selectedIds.has(q.id)).map((q) => q.id)),
-    ];
+    const questionLogicalIds = selectedIds;
     const res = await fetch("/api/question-sets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -190,7 +188,7 @@ export function CreateSetForm() {
           )}
         </div>
         <p className="mt-1 text-sm text-zinc-500">
-          Select the questions to add to this set. Order is the order they will appear when taking as a test.
+          Click &quot;Add to set&quot; to add a question to your set. Use the selected list below to review and remove. Order in that list is the order questions will appear when taking the test.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <label htmlFor="tag-filter-set" className="text-sm text-zinc-600">
@@ -265,53 +263,57 @@ export function CreateSetForm() {
               role="listbox"
               aria-label="Questions to include"
               onKeyDown={handleListKeyDown}
-              className="min-w-0 max-h-64 overflow-y-auto overflow-x-auto rounded border border-zinc-200 bg-white p-2 outline-none focus:ring-2 focus:ring-zinc-300"
+              className="min-w-0 overflow-x-auto rounded border border-zinc-200 bg-white p-2 outline-none focus:ring-2 focus:ring-zinc-300"
             >
               <ul className="space-y-2">
-                {questions.map((q, idx) => (
-                  <li
-                    key={q.id}
-                    role="option"
-                    aria-selected={detailIndex === idx}
-                    onClick={() => setDetailIndex(idx)}
-                    className={`flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-50 ${
-                      detailIndex === idx ? "bg-zinc-100" : ""
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(q.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleQuestion(q.id);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded border-zinc-300"
-                      aria-label={`Include question ${q.id} in set`}
-                    />
-                    <span className="font-mono text-sm text-zinc-800">
-                      {q.id}
-                    </span>
-                    {q.title && (
-                      <span className="text-sm text-zinc-600">
-                        — {q.title}
+                {questions.map((q, idx) => {
+                  const inSet = selectedIds.includes(q.id);
+                  return (
+                    <li
+                      key={q.id}
+                      role="option"
+                      aria-selected={detailIndex === idx}
+                      onClick={() => setDetailIndex(idx)}
+                      className={`flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-50 ${
+                        detailIndex === idx ? "bg-zinc-100" : ""
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!inSet) addToSet(q.id);
+                        }}
+                        disabled={inSet}
+                        className="shrink-0 rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-default disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500"
+                        aria-label={inSet ? "Already in set" : `Add question ${q.id} to set`}
+                      >
+                        {inSet ? "In set" : "Add to set"}
+                      </button>
+                      <span className="min-w-0 font-mono text-sm text-zinc-800">
+                        {q.id}
                       </span>
-                    )}
-                    <span className="text-xs text-zinc-400">{q.type}</span>
-                    {q.tags && q.tags.length > 0 && (
-                      <span className="flex flex-wrap gap-1">
-                        {q.tags.map((t) => (
-                          <span
-                            key={t}
-                            className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </li>
-                ))}
+                      {q.title && (
+                        <span className="text-sm text-zinc-600">
+                          — {q.title}
+                        </span>
+                      )}
+                      <span className="text-xs text-zinc-400">{q.type}</span>
+                      {q.tags && q.tags.length > 0 && (
+                        <span className="flex flex-wrap gap-1">
+                          {q.tags.map((t) => (
+                            <span
+                              key={t}
+                              className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <div className="min-h-[200px] min-w-0">
@@ -320,6 +322,32 @@ export function CreateSetForm() {
                 version={detailQuestion?.version}
               />
             </div>
+          </div>
+        )}
+
+        {selectedIds.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-base font-medium text-zinc-800">
+              Selected questions for this set
+            </h3>
+            <p className="mt-1 text-sm text-zinc-500">
+              All questions below will appear in the set in this order. Remove any you do not want.
+            </p>
+            <ul className="mt-4 flex flex-col gap-6" aria-label="Selected questions">
+              {selectedIds.map((id) => {
+                const meta = questions.find((q) => q.id === id);
+                const version = meta?.version ?? "";
+                return (
+                  <li key={id}>
+                    <SelectedQuestionCard
+                      questionId={id}
+                      version={version}
+                      onRemove={() => removeFromSet(id)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
       </div>
