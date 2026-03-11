@@ -258,14 +258,14 @@ export function CreateSetForm() {
             )}
           </div>
         ) : (
-          <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <div
               ref={listWrapperRef}
               tabIndex={0}
               role="listbox"
               aria-label="Questions to include"
               onKeyDown={handleListKeyDown}
-              className="max-h-64 overflow-y-auto rounded border border-zinc-200 bg-white p-2 outline-none focus:ring-2 focus:ring-zinc-300"
+              className="min-w-0 max-h-64 overflow-y-auto overflow-x-auto rounded border border-zinc-200 bg-white p-2 outline-none focus:ring-2 focus:ring-zinc-300"
             >
               <ul className="space-y-2">
                 {questions.map((q, idx) => (
@@ -314,7 +314,7 @@ export function CreateSetForm() {
                 ))}
               </ul>
             </div>
-            <div className="min-h-[200px]">
+            <div className="min-h-[200px] min-w-0">
               <QuestionDetailPanel
                 questionId={detailQuestion?.id ?? null}
                 version={detailQuestion?.version}

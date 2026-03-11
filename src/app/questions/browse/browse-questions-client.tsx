@@ -128,14 +128,14 @@ export function BrowseQuestionsClient() {
       ) : questions.length === 0 ? (
         <p className="text-zinc-500">No questions found.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           <div
             ref={tableWrapperRef}
             tabIndex={0}
             role="grid"
             aria-label="Questions list"
             onKeyDown={handleKeyDown}
-            className="overflow-x-auto rounded-lg border border-zinc-200 bg-white outline-none focus:ring-2 focus:ring-zinc-300"
+            className="min-w-0 overflow-x-auto rounded-lg border border-zinc-200 bg-white outline-none focus:ring-2 focus:ring-zinc-300"
           >
             <table className="min-w-full divide-y divide-zinc-200">
               <thead>
@@ -203,7 +203,7 @@ export function BrowseQuestionsClient() {
               </tbody>
             </table>
           </div>
-          <div className="min-h-[200px] lg:sticky lg:top-4">
+          <div className="min-h-[200px] min-w-0 lg:sticky lg:top-4">
             <QuestionDetailPanel
               questionId={selectedQuestion?.id ?? null}
               version={selectedQuestion?.version}

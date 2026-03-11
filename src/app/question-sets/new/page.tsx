@@ -7,7 +7,7 @@ export default async function NewQuestionSetPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 p-8">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-7xl">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">Create question set</h1>
           <Link href="/question-sets" className="text-sm text-zinc-600 hover:underline">

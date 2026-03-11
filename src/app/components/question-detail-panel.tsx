@@ -40,7 +40,7 @@ export function QuestionDetailPanel({ questionId, version }: Props) {
 
   if (!questionId) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-6 text-center text-zinc-500">
+      <div className="w-full min-w-0 rounded-lg border border-zinc-200 bg-white p-6 text-center text-zinc-500">
         Select a question to view details.
       </div>
     );
@@ -48,7 +48,7 @@ export function QuestionDetailPanel({ questionId, version }: Props) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-6 text-zinc-600">
+      <div className="w-full min-w-0 rounded-lg border border-zinc-200 bg-white p-6 text-zinc-600">
         Loading…
       </div>
     );
@@ -56,14 +56,14 @@ export function QuestionDetailPanel({ questionId, version }: Props) {
 
   if (error || !question) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-6 text-red-600">
+      <div className="w-full min-w-0 rounded-lg border border-zinc-200 bg-white p-6 text-red-600">
         {error ?? "Question not found."}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6">
+    <div className="flex w-full min-w-0 flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6">
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
         <span className="text-zinc-500">ID</span>
         <span className="font-mono text-zinc-800">{question.id}</span>
@@ -102,7 +102,7 @@ export function QuestionDetailPanel({ questionId, version }: Props) {
 
       <div>
         <h3 className="mb-2 text-sm font-medium text-zinc-700">Question</h3>
-        <div className="prose prose-sm max-w-none rounded border border-zinc-100 bg-zinc-50/50 p-4 text-zinc-800">
+        <div className="prose prose-sm w-full max-w-none overflow-y-auto rounded border border-zinc-100 bg-zinc-50/50 p-4 text-zinc-800">
           {question.promptFormat === "md" ? (
             <ReactMarkdown>{question.prompt}</ReactMarkdown>
           ) : (
