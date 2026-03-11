@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { QuestionDetailPanel } from "@/app/components/question-detail-panel";
 
 interface QuestionOption {
   id: string;
@@ -26,6 +27,8 @@ export function CreateSetForm() {
   const [syncMessage, setSyncMessage] = useState("");
   const [tagFilter, setTagFilter] = useState("");
   const [appliedTagFilter, setAppliedTagFilter] = useState<string[]>([]);
+  const [detailIndex, setDetailIndex] = useState<number | null>(null);
+  const listWrapperRef = useRef<HTMLDivElement>(null);
 
   async function loadQuestions(tags?: string[]) {
     const filter = tags ?? appliedTagFilter;
@@ -82,6 +85,29 @@ export function CreateSetForm() {
       return next;
     });
   }
+
+  const detailQuestion =
+    detailIndex != null && questions[detailIndex] != null
+      ? questions[detailIndex]
+      : null;
+
+  const handleListKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (questions.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setDetailIndex((prev) =>
+          prev === null ? 0 : Math.min(prev + 1, questions.length - 1)
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setDetailIndex((prev) =>
+          prev === null ? questions.length - 1 : Math.max(0, prev - 1)
+        );
+      }
+    },
+    [questions.length]
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -232,37 +258,69 @@ export function CreateSetForm() {
             )}
           </div>
         ) : (
-          <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded border border-zinc-200 bg-white p-2">
-            {questions.map((q) => (
-              <li key={q.id}>
-                <label className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-50">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(q.id)}
-                    onChange={() => toggleQuestion(q.id)}
-                    className="rounded border-zinc-300"
-                  />
-                  <span className="font-mono text-sm text-zinc-800">{q.id}</span>
-                  {q.title && (
-                    <span className="text-sm text-zinc-600">— {q.title}</span>
-                  )}
-                  <span className="text-xs text-zinc-400">{q.type}</span>
-                  {q.tags && q.tags.length > 0 && (
-                    <span className="flex flex-wrap gap-1">
-                      {q.tags.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600"
-                        >
-                          {t}
-                        </span>
-                      ))}
+          <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div
+              ref={listWrapperRef}
+              tabIndex={0}
+              role="listbox"
+              aria-label="Questions to include"
+              onKeyDown={handleListKeyDown}
+              className="max-h-64 overflow-y-auto rounded border border-zinc-200 bg-white p-2 outline-none focus:ring-2 focus:ring-zinc-300"
+            >
+              <ul className="space-y-2">
+                {questions.map((q, idx) => (
+                  <li
+                    key={q.id}
+                    role="option"
+                    aria-selected={detailIndex === idx}
+                    onClick={() => setDetailIndex(idx)}
+                    className={`flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-50 ${
+                      detailIndex === idx ? "bg-zinc-100" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(q.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleQuestion(q.id);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded border-zinc-300"
+                      aria-label={`Include question ${q.id} in set`}
+                    />
+                    <span className="font-mono text-sm text-zinc-800">
+                      {q.id}
                     </span>
-                  )}
-                </label>
-              </li>
-            ))}
-          </ul>
+                    {q.title && (
+                      <span className="text-sm text-zinc-600">
+                        — {q.title}
+                      </span>
+                    )}
+                    <span className="text-xs text-zinc-400">{q.type}</span>
+                    {q.tags && q.tags.length > 0 && (
+                      <span className="flex flex-wrap gap-1">
+                        {q.tags.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="min-h-[200px]">
+              <QuestionDetailPanel
+                questionId={detailQuestion?.id ?? null}
+                version={detailQuestion?.version}
+              />
+            </div>
+          </div>
         )}
       </div>
       {error && (

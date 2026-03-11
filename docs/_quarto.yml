@@ -23,6 +23,7 @@ book:
         - PRD-0.0.1-v001.qmd
     - part: "SPEC files for different releases"
       chapters:
+        - SPEC-0.0.7-QUESTION-BROWSE-DETAIL-VIEW.qmd
         - SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.qmd
         - SPEC-0.0.5-DEFAULT-OWNER-AND-SYSTEM-LOGGING.qmd
         - SPEC-0.0.4-IMPLEMENT-BASH-QUESTIONS-v001.qmd

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import { QuestionDetailPanel } from "@/app/components/question-detail-panel";
 
 interface QuestionItem {
   id: string;
@@ -17,6 +18,9 @@ export function BrowseQuestionsClient() {
   const [loading, setLoading] = useState(true);
   const [tagFilter, setTagFilter] = useState("");
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const tableWrapperRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
   function loadQuestions(tags?: string[]) {
     setLoading(true);
@@ -33,6 +37,41 @@ export function BrowseQuestionsClient() {
   useEffect(() => {
     loadQuestions(appliedTags.length ? appliedTags : undefined);
   }, [appliedTags.join(",")]);
+
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [appliedTags.join(",")]);
+
+  const selectedQuestion =
+    selectedIndex != null && questions[selectedIndex] != null
+      ? questions[selectedIndex]
+      : null;
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (questions.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev === null ? 0 : Math.min(prev + 1, questions.length - 1)
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev === null ? questions.length - 1 : Math.max(0, prev - 1)
+        );
+      }
+    },
+    [questions.length]
+  );
+
+  useEffect(() => {
+    if (selectedIndex == null) return;
+    rowRefs.current[selectedIndex]?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [selectedIndex]);
 
   function applyTagFilter() {
     const tags = tagFilter
@@ -89,44 +128,87 @@ export function BrowseQuestionsClient() {
       ) : questions.length === 0 ? (
         <p className="text-zinc-500">No questions found.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-          <table className="min-w-full divide-y divide-zinc-200">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">ID</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">Title</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">Type</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">Domain</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">Tags</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {questions.map((q) => (
-                <tr key={q.id} className="hover:bg-zinc-50">
-                  <td className="px-4 py-2 font-mono text-sm text-zinc-800">{q.id}</td>
-                  <td className="px-4 py-2 text-sm text-zinc-700">{q.title ?? "—"}</td>
-                  <td className="px-4 py-2 text-sm text-zinc-600">{q.type}</td>
-                  <td className="px-4 py-2 text-sm text-zinc-600">{q.domain ?? "—"}</td>
-                  <td className="px-4 py-2">
-                    {q.tags?.length ? (
-                      <span className="flex flex-wrap gap-1">
-                        {q.tags.map((t) => (
-                          <span
-                            key={t}
-                            className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-700"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-400 text-sm">—</span>
-                    )}
-                  </td>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div
+            ref={tableWrapperRef}
+            tabIndex={0}
+            role="grid"
+            aria-label="Questions list"
+            onKeyDown={handleKeyDown}
+            className="overflow-x-auto rounded-lg border border-zinc-200 bg-white outline-none focus:ring-2 focus:ring-zinc-300"
+          >
+            <table className="min-w-full divide-y divide-zinc-200">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                    ID
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                    Title
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                    Type
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                    Domain
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                    Tags
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {questions.map((q, idx) => (
+                  <tr
+                    key={q.id}
+                    ref={(el) => {
+                      rowRefs.current[idx] = el;
+                    }}
+                    role="row"
+                    aria-selected={selectedIndex === idx}
+                    tabIndex={-1}
+                    onClick={() => setSelectedIndex(idx)}
+                    className={`cursor-pointer hover:bg-zinc-50 ${
+                      selectedIndex === idx ? "bg-zinc-100" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-2 font-mono text-sm text-zinc-800">
+                      {q.id}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-zinc-700">
+                      {q.title ?? "—"}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-zinc-600">{q.type}</td>
+                    <td className="px-4 py-2 text-sm text-zinc-600">
+                      {q.domain ?? "—"}
+                    </td>
+                    <td className="px-4 py-2">
+                      {q.tags?.length ? (
+                        <span className="flex flex-wrap gap-1">
+                          {q.tags.map((t) => (
+                            <span
+                              key={t}
+                              className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-700"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-zinc-400">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="min-h-[200px] lg:sticky lg:top-4">
+            <QuestionDetailPanel
+              questionId={selectedQuestion?.id ?? null}
+              version={selectedQuestion?.version}
+            />
+          </div>
         </div>
       )}
     </div>
