@@ -22,6 +22,8 @@ export interface MetaYaml {
   version: string;
   title?: string;
   domain?: string;
+  /** Tags for filtering and discovery (SPEC-0.0.6). */
+  tags?: string[];
   created_at?: string;
   modified_at?: string;
   /** bash: optional reference to zip file for sandbox folder tree (filename or path). */
@@ -80,6 +82,8 @@ export interface ParsedQuestion {
   sandboxZipRef?: string;
   /** bash_predict_output: script shown to student; grading uses run output. */
   scriptSource?: string;
+  /** Tags for filtering and discovery (SPEC-0.0.6). */
+  tags?: string[];
   /** Raw file names present (for storage) */
   _files?: string[];
 }
@@ -90,6 +94,7 @@ export interface QuestionMetaListItem {
   version: string;
   title?: string;
   domain?: string;
+  tags?: string[];
   created_at?: string;
   modified_at?: string;
 }
@@ -105,6 +110,7 @@ export interface MultipleChoicePayload {
   type: "multiple_choice";
   title?: string;
   domain?: string;
+  tags?: string[];
   prompt: string;
   options: MultipleChoiceOption[];
 }
@@ -114,6 +120,7 @@ export interface BashPayload {
   type: "bash";
   title?: string;
   domain?: string;
+  tags?: string[];
   prompt: string;
   solutionScript: string;
   tests?: TestCaseYaml[];
@@ -125,6 +132,7 @@ export interface BashPredictOutputPayload {
   type: "bash_predict_output";
   title?: string;
   domain?: string;
+  tags?: string[];
   prompt: string;
   scriptSource: string;
   expectedOutput: string;

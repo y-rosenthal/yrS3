@@ -53,6 +53,11 @@ export function parseQuestion(
     return { question: null as unknown as ParsedQuestion, error: "prompt.md or prompt.txt required" };
   }
 
+  const tags =
+    Array.isArray(meta.tags) && meta.tags.length > 0
+      ? [...new Set(meta.tags.map((t) => String(t).trim()).filter(Boolean))]
+      : undefined;
+
   const question: ParsedQuestion = {
     id: meta.id,
     type: meta.type as QuestionType,
@@ -61,6 +66,7 @@ export function parseQuestion(
     domain: meta.domain,
     created_at: meta.created_at,
     modified_at: meta.modified_at,
+    tags,
     prompt: prompt.content,
     promptFormat: prompt.format,
     _files: files.map((f) => f.name),

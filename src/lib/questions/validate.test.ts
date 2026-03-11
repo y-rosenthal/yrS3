@@ -86,6 +86,30 @@ describe("validateMetaYaml", () => {
     expect(result.meta?.title).toBe("A title");
     expect(result.meta?.domain).toBe("math");
   });
+
+  it("returns meta.tags when valid tags array is provided", () => {
+    const input = {
+      id: "q1",
+      type: "short_answer",
+      version: "1.0.0.0",
+      tags: ["bash", "intro"],
+    };
+    const result = validateMetaYaml(input, "q1");
+    expect(result.errors).toHaveLength(0);
+    expect(result.meta?.tags).toEqual(["bash", "intro"]);
+  });
+
+  it("normalizes and dedupes tags", () => {
+    const input = {
+      id: "q1",
+      type: "bash",
+      version: "1.0.0.0",
+      tags: ["bash", "  intro  ", "bash"],
+    };
+    const result = validateMetaYaml(input, "q1");
+    expect(result.errors).toHaveLength(0);
+    expect(result.meta?.tags).toEqual(["bash", "intro"]);
+  });
 });
 
 describe("validateOptionsYaml", () => {

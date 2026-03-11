@@ -51,7 +51,7 @@ A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 
 Project docs are in the **`docs/`** folder and are built as a Quarto book. Rendered HTML (after building) is in **`docs/_book/`**.
 
 - **DOC-GUIDE** — How to navigate docs and version numbering
-- **SPEC** — Initial MVP scope and technical spec; **SPEC-QUESTION-SETS** — Question sets (DB + file-based); **SPEC-DB-FS-QUESTION-SYNC** — DB–FS question sync, dual-write, and backup
+- **SPEC** — Initial MVP scope and technical spec; **SPEC-QUESTION-SETS** — Question sets (DB + file-based); **SPEC-DB-FS-QUESTION-SYNC** — DB–FS question sync, dual-write, and backup; **SPEC-0.0.6** — Question tags and questions browser
 - **SETUP** — Full setup and run (local + Vercel/Supabase deploy)
 - **QUESTION-FORMAT** — Question folder layout, metadata, and optional `db_meta.yaml`
 - **QUESTION-SET-FORMAT** — File-based question set layout (`set.yaml`)

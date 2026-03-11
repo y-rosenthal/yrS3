@@ -45,6 +45,7 @@ export function serializeMultipleChoice(
   };
   if (payload.title != null) meta.title = payload.title;
   if (payload.domain != null) meta.domain = payload.domain;
+  if (payload.tags?.length) meta.tags = payload.tags;
   if (options.created_at) meta.created_at = options.created_at;
   if (options.modified_at) meta.modified_at = options.modified_at;
 
@@ -77,6 +78,7 @@ export function serializeBash(
   };
   if (payload.title != null) meta.title = payload.title;
   if (payload.domain != null) meta.domain = payload.domain;
+  if (payload.tags?.length) meta.tags = payload.tags;
   if (payload.sandboxZipRef != null) meta.sandbox_zip_ref = payload.sandboxZipRef;
   if (options.created_at) meta.created_at = options.created_at;
   if (options.modified_at) meta.modified_at = options.modified_at;
@@ -107,6 +109,7 @@ export function serializeBashPredictOutput(
   };
   if (payload.title != null) meta.title = payload.title;
   if (payload.domain != null) meta.domain = payload.domain;
+  if (payload.tags?.length) meta.tags = payload.tags;
   if (options.created_at) meta.created_at = options.created_at;
   if (options.modified_at) meta.modified_at = options.modified_at;
 
@@ -156,6 +159,7 @@ export function serializeParsedQuestion(
   };
   if (question.title != null) meta.title = question.title;
   if (question.domain != null) meta.domain = question.domain;
+  if (question.tags?.length) meta.tags = question.tags;
   if (question.type === "bash" && question.sandboxZipRef) meta.sandbox_zip_ref = question.sandboxZipRef;
   if (options.created_at) meta.created_at = options.created_at;
   if (options.modified_at) meta.modified_at = options.modified_at;

@@ -30,13 +30,14 @@ Minimal metadata that identifies and classifies the question. Keep this file sho
 
 **Optional (recommended):**
 
-| Field             | Type   | Description |
-|-------------------|--------|-------------|
-| `title`           | string | Short title for admin UIs. |
-| `domain`          | string | Knowledge domain (e.g. `bash`, `r`, `regex`, `excel`, `html`, `css`). |
-| `sandbox_zip_ref` | string | (bash only) Filename or path to a zip for the sandbox folder tree. |
-| `created_at`      | string | ISO 8601 date (user or system on first upload). |
-| `modified_at`     | string | ISO 8601 date (system on each modification upload). |
+| Field             | Type     | Description |
+|-------------------|----------|-------------|
+| `title`           | string   | Short title for admin UIs. |
+| `domain`          | string   | Knowledge domain (e.g. `bash`, `r`, `regex`, `excel`, `html`, `css`). |
+| `tags`            | string[] | List of tags for filtering and discovery (e.g. `[bash, intro, week-1]`). See SPEC-0.0.6. |
+| `sandbox_zip_ref` | string   | (bash only) Filename or path to a zip for the sandbox folder tree. |
+| `created_at`      | string   | ISO 8601 date (user or system on first upload). |
+| `modified_at`     | string   | ISO 8601 date (system on each modification upload). |
 
 **Version semantics (four-part, required from day one):**
 
@@ -53,6 +54,9 @@ type: multiple_choice
 version: "1.0.0.0"
 title: List files in current directory
 domain: bash
+tags:
+  - bash
+  - intro
 ```
 
 ### Prompt file: `prompt.md` or `prompt.txt` (required)

@@ -3,6 +3,7 @@ import {
   serializeQuestion,
   serializeBash,
   serializeBashPredictOutput,
+  serializeParsedQuestion,
 } from "./serialize";
 
 describe("serializeBash", () => {
@@ -34,6 +35,21 @@ describe("serializeBash", () => {
       { logicalId: "b1", version: "1.0.0.0" }
     );
     expect(files.find((f) => f.name === "meta.yaml")?.content).toContain("sandbox_zip_ref: tree.zip");
+  });
+
+  it("includes tags in meta.yaml when provided", () => {
+    const { files } = serializeBash(
+      {
+        type: "bash",
+        prompt: "Q",
+        solutionScript: "echo x",
+        tags: ["bash", "intro"],
+      },
+      { logicalId: "b1", version: "1.0.0.0" }
+    );
+    const metaContent = files.find((f) => f.name === "meta.yaml")?.content ?? "";
+    expect(metaContent).toContain("tags:");
+    expect(metaContent).toMatch(/bash|intro/);
   });
 });
 
@@ -85,5 +101,28 @@ describe("serializeQuestion", () => {
     expect(error).toBeUndefined();
     expect(files.some((f) => f.name === "script.sh")).toBe(true);
     expect(files.some((f) => f.name === "expected.yaml")).toBe(true);
+  });
+});
+
+describe("serializeParsedQuestion with tags", () => {
+  it("writes tags to meta.yaml when question has tags", () => {
+    const question = {
+      id: "q1",
+      type: "short_answer" as const,
+      version: "1.0.0.0",
+      title: "A question",
+      domain: "bash",
+      tags: ["bash", "intro"],
+      prompt: "Prompt text",
+      promptFormat: "md" as const,
+      _files: ["meta.yaml", "prompt.md"],
+    };
+    const { files } = serializeParsedQuestion(question, {
+      logicalId: "q1",
+      version: "1.0.0.0",
+    });
+    const metaContent = files.find((f) => f.name === "meta.yaml")?.content ?? "";
+    expect(metaContent).toContain("tags:");
+    expect(metaContent).toMatch(/bash|intro/);
   });
 });

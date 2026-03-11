@@ -35,7 +35,7 @@ This spec describes how question data is kept in sync between the **database** (
 ### Question content (portable)
 
 - **Location:** `{questions_root}/{logical_id}/{version}/`
-- **Files:** `meta.yaml` (id, type, version, title, domain, created_at, modified_at), `prompt.md` or `prompt.txt`, and type-specific files (e.g. `options.yaml`). Defined in QUESTION-FORMAT-0.0.1. No ownership or status in these files.
+- **Files:** `meta.yaml` (id, type, version, title, domain, optional tags, created_at, modified_at), `prompt.md` or `prompt.txt`, and type-specific files (e.g. `options.yaml`). Defined in QUESTION-FORMAT-0.0.1. No ownership or status in these files. For tags, see SPEC-0.0.6.
 
 ### App metadata (optional)
 

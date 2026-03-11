@@ -60,6 +60,11 @@ export function validateMetaYaml(
   }
 
   if (errors.length > 0) return { errors };
+  const tagsRaw = m.tags;
+  const tags =
+    Array.isArray(tagsRaw) && tagsRaw.length > 0
+      ? [...new Set(tagsRaw.map((t) => String(t).trim()).filter(Boolean))]
+      : undefined;
   return {
     meta: {
       id: String(id),
@@ -67,6 +72,7 @@ export function validateMetaYaml(
       version: String(version),
       title: typeof m.title === "string" ? m.title : undefined,
       domain: typeof m.domain === "string" ? m.domain : undefined,
+      tags,
       created_at: typeof m.created_at === "string" ? m.created_at : undefined,
       modified_at:
         typeof m.modified_at === "string" ? m.modified_at : undefined,

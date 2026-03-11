@@ -209,4 +209,50 @@ describe("parseQuestion", () => {
     expect(result.question.type).toBe("bash");
     expect(result.question.sandboxZipRef).toBe("tree.zip");
   });
+
+  it("parses tags from meta.yaml into question.tags", () => {
+    const result = parseQuestion(
+      "q1",
+      files([
+        {
+          name: "meta.yaml",
+          content: "id: q1\ntype: short_answer\nversion: 1.0.0.0\ntags:\n  - bash\n  - intro\n",
+        },
+        { name: "prompt.md", content: "Question text" },
+      ])
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.question.tags).toEqual(["bash", "intro"]);
+  });
+
+  it("dedupes and trims tags from meta.yaml", () => {
+    const result = parseQuestion(
+      "q2",
+      files([
+        {
+          name: "meta.yaml",
+          content: "id: q2\ntype: bash\nversion: 1.0.0.0\ntags:\n  - bash\n  -  intro \n  - bash\n",
+        },
+        { name: "prompt.md", content: "Q" },
+        { name: "solution.sh", content: "echo x" },
+      ])
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.question.tags).toEqual(["bash", "intro"]);
+  });
+
+  it("leaves question.tags undefined when meta has no tags or empty tags", () => {
+    const result = parseQuestion(
+      "q3",
+      files([
+        {
+          name: "meta.yaml",
+          content: "id: q3\ntype: short_answer\nversion: 1.0.0.0\n",
+        },
+        { name: "prompt.md", content: "Q" },
+      ])
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.question.tags).toBeUndefined();
+  });
 });
