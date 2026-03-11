@@ -37,7 +37,7 @@ export default async function AuthorPage() {
               <li className="px-4 py-6 text-zinc-500">No questions yet.</li>
             ) : (
               questions.map((q) => (
-                <li key={q.id} className="px-4 py-3">
+                <li key={`${q.id}-${q.version}`} className="px-4 py-3">
                   <div className="flex justify-between">
                     <span className="font-mono text-zinc-800">{q.id}</span>
                     <span className="text-sm text-zinc-500">
