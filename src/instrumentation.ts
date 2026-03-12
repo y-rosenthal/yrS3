@@ -15,43 +15,13 @@ export async function register() {
 
   if (!useFs || !hasAdminKey) return;
 
-  const { getSyncOwnerId } = await import("@/lib/questions/sync-owner");
   const { setSyncStatusRan, setSyncStatusSkipped } = await import(
     "@/lib/questions/sync-status"
   );
-  const syncOwnerId = getSyncOwnerId();
 
-  const usingDefaultOwner = !process.env.QUESTION_SYNC_OWNER_ID;
-  if (usingDefaultOwner) {
-    try {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const supabase = createAdminClient();
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.admin.getUserById(syncOwnerId);
-      if (error || !user) {
-        const reason =
-          "Default question owner user not found in database. Run supabase db reset (local) or set QUESTION_SYNC_OWNER_ID. Ensure SUPABASE_SERVICE_ROLE_KEY (or SERVICE_ROLE_KEY) is set for startup sync. See SETUP/SPEC-DB-FS-QUESTION-SYNC.";
-        setSyncStatusSkipped(reason);
-        const { reportError } = await import("@/lib/report");
-        reportError(new Error(reason), { source: "instrumentation" });
-        console.warn("[yrS3] Startup question sync skipped:", reason);
-        return;
-      }
-    } catch (e) {
-      const reason =
-        "Could not verify default question owner. Run supabase db reset (local) or set QUESTION_SYNC_OWNER_ID. See SETUP/SPEC-DB-FS-QUESTION-SYNC.";
-      setSyncStatusSkipped(reason);
-      const { reportError } = await import("@/lib/report");
-      reportError(e instanceof Error ? e : new Error(String(e)), {
-        source: "instrumentation",
-      });
-      console.warn("[yrS3] Startup question sync skipped:", e);
-      return;
-    }
-  }
-
+  // When using default owner we skip the Auth API lookup: it often isn't ready right after
+  // `supabase db reset` (restarting containers). We run sync directly; if the seeded user
+  // exists, sync succeeds; if not, inserts fail with FK errors and we report them.
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const { syncFsWithDb } = await import("@/lib/questions/sync-questions");

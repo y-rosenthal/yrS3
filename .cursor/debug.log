@@ -4,3 +4,6 @@
 {"location":"instrumentation.ts:defaultOwnerCheck","message":"default owner check start","data":{"syncOwnerId":"00000000-0000-4000-8000-000000000001","usingDefaultOwner":true},"timestamp":1773325762570,"hypothesisId":"H1"}
 {"location":"instrumentation.ts:afterGetUserById","message":"getUserById result","data":{"syncOwnerId":"00000000-0000-4000-8000-000000000001","errorMessage":"Database error loading user","errorCode":"unexpected_failure","userFound":false},"timestamp":1773325762630,"hypothesisId":"H2"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773325783706,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773326493590,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773327037657,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773327528108,"hypothesisId":"H1"}
