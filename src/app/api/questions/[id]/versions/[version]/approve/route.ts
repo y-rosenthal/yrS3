@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getQuestionVersion, approveVersion, isOwnerOfQuestion } from "@/lib/questions/store-db";
+import { getQuestionVersion, approveVersion, isOwnerOfQuestion, getEffectiveOwner } from "@/lib/questions/store-db";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 
 /**
@@ -41,7 +41,7 @@ export async function POST(
       logicalId,
       version,
       dbRow: {
-        owner_id: row.owner_id,
+        owner_id: getEffectiveOwner(row) ?? "",
         status: "approved",
         proposed_by: row.proposed_by,
       },

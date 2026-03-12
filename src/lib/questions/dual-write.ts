@@ -8,6 +8,7 @@ import { getQuestionsRootPath, getQuestionsFsBackupRoot } from "./store-fs";
 import { writeDbMeta } from "./db-meta-fs";
 import { writeQuestionVersionToFs } from "./write-to-fs";
 import type { QuestionVersionRow } from "./store-db";
+import { getEffectiveOwner } from "./store-db";
 
 export interface DualWriteParams {
   logicalId: string;
@@ -25,14 +26,13 @@ export async function dualWriteToFs(params: DualWriteParams): Promise<void> {
   const { logicalId, version, dbRow } = params;
   const isSupabase = process.env.QUESTIONS_STORAGE === "supabase";
 
+  const effectiveOwner = getEffectiveOwner(dbRow) ?? "";
+  const meta = { owner_id: effectiveOwner, status: dbRow.status, proposed_by: dbRow.proposed_by };
+
   if (!isSupabase) {
     const root = getQuestionsRootPath();
     try {
-      await writeDbMeta(root, logicalId, version, {
-        owner_id: dbRow.owner_id,
-        status: dbRow.status,
-        proposed_by: dbRow.proposed_by,
-      });
+      await writeDbMeta(root, logicalId, version, meta);
     } catch (_e) {
       // best-effort; do not fail the request
     }
@@ -48,7 +48,7 @@ export async function dualWriteToFs(params: DualWriteParams): Promise<void> {
         root: backupRoot,
         logicalId,
         version,
-        dbRow,
+        dbRow: { ...dbRow, owner_id: effectiveOwner },
         contentFiles: params.contentFiles,
       });
     } catch (_e) {
@@ -56,11 +56,7 @@ export async function dualWriteToFs(params: DualWriteParams): Promise<void> {
     }
   } else {
     try {
-      await writeDbMeta(backupRoot, logicalId, version, {
-        owner_id: dbRow.owner_id,
-        status: dbRow.status,
-        proposed_by: dbRow.proposed_by,
-      });
+      await writeDbMeta(backupRoot, logicalId, version, meta);
     } catch (_e) {
       // best-effort (e.g. approve flow: only update db_meta)
     }

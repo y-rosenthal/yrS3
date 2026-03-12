@@ -10,7 +10,7 @@ import path from "path";
 import { getQuestionStore } from "./get-store";
 import { listAllQuestionVersions } from "./store-db";
 import type { QuestionVersionRow } from "./store-db";
-import { insertQuestionVersion, makePromptSnippet } from "./store-db";
+import { insertQuestionVersion, makePromptSnippet, getEffectiveOwner } from "./store-db";
 import {
   getQuestionsRootPath,
   listVersionKeysFromFs,
@@ -147,7 +147,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
       fsMeta.domain === dbMeta.domain &&
       sameTags &&
       (!fsDbMeta ||
-        (fsDbMeta.owner_id === dbRow.owner_id &&
+        (fsDbMeta.owner_id === getEffectiveOwner(dbRow) &&
           fsDbMeta.status === dbRow.status &&
           fsDbMeta.proposed_by === dbRow.proposed_by));
     if (sameMeta) continue;
@@ -182,7 +182,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
       logicalId,
       version,
       dbRow: {
-        owner_id: dbRow.owner_id,
+        owner_id: getEffectiveOwner(dbRow) ?? "",
         status: dbRow.status,
         proposed_by: dbRow.proposed_by,
       },

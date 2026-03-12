@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { syncFsWithDb } from "@/lib/questions/sync-questions";
 import { syncQuestionSetsFromFs } from "@/lib/question-sets/sync-question-sets";
 import { setSyncStatusRan } from "@/lib/questions/sync-status";
@@ -9,11 +9,12 @@ import { reportError } from "@/lib/report";
 /**
  * POST /api/admin/sync-questions
  * Run FS-DB sync (import FS-only, resolve conflicts with DB wins). Requires auth.
+ * Uses service role so inserts with sync owner_id are not blocked by RLS.
  */
 export async function POST() {
   try {
     await requireUser();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const result = await syncFsWithDb(supabase);
     const setSyncResult = await syncQuestionSetsFromFs(supabase);
     const allErrors = [...result.errors, ...setSyncResult.errors];

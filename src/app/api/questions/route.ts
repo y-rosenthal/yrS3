@@ -32,10 +32,13 @@ export async function GET(request: NextRequest) {
             .filter(Boolean)
         : undefined;
     const searchQuery = request.nextUrl.searchParams.get("q") ?? undefined;
+    const ownerIdParam = request.nextUrl.searchParams.get("ownerId")?.trim();
+    const ownerId = ownerIdParam && ownerIdParam.length > 0 ? ownerIdParam : undefined;
 
     const { data: rows, error } = await listApprovedQuestionsForListing(supabase, {
       tags,
       searchQuery: searchQuery || undefined,
+      ownerId,
     });
     if (error) {
       return NextResponse.json({ error: "Failed to list questions" }, { status: 500 });

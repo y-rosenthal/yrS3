@@ -7,3 +7,5 @@
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773326493590,"hypothesisId":"H1"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773327037657,"hypothesisId":"H1"}
 {"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773327528108,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":16},"timestamp":1773328986767,"hypothesisId":"H1"}
+{"location":"login/page.tsx:handleEmailSubmit","message":"email signup attempt","data":{"mode":"signup","emailLength":20},"timestamp":1773332357507,"hypothesisId":"H1"}

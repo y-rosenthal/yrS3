@@ -60,7 +60,8 @@ Store one row per question set.
 | `id` | uuid, PK | Unique question set id (e.g. `gen_random_uuid()`). |
 | `title` | text, not null | User-facing name (e.g. "Bash basics", "Week 3 homework"). |
 | `description` | text, nullable | Optional description. |
-| `owner_id` | uuid, nullable, FK → auth.users | User who created the set. Nullable to allow system/seed data. |
+| `owner_id` | uuid, nullable, FK → auth.users ON DELETE SET NULL | User who created the set. Nullable when user is deleted or for system/seed data. |
+| `preserved_owner_id` | uuid, nullable | Original creator UUID; kept when `owner_id` is nulled after user delete (see SPEC-PRESERVED-OWNERSHIP-0.0.1). |
 | `created_at` | timestamptz | When the set was created. |
 | `source_slug` | text, nullable, unique when present | Folder name under `question-sets/` when the set was synced from the filesystem; null for UI-created sets. |
 

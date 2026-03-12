@@ -12,7 +12,10 @@ export interface QuestionVersionRow {
   id: string;
   logical_id: string;
   version: string;
-  owner_id: string;
+  /** Current owner; null when user was deleted (see preserved_owner_id). */
+  owner_id: string | null;
+  /** Original owner UUID; kept when owner_id is nulled after user delete. */
+  preserved_owner_id: string | null;
   type: string;
   title: string | null;
   domain: string | null;
@@ -67,8 +70,8 @@ export async function insertQuestionVersion(
 }
 
 /**
- * List all version rows for an owner. Returns rows ordered by created_at desc.
- * For "my questions" UI, consumer can group by logical_id and take latest per group.
+ * List all version rows for an owner (current owner_id only; "my questions").
+ * For "questions by this user" including deleted, use listApprovedQuestionsForListing with ownerId filter.
  */
 export async function listQuestionVersionsByOwner(
   supabase: SupabaseClient,
@@ -123,7 +126,8 @@ export async function getLatestQuestionVersion(
 }
 
 /**
- * Get the owner of a question (owner_id of the latest approved version, or any version if none approved).
+ * Get the effective owner of a question (for display and "who can approve").
+ * Returns current owner_id, or preserved_owner_id when owner was deleted (owner_id null).
  */
 export async function getQuestionOwner(
   supabase: SupabaseClient,
@@ -131,20 +135,25 @@ export async function getQuestionOwner(
 ): Promise<string | null> {
   const { data: approved } = await supabase
     .from("question_versions")
-    .select("owner_id")
+    .select("owner_id, preserved_owner_id")
     .eq("logical_id", logicalId)
     .eq("status", "approved")
     .order("version", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (approved?.owner_id) return (approved as { owner_id: string }).owner_id;
+  if (approved) {
+    const row = approved as { owner_id: string | null; preserved_owner_id: string | null };
+    return row.owner_id ?? row.preserved_owner_id ?? null;
+  }
   const { data: anyRow } = await supabase
     .from("question_versions")
-    .select("owner_id")
+    .select("owner_id, preserved_owner_id")
     .eq("logical_id", logicalId)
     .limit(1)
     .maybeSingle();
-  return anyRow ? (anyRow as { owner_id: string }).owner_id : null;
+  if (!anyRow) return null;
+  const row = anyRow as { owner_id: string | null; preserved_owner_id: string | null };
+  return row.owner_id ?? row.preserved_owner_id ?? null;
 }
 
 /**
@@ -184,7 +193,8 @@ export async function approveVersion(
 }
 
 /**
- * Check whether the user owns at least one version of this question (and thus can create new versions or delete).
+ * Check whether the user is the current owner of at least one version (can approve, create new versions, delete).
+ * Orphaned questions (owner_id null after user delete) return false; they are read-only.
  */
 export async function isOwnerOfQuestion(
   supabase: SupabaseClient,
@@ -215,6 +225,20 @@ export async function listAllQuestionVersions(
   return { data: (data ?? []) as QuestionVersionRow[], error: null };
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUuid(s: string): boolean {
+  return UUID_RE.test(s.trim());
+}
+
+/** Effective owner for display and FS metadata: current owner or preserved when user was deleted. */
+export function getEffectiveOwner(row: {
+  owner_id: string | null;
+  preserved_owner_id?: string | null;
+}): string | null {
+  return row.owner_id ?? row.preserved_owner_id ?? null;
+}
+
 const PROMPT_SNIPPET_LENGTH = 200;
 
 /** Strip to plain text and take first N chars for snippet. */
@@ -229,10 +253,11 @@ export function makePromptSnippet(prompt: string | null | undefined): string | n
  * List approved questions for listing (browse, create-set picker): one per logical_id (latest version).
  * Optional tag filter: only questions whose tags array contains all of the given tags.
  * Optional searchQuery: case-insensitive filter on title, domain, prompt_snippet.
+ * Optional ownerId: only questions whose current or preserved owner is this UUID (e.g. "questions by this user" including deleted).
  */
 export async function listApprovedQuestionsForListing(
   supabase: SupabaseClient,
-  opts: { tags?: string[]; searchQuery?: string } = {}
+  opts: { tags?: string[]; searchQuery?: string; ownerId?: string } = {}
 ): Promise<{ data: QuestionVersionRow[]; error: Error | null }> {
   let query = supabase
     .from("question_versions")
@@ -241,6 +266,9 @@ export async function listApprovedQuestionsForListing(
     .order("created_at", { ascending: false });
   if (opts.tags?.length) {
     query = query.contains("tags", opts.tags);
+  }
+  if (opts.ownerId && isValidUuid(opts.ownerId)) {
+    query = query.or(`owner_id.eq.${opts.ownerId},preserved_owner_id.eq.${opts.ownerId}`);
   }
   const { data, error } = await query;
   if (error) return { data: [], error };
