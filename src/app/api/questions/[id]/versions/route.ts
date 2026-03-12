@@ -14,6 +14,7 @@ import {
   getLatestQuestionVersion,
   getQuestionOwner,
   insertQuestionVersion,
+  makePromptSnippet,
 } from "@/lib/questions/store-db";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 
@@ -27,11 +28,13 @@ function validatePayload(payload: Record<string, unknown>): { valid: boolean; er
 
 function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
   const type = body.type;
+  const tags = Array.isArray(body.tags) ? (body.tags as string[]).filter((t) => typeof t === "string" && t.trim()) : undefined;
   if (type === "bash") {
     return {
       type: "bash",
       title: body.title,
       domain: body.domain,
+      tags,
       prompt: body.prompt,
       solutionScript: body.solutionScript,
       tests: body.tests,
@@ -43,6 +46,7 @@ function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
       type: "bash_predict_output",
       title: body.title,
       domain: body.domain,
+      tags,
       prompt: body.prompt,
       scriptSource: body.scriptSource,
       expectedOutput: body.expectedOutput,
@@ -52,6 +56,7 @@ function buildPayload(body: Record<string, unknown>): Record<string, unknown> {
     type: "multiple_choice",
     title: body.title,
     domain: body.domain,
+    tags,
     prompt: body.prompt,
     options: body.options,
   };
@@ -113,6 +118,7 @@ export async function POST(
     const isOwner = ownerId === user.id;
     const storagePath = `${logicalId}/${nextVersion}`;
     const payloadType = (payload as { type: string }).type;
+    const payloadTags = (payload as { tags?: string[] }).tags;
     const { error: dbError } = await insertQuestionVersion(supabase, {
       logical_id: logicalId,
       version: nextVersion,
@@ -120,6 +126,8 @@ export async function POST(
       type: payloadType,
       title: (payload as { title?: string }).title ?? null,
       domain: (payload as { domain?: string }).domain ?? null,
+      tags: payloadTags?.length ? payloadTags : [],
+      prompt_snippet: makePromptSnippet((payload as { prompt?: string }).prompt),
       storage_path: storagePath,
       status: isOwner ? "approved" : "pending",
       proposed_by: isOwner ? null : user.id,

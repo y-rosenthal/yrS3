@@ -3,7 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getQuestionStore } from "@/lib/questions/get-store";
 import { validateQuestionUpload, isValidVersion } from "@/lib/questions";
-import { getQuestionOwner, insertQuestionVersion } from "@/lib/questions/store-db";
+import { getQuestionOwner, insertQuestionVersion, makePromptSnippet } from "@/lib/questions/store-db";
+import { parseQuestion } from "@/lib/questions/parse";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 import yaml from "js-yaml";
 import { logQuestions } from "@/lib/logger";
@@ -169,16 +170,20 @@ export async function POST(request: NextRequest) {
     let type = "multiple_choice";
     let title: string | null = null;
     let domain: string | null = null;
+    let tags: string[] = [];
     if (metaFile) {
       try {
-        const meta = yaml.load(metaFile.content) as { type?: string; title?: string; domain?: string };
+        const meta = yaml.load(metaFile.content) as { type?: string; title?: string; domain?: string; tags?: string[] };
         if (meta?.type) type = meta.type;
         if (meta?.title != null) title = meta.title;
         if (meta?.domain != null) domain = meta.domain;
+        if (Array.isArray(meta?.tags)) tags = meta.tags.filter((t) => typeof t === "string" && t.trim());
       } catch {
         // keep defaults
       }
     }
+    const { question: parsed } = parseQuestion(logicalId, files);
+    const promptSnippet = parsed ? makePromptSnippet(parsed.prompt) : null;
     const supabase = await createClient();
     const questionOwner = await getQuestionOwner(supabase, logicalId);
     const isNewQuestion = questionOwner == null;
@@ -191,6 +196,8 @@ export async function POST(request: NextRequest) {
       type,
       title,
       domain,
+      tags: tags.length ? tags : [],
+      prompt_snippet: promptSnippet,
       storage_path: storagePath,
       status: isOwner ? "approved" : "pending",
       proposed_by: isOwner ? null : user.id,

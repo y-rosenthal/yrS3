@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { QuestionListEntry } from "@/app/components/available-questions-table";
 import { AvailableQuestionsTable } from "@/app/components/available-questions-table";
 import { QuestionDetailPanel } from "@/app/components/question-detail-panel";
@@ -9,60 +9,67 @@ import { TagFilterBar } from "@/app/components/tag-filter-bar";
 export function BrowseQuestionsClient() {
   const [questions, setQuestions] = useState<QuestionListEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tagFilter, setTagFilter] = useState("");
-  const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [chosenTags, setChosenTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  function loadQuestions(tags?: string[]) {
-    setLoading(true);
-    const url = tags?.length
-      ? `/api/questions?tags=${encodeURIComponent(tags.join(","))}`
-      : "/api/questions";
-    fetch(url)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setQuestions(Array.isArray(data) ? data : []))
-      .catch(() => setQuestions([]))
-      .finally(() => setLoading(false));
-  }
+  const loadQuestions = useCallback(
+    (tags: string[], q: string) => {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (tags.length) params.set("tags", tags.join(","));
+      if (q.trim()) params.set("q", q.trim());
+      const url = `/api/questions${params.toString() ? `?${params}` : ""}`;
+      fetch(url)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => setQuestions(Array.isArray(data) ? data : []))
+        .catch(() => setQuestions([]))
+        .finally(() => setLoading(false));
+    },
+    []
+  );
 
   useEffect(() => {
-    loadQuestions(appliedTags.length ? appliedTags : undefined);
-  }, [appliedTags.join(",")]);
+    loadQuestions(chosenTags, searchQuery);
+  }, [chosenTags, searchQuery, loadQuestions]);
 
   useEffect(() => {
     setSelectedIndex(null);
-  }, [appliedTags.join(",")]);
+  }, [chosenTags.join(","), searchQuery]);
 
   const selectedQuestion =
     selectedIndex != null && questions[selectedIndex] != null
       ? questions[selectedIndex]
       : null;
 
-  function applyTagFilter() {
-    const tags = tagFilter
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-    setAppliedTags(tags);
-  }
-
-  function clearTagFilter() {
-    setTagFilter("");
-    setAppliedTags([]);
-  }
-
   return (
     <div className="space-y-4">
-      <TagFilterBar
-        tagFilter={tagFilter}
-        onTagFilterChange={setTagFilter}
-        appliedTags={appliedTags}
-        onApply={applyTagFilter}
-        onClear={clearTagFilter}
-      />
-      {appliedTags.length > 0 && (
+      <div className="flex flex-wrap items-center gap-3">
+        <TagFilterBar
+          chosenTags={chosenTags}
+          onChosenTagsChange={setChosenTags}
+          label="Filter by tags:"
+          placeholder="Add tags…"
+        />
+        <div className="flex items-center gap-2">
+          <label htmlFor="question-search" className="text-sm font-medium text-zinc-700">
+            Full text search:
+          </label>
+          <input
+            id="question-search"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search title, domain, question text…"
+            className="rounded border border-zinc-300 px-2 py-1.5 text-sm text-zinc-800 w-56"
+          />
+        </div>
+      </div>
+      {(chosenTags.length > 0 || searchQuery.trim()) && (
         <p className="text-sm text-zinc-500">
-          Showing questions with all tags: {appliedTags.join(", ")}
+          {chosenTags.length > 0 && `Tags: ${chosenTags.join(", ")}`}
+          {chosenTags.length > 0 && searchQuery.trim() && " · "}
+          {searchQuery.trim() && `Search: "${searchQuery.trim()}"`}
         </p>
       )}
       {loading ? (

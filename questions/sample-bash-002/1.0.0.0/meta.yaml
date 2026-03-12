@@ -3,3 +3,6 @@ type: bash
 version: "1.0.0.0"
 title: Echo and count lines
 domain: bash
+tags:
+  - bash
+  - intro

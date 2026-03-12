@@ -3,3 +3,6 @@ type: bash_predict_output
 version: "1.0.0.0"
 title: Predict echo output
 domain: bash
+tags:
+  - bash
+  - intro

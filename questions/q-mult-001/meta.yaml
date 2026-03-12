@@ -3,3 +3,7 @@ type: multiple_choice
 version: "1"
 title: Sample multiple choice
 domain: general
+tags:
+  - general
+  - multiple_choice
+  - sample

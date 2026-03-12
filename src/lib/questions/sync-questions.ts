@@ -10,7 +10,7 @@ import path from "path";
 import { getQuestionStore } from "./get-store";
 import { listAllQuestionVersions } from "./store-db";
 import type { QuestionVersionRow } from "./store-db";
-import { insertQuestionVersion } from "./store-db";
+import { insertQuestionVersion, makePromptSnippet } from "./store-db";
 import {
   getQuestionsRootPath,
   listVersionKeysFromFs,
@@ -100,6 +100,7 @@ export async function syncFsWithDb(supabase: SupabaseClient): Promise<SyncResult
         title: question.title ?? null,
         domain: question.domain ?? null,
         tags: question.tags ?? [],
+        prompt_snippet: makePromptSnippet(question.prompt),
         storage_path: storagePath,
         status: "approved",
         proposed_by: null,

@@ -9,7 +9,10 @@ export interface QuestionListEntry {
   title?: string;
   domain?: string;
   tags?: string[];
+  promptSnippet?: string;
 }
+
+const SNIPPET_MAX_LEN = 80;
 
 type Props = {
   questions: QuestionListEntry[];
@@ -21,12 +24,19 @@ type Props = {
   highlightQuestionIds?: string[] | Set<string>;
   /** Optional: called when Escape is pressed to clear selection. */
   onClearSelection?: () => void;
+  /** If false, hide ID column in the table (e.g. in create-set "questions to include" to save space). Default true. */
+  showIdInList?: boolean;
   ariaLabel?: string;
 };
 
 function isHighlighted(id: string, highlightIds: string[] | Set<string> | undefined): boolean {
   if (!highlightIds) return false;
   return Array.isArray(highlightIds) ? highlightIds.includes(id) : highlightIds.has(id);
+}
+
+function truncate(s: string, max: number): string {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length <= max ? t : t.slice(0, max) + "…";
 }
 
 export function AvailableQuestionsTable({
@@ -36,6 +46,7 @@ export function AvailableQuestionsTable({
   actionColumn,
   highlightQuestionIds,
   onClearSelection,
+  showIdInList = true,
   ariaLabel = "Questions list",
 }: Props) {
   const tableWrapperRef = useRef<HTMLDivElement>(null);
@@ -88,9 +99,11 @@ export function AvailableQuestionsTable({
                 Action
               </th>
             )}
-            <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
-              ID
-            </th>
+            {showIdInList && (
+              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                ID
+              </th>
+            )}
             <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
               Title
             </th>
@@ -103,6 +116,11 @@ export function AvailableQuestionsTable({
             <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
               Tags
             </th>
+            {!showIdInList && (
+              <th className="px-4 py-2 text-left text-sm font-medium text-zinc-700">
+                Preview
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
@@ -135,9 +153,11 @@ export function AvailableQuestionsTable({
                   {actionColumn(q, idx)}
                 </td>
               )}
-              <td className="px-4 py-2 font-mono text-sm text-zinc-800">
-                {q.id}
-              </td>
+              {showIdInList && (
+                <td className="px-4 py-2 font-mono text-sm text-zinc-800">
+                  {q.id}
+                </td>
+              )}
               <td className="px-4 py-2 text-sm text-zinc-700">
                 {q.title ?? "—"}
               </td>
@@ -161,6 +181,17 @@ export function AvailableQuestionsTable({
                   <span className="text-sm text-zinc-400">—</span>
                 )}
               </td>
+              {!showIdInList && (
+                <td className="px-4 py-2">
+                  {q.promptSnippet ? (
+                    <span className="text-[11px] text-zinc-500 line-clamp-2">
+                      {truncate(q.promptSnippet, SNIPPET_MAX_LEN)}
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-zinc-400">—</span>
+                  )}
+                </td>
+              )}
             </tr>
           );
           })}

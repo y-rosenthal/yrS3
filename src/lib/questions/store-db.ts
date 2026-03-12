@@ -17,6 +17,7 @@ export interface QuestionVersionRow {
   title: string | null;
   domain: string | null;
   tags: string[] | null;
+  prompt_snippet: string | null;
   storage_path: string;
   status: QuestionVersionStatus;
   proposed_by: string | null;
@@ -31,6 +32,7 @@ export interface InsertQuestionVersion {
   title?: string | null;
   domain?: string | null;
   tags?: string[] | null;
+  prompt_snippet?: string | null;
   storage_path: string;
   status?: QuestionVersionStatus;
   proposed_by?: string | null;
@@ -53,6 +55,7 @@ export async function insertQuestionVersion(
       title: row.title ?? null,
       domain: row.domain ?? null,
       tags: row.tags ?? [],
+      prompt_snippet: row.prompt_snippet ?? null,
       storage_path: row.storage_path,
       status: row.status ?? "approved",
       proposed_by: row.proposed_by ?? null,
@@ -212,13 +215,24 @@ export async function listAllQuestionVersions(
   return { data: (data ?? []) as QuestionVersionRow[], error: null };
 }
 
+const PROMPT_SNIPPET_LENGTH = 200;
+
+/** Strip to plain text and take first N chars for snippet. */
+export function makePromptSnippet(prompt: string | null | undefined): string | null {
+  if (!prompt || typeof prompt !== "string") return null;
+  const plain = prompt.replace(/\s+/g, " ").trim();
+  if (!plain) return null;
+  return plain.length <= PROMPT_SNIPPET_LENGTH ? plain : plain.slice(0, PROMPT_SNIPPET_LENGTH);
+}
+
 /**
  * List approved questions for listing (browse, create-set picker): one per logical_id (latest version).
  * Optional tag filter: only questions whose tags array contains all of the given tags.
+ * Optional searchQuery: case-insensitive filter on title, domain, prompt_snippet.
  */
 export async function listApprovedQuestionsForListing(
   supabase: SupabaseClient,
-  opts: { tags?: string[] } = {}
+  opts: { tags?: string[]; searchQuery?: string } = {}
 ): Promise<{ data: QuestionVersionRow[]; error: Error | null }> {
   let query = supabase
     .from("question_versions")
@@ -230,7 +244,16 @@ export async function listApprovedQuestionsForListing(
   }
   const { data, error } = await query;
   if (error) return { data: [], error };
-  const rows = (data ?? []) as QuestionVersionRow[];
+  let rows = (data ?? []) as QuestionVersionRow[];
+  const q = opts.searchQuery?.trim().toLowerCase();
+  if (q) {
+    rows = rows.filter(
+      (r) =>
+        (r.title && r.title.toLowerCase().includes(q)) ||
+        (r.domain && r.domain.toLowerCase().includes(q)) ||
+        (r.prompt_snippet && r.prompt_snippet.toLowerCase().includes(q))
+    );
+  }
   rows.sort((a, b) => compareVersion(b.version, a.version));
   const byLogicalId = new Map<string, QuestionVersionRow>();
   for (const row of rows) {
@@ -265,4 +288,23 @@ export async function listMyQuestionsWithLatest(
     }
   }
   return { data: latest, error: null };
+}
+
+/**
+ * List distinct tag names from approved question versions (for tag filter picker).
+ */
+export async function listDistinctTags(
+  supabase: SupabaseClient
+): Promise<{ data: string[]; error: Error | null }> {
+  const { data, error } = await supabase
+    .from("question_versions")
+    .select("tags")
+    .eq("status", "approved");
+  if (error) return { data: [], error };
+  const set = new Set<string>();
+  for (const row of (data ?? []) as { tags: string[] | null }[]) {
+    const tags = row?.tags;
+    if (Array.isArray(tags)) for (const t of tags) if (typeof t === "string" && t.trim()) set.add(t.trim());
+  }
+  return { data: Array.from(set).sort(), error: null };
 }

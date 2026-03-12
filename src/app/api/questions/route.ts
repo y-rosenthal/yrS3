@@ -9,7 +9,11 @@ import {
   validateBashPredictOutputPayload,
   INITIAL_VERSION,
 } from "@/lib/questions";
-import { listApprovedQuestionsForListing, insertQuestionVersion } from "@/lib/questions/store-db";
+import {
+  listApprovedQuestionsForListing,
+  insertQuestionVersion,
+  makePromptSnippet,
+} from "@/lib/questions/store-db";
 import { dualWriteToFs } from "@/lib/questions/dual-write";
 import { logQuestions } from "@/lib/logger";
 import { reportError } from "@/lib/report";
@@ -27,8 +31,12 @@ export async function GET(request: NextRequest) {
             .map((t) => t.trim())
             .filter(Boolean)
         : undefined;
+    const searchQuery = request.nextUrl.searchParams.get("q") ?? undefined;
 
-    const { data: rows, error } = await listApprovedQuestionsForListing(supabase, { tags });
+    const { data: rows, error } = await listApprovedQuestionsForListing(supabase, {
+      tags,
+      searchQuery: searchQuery || undefined,
+    });
     if (error) {
       return NextResponse.json({ error: "Failed to list questions" }, { status: 500 });
     }
@@ -39,6 +47,7 @@ export async function GET(request: NextRequest) {
       title: r.title ?? undefined,
       domain: r.domain ?? undefined,
       tags: r.tags ?? [],
+      promptSnippet: r.prompt_snippet ?? undefined,
     }));
     logQuestions("metadata_list", user.id, { count: list.length });
     return NextResponse.json(list);
@@ -128,6 +137,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const storagePath = `${logicalId}/${version}`;
     const payloadTags = (payload as { tags?: string[] }).tags;
+    const prompt = (payload as { prompt?: string }).prompt;
     const { error: dbError } = await insertQuestionVersion(supabase, {
       logical_id: logicalId,
       version,
@@ -136,6 +146,7 @@ export async function POST(request: NextRequest) {
       title: (payload as { title?: string }).title ?? null,
       domain: (payload as { domain?: string }).domain ?? null,
       tags: payloadTags?.length ? payloadTags : [],
+      prompt_snippet: makePromptSnippet(prompt),
       storage_path: storagePath,
     });
     if (dbError) {

@@ -3,5 +3,8 @@ type: multiple_choice
 version: 1.0.0.0
 title: name of languge we r using
 domain: r
+tags:
+  - r
+  - multiple_choice
 created_at: '2026-03-05T10:32:23.802Z'
 modified_at: '2026-03-05T10:32:23.802Z'
