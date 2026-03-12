@@ -7,7 +7,7 @@ DOC STRUCTURE RULES
 -->
 # SPEC: Hierarchical tags and canonical facts (v0.0.8)
 
-This spec defines the **design and storage approach** for **hierarchical tags** (to disambiguate terminology across domains and organize content) and **canonical facts** (to map questions and tutorial content via a shared database of normalized facts). It also specifies **minimal tutorial content** storage and **AI-assisted duplicate detection** for tags and facts. The system must support **filesystem persistence** for tags and facts so that editors and content creators can work in the filesystem or via the UI (see [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd) system goals). Design targets **scalability** on the order of hundreds of thousands of facts and thousands of tags (not "Google" scale, but internet-scale growth).
+This spec defines the **design and storage approach** for **hierarchical tags** (to disambiguate terminology across domains and organize content) and **canonical facts** (to map questions and tutorial content via a shared database of normalized facts). It also specifies **minimal tutorial content** storage and **AI-assisted duplicate detection** for tags and facts. The system must support **filesystem persistence** for tags and facts so that editors and content creators can work in the filesystem or via the UI (see [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd) system goals). Design targets **scalability** on the order of millions of facts and tens of thousands of tags (not "Google" scale, but internet-scale growth).
 
 **References:** [SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.qmd](SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.qmd), [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd), [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd), [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd), [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd).
 
@@ -37,9 +37,9 @@ There is **no** requirement for backwards compatibility. The system has not gone
 
 Design for:
 
-- **Facts:** Hundreds of thousands of rows (e.g. 100k–500k+). Use indexes on `canonical_text` (or full-text search), `tag_path`/domain, and any foreign keys. Consider partitioning by domain or tag_path if needed at scale.
-- **Tags:** Thousands of nodes (e.g. 1k–10k+). Adjacency list with indexed `parent_id` and optional materialized path; recursive CTEs are acceptable at this scale. Index path or path prefix for filter-by-path queries.
-- **Link tables** (question–fact, tutorial–fact, etc.): Row counts will be large (questions × facts per question, etc.). Index by content id and by fact_id for both directions of lookup. No need to design for billions of rows in v0.0.8; hundreds of thousands of link rows are the target.
+- **Facts:** Potentially **millions** of rows (e.g. 1M–10M+). Use indexes on `canonical_text` (or full-text search), `tag_path`/domain, and any foreign keys. Consider partitioning by domain or tag_path for query and maintenance at scale; full-text search infrastructure (e.g. Postgres `tsvector` or external search) should support millions of documents.
+- **Tags:** Potentially **tens of thousands** of nodes (e.g. 10k–50k+). Adjacency list with indexed `parent_id` and optional materialized path; recursive CTEs are acceptable at this scale. Index path or path prefix for filter-by-path queries; ensure hierarchy traversal remains efficient.
+- **Link tables** (question–fact, tutorial–fact, etc.): Row counts will be very large (questions × facts per question, etc.). Index by content id and by fact_id for both directions of lookup. Design for millions of link rows; consider partitioning or sharding if a single table grows beyond comfortable range.
 
 ---
 
@@ -255,7 +255,7 @@ flowchart LR
 
 ## Summary
 
-- **Scalability:** Design for hundreds of thousands of facts and thousands of tags; index and optional partitioning as needed.
+- **Scalability:** Design for millions of facts and tens of thousands of tags; index, full-text search, and optional partitioning as needed.
 - **Filesystem:** Tags and facts are persistable on the filesystem and synced with the database; same dual-write/sync philosophy as questions.
 - **Separator:** Use `/` for hierarchical tag paths (e.g. `programming/python/if`); path convention and curated taxonomy.
 - **No backwards compatibility:** Replace flat tags with hierarchical references.
