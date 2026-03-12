@@ -313,7 +313,7 @@ export function CreateSetForm() {
                 {syncLoading ? "Syncing…" : "Sync from folders (questions + question sets)"}
               </button>
               {syncMessage && (
-                <p className={`text-sm ${syncMessage.startsWith("Synced") ? "text-green-700" : "text-amber-700"}`}>
+                <p className={`text-sm ${syncMessage.startsWith("Sync:") || syncMessage.startsWith("Sync completed.") ? "text-green-700" : "text-amber-700"}`}>
                   {syncMessage}
                 </p>
               )}
