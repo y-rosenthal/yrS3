@@ -23,6 +23,10 @@ The system is designed to be **modular and componentized** to support AI-assiste
 - Enable secure user authentication
 - Establish a scalable, modular architecture compatible with AI coding assistants
 
+### System goals (all assets)
+- **Filesystem persistence:** All main assets (questions, question sets, tags, facts, tutorial content) should be persistable on the filesystem in a human-editable form, so that editors and content creators can create and edit content either via the UI or directly in the filesystem. This is already the case for questions and question sets; the same principle applies to tags, facts, and tutorials.
+- **Decentralized use (long-term):** The system should eventually support decentralized use: content creators may store content in GitHub or similar systems, and an offline or local UI may be pointed at filesystem or git repositories of content, without requiring a central server for authoring.
+
 ### Non-Goals (v0.1)
 - Full tutorial authoring workflows
 - Advanced analytics or reporting
