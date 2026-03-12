@@ -18,12 +18,6 @@ export async function GET(
     if (!set) {
       return NextResponse.json({ error: "Question set not found" }, { status: 404 });
     }
-    if (set.source !== "db") {
-      return NextResponse.json(
-        { error: "Attached files are only available for database-backed sets" },
-        { status: 400 }
-      );
-    }
     return NextResponse.json(set.files ?? []);
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
@@ -47,13 +41,6 @@ export async function POST(
     if (!set) {
       return NextResponse.json({ error: "Question set not found" }, { status: 404 });
     }
-    if (set.source !== "db") {
-      return NextResponse.json(
-        { error: "Cannot add files to file-based question sets" },
-        { status: 400 }
-      );
-    }
-
     const formData = await request.formData();
     const file = formData.get("file");
     const description = (formData.get("description") as string | null)?.trim() ?? null;
@@ -68,11 +55,11 @@ export async function POST(
     const fileId = fileStorage.generateFileId();
     const buffer = Buffer.from(await file.arrayBuffer());
     const originalFilename = file.name || "file";
-    const storedPath = await fileStorage.saveFile(setId, fileId, originalFilename, buffer);
+    const storedPath = await fileStorage.saveFile(set.id, fileId, originalFilename, buffer);
 
     const { error } = await supabase.from("question_set_files").insert({
       id: fileId,
-      question_set_id: setId,
+      question_set_id: set.id,
       filename: originalFilename,
       description,
       stored_path: storedPath,

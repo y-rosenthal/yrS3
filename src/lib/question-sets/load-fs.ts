@@ -6,9 +6,9 @@
 import fs from "fs/promises";
 import path from "path";
 import yaml from "js-yaml";
-import type { QuestionSet, QuestionSetFile, QuestionSetListItem } from "./types";
+import type { QuestionSet, QuestionSetFile } from "./types";
 
-function getQuestionSetsRoot(): string {
+export function getQuestionSetsRoot(): string {
   const root = process.env.QUESTION_SETS_ROOT;
   if (root) return path.resolve(process.cwd(), root);
   return path.resolve(process.cwd(), "question-sets");
@@ -29,7 +29,7 @@ export interface SetYaml {
   attached_files?: unknown;
 }
 
-function parseSetYaml(content: string, folderName: string): QuestionSet | null {
+export function parseSetYamlFromContent(content: string, folderName: string): QuestionSet | null {
   const raw = yaml.load(content) as SetYaml | undefined;
   if (!raw || typeof raw.id !== "string" || !raw.id.trim()) return null;
   if (raw.id.trim() !== folderName) return null; // path and id must match
@@ -69,7 +69,6 @@ function parseSetYaml(content: string, folderName: string): QuestionSet | null {
         ? raw.sandbox_zip_ref.trim()
         : null,
     files: attachedFiles.length > 0 ? attachedFiles : undefined,
-    source: "file",
   };
 }
 
@@ -78,43 +77,4 @@ export function getQuestionSetFolderPath(id: string): string {
   return path.join(getQuestionSetsRoot(), id);
 }
 
-export async function listQuestionSetsFromFs(): Promise<QuestionSetListItem[]> {
-  const root = getQuestionSetsRoot();
-  const results: QuestionSetListItem[] = [];
-  try {
-    const entries = await fs.readdir(root, { withFileTypes: true });
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      const setPath = path.join(root, ent.name, "set.yaml");
-      try {
-        const content = await fs.readFile(setPath, "utf-8");
-        const set = parseSetYaml(content, ent.name);
-        if (set) {
-          results.push({
-            id: set.id,
-            title: set.title,
-            description: set.description,
-            questionCount: set.questionLogicalIds.length,
-            source: "file",
-          });
-        }
-      } catch {
-        // skip missing or invalid set.yaml
-      }
-    }
-  } catch {
-    // root missing or not readable
-  }
-  return results;
-}
-
-export async function getQuestionSetFromFs(id: string): Promise<QuestionSet | null> {
-  const root = getQuestionSetsRoot();
-  const setPath = path.join(root, id, "set.yaml");
-  try {
-    const content = await fs.readFile(setPath, "utf-8");
-    return parseSetYaml(content, id);
-  } catch {
-    return null;
-  }
-}
+// Runtime list/get of question sets from FS removed — use syncQuestionSetsFromFs to import into DB.

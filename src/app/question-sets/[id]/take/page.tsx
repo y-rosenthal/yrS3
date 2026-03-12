@@ -22,7 +22,6 @@ export default async function TakeQuestionSetPage({
         title={set.title}
         instructions={set.instructions ?? null}
         files={set.files ?? []}
-        setSource={set.source}
       />
     </div>
   );

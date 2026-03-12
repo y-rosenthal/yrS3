@@ -97,12 +97,12 @@ Implementations that read or validate file-based question sets MUST enforce:
 
 ## Relationship to database
 
-- This format is **independent** of the database. Question sets can be:
-  - **File-only**: Stored only on the filesystem and loaded at runtime (e.g. by an app that reads from the question-sets root).
-  - **DB-only**: Created and stored only in the database via the UI/API.
-  - **Synced**: Imported from files into the DB, or exported from DB to files. Sync logic is not defined in this format spec; the format only defines the file layout and YAML schema.
+The **database is the source of truth** for listing and for “take as test,” in line with how **questions** work: the filesystem under `question-sets/` is **import-only**. Run the same sync as for questions (`POST /api/admin/sync-questions`, which also syncs question sets) or rely on startup sync when using local FS. Each folder’s name becomes `source_slug` in `question_sets`; repeated syncs **upsert** by slug (update metadata and replace item order; attached files under `files/` are copied into DB-backed storage).
 
-SPEC-QUESTION-SETS-0.0.2 defines the DB tables and API; this document defines the **file-based** representation so that question set data can be edited in a repo, shared, or bulk-loaded without going through the UI.
+- **Create in UI**: Inserts into `question_sets` / `question_set_items` only.
+- **Edit in repo**: Change `set.yaml` (and files under `files/`) then **sync** so the DB matches.
+
+This document defines the **file-based** representation for version control and hand-editing; the implementation imports it into the DB per SPEC-QUESTION-SETS (aligned with SPEC-DB-FS-QUESTION-SYNC for questions).
 
 ---
 

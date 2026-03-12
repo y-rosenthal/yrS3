@@ -40,13 +40,7 @@ export async function PATCH(
     if (!set) {
       return NextResponse.json({ error: "Question set not found" }, { status: 404 });
     }
-    if (set.source !== "db") {
-      return NextResponse.json(
-        { error: "Only database-backed sets can be updated" },
-        { status: 400 }
-      );
-    }
-    const ok = await updateQuestionSet(supabase, id, {
+    const ok = await updateQuestionSet(supabase, set.id, {
       ...(instructions !== undefined && { instructions: instructions?.trim() || null }),
     });
     if (!ok) {

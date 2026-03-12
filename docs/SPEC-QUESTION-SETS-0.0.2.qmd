@@ -39,7 +39,7 @@ So: **question sets** are the reusable data; **tests** (and test sessions) are t
   - Persist question sets in the database (new tables and APIs).
   - UI to **create** a new question set: choose a name (and optional description) and **select which questions** to include (from available questions).
   - UI to **list** question sets; from the list, the user can take a set as a test (take flow) or later edit/delete (optional for 0.0.2).
-  - Remove the config-based "tests" (`tests-config.ts`, `TESTS_CONFIG` env). Question sets are the source of truth from **database** and/or **filesystem**; see [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd) for the file-based format. "Take as test" uses a question set id (from either source).
+  - Remove the config-based "tests" (`tests-config.ts`, `TESTS_CONFIG` env). Question sets are stored in the **database** (source of truth). The **filesystem** under `question-sets/` is imported via **sync** only (same model as questions). See [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd) for the file layout; sync upserts into `question_sets` with `source_slug` set to the folder name.
   - Update documentation and code naming so that "question set" is used for the set of questions and "test" is used only for the taking/submission flow.
 
 - **Out of scope for 0.0.2**
@@ -62,6 +62,7 @@ Store one row per question set.
 | `description` | text, nullable | Optional description. |
 | `owner_id` | uuid, nullable, FK → auth.users | User who created the set. Nullable to allow system/seed data. |
 | `created_at` | timestamptz | When the set was created. |
+| `source_slug` | text, nullable, unique when present | Folder name under `question-sets/` when the set was synced from the filesystem; null for UI-created sets. |
 
 ### New table: `question_set_items`
 
@@ -78,12 +79,8 @@ Unique constraint on `(question_set_id, question_logical_id)` so the same questi
 
 ### Sources of question set data
 
-Question sets can be stored in two ways:
-
-- **Database**: Tables `question_sets` and `question_set_items` (see above). Created and updated via the UI/API.
-- **Filesystem**: Per [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd), one folder per set with a `set.yaml` file (id, title, description, question_logical_ids). Enables version control, bulk import, and editing outside the app.
-
-The implementation decides how to combine them (e.g. load file-based sets at startup and merge with DB, or treat one as authoritative). When a set is referenced by id (e.g. for "take as test"), the system resolves that id from the configured source(s).
+- **Database (source of truth)**: Tables `question_sets` and `question_set_items`. Listing, get-by-id, and take flow use the DB only. Optional column `source_slug` identifies sets imported from a repo folder.
+- **Filesystem (import only)**: Per [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd), one folder per set with `set.yaml`. **Sync** (startup and `POST /api/admin/sync-questions`) reads these folders and upserts into the DB—same approach as question sync. There is no runtime merge of DB + filesystem lists.
 
 ### Changes to existing tables
 

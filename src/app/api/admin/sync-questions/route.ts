@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { syncFsWithDb } from "@/lib/questions/sync-questions";
+import { syncQuestionSetsFromFs } from "@/lib/question-sets/sync-question-sets";
 import { setSyncStatusRan } from "@/lib/questions/sync-status";
 import { reportError } from "@/lib/report";
 
@@ -14,12 +15,19 @@ export async function POST() {
     await requireUser();
     const supabase = await createClient();
     const result = await syncFsWithDb(supabase);
+    const setSyncResult = await syncQuestionSetsFromFs(supabase);
+    const allErrors = [...result.errors, ...setSyncResult.errors];
     setSyncStatusRan({
       imported: result.imported,
       conflictsResolved: result.conflictsResolved,
-      errors: result.errors,
+      errors: allErrors,
     });
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      questionSetImported: setSyncResult.imported,
+      questionSetUpdated: setSyncResult.updated,
+      errors: allErrors,
+    });
   } catch (e) {
     if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
     reportError(e instanceof Error ? e : new Error(String(e)), {

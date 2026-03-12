@@ -1,62 +1,47 @@
 /**
- * Question sets: list and get from DB and/or filesystem (SPEC-QUESTION-SETS-0.0.2).
- * Merges DB + file-based sets when listing; getById checks DB then FS.
- * For "take as test" we need a DB set id (uuid); file-based sets are materialized into DB on first take.
+ * Question sets: DB is the source of truth (same approach as questions).
+ * Filesystem question-sets/ is imported via sync only; see sync-question-sets.ts and POST /api/admin/sync-questions.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { listQuestionSetsFromDb, getQuestionSetFromDb, insertQuestionSet } from "./load-db";
-import { listQuestionSetsFromFs, getQuestionSetFromFs } from "./load-fs";
+import { listQuestionSetsFromDb, getQuestionSetFromDb } from "./load-db";
 import type { QuestionSet, QuestionSetListItem } from "./types";
 
-/** List all question sets from DB and filesystem (file-based only if QUESTION_SETS_ROOT or default path exists). */
+/** List all question sets from the database only. */
 export async function listQuestionSets(supabase: SupabaseClient): Promise<QuestionSetListItem[]> {
-  const fromDb = await listQuestionSetsFromDb(supabase);
-  const fromFs = await listQuestionSetsFromFs();
-  const byId = new Map<string, QuestionSetListItem>();
-  for (const s of fromDb) byId.set(s.id, s);
-  for (const s of fromFs) {
-    if (!byId.has(s.id)) byId.set(s.id, s);
-  }
-  return Array.from(byId.values()).sort((a, b) =>
-    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
-  );
+  return listQuestionSetsFromDb(supabase);
 }
 
-/** Get one question set by id (string: uuid or file-based slug). Checks DB first, then FS. */
+/**
+ * Get one question set by id (uuid) or by source_slug (folder name) after sync.
+ * Returns null if not in DB — run sync to import from question-sets/ folder.
+ */
 export async function getQuestionSetById(
   supabase: SupabaseClient,
   id: string
 ): Promise<QuestionSet | null> {
-  const fromDb = await getQuestionSetFromDb(supabase, id);
-  if (fromDb) return fromDb;
-  return getQuestionSetFromFs(id);
+  return getQuestionSetFromDb(supabase, id);
 }
 
 /**
  * Return the uuid to use for test_sessions.set_id and the ordered question logical ids.
- * If the set is in DB, use its id. If it's file-based, materialize it into DB and return the new uuid.
+ * Set must already exist in DB (create via UI or sync from filesystem).
  */
 export async function resolveSetIdForSession(
   supabase: SupabaseClient,
   id: string
 ): Promise<{ setId: string; questionLogicalIds: string[] } | null> {
-  const set = await getQuestionSetById(supabase, id);
+  const set = await getQuestionSetFromDb(supabase, id);
   if (!set) return null;
-  if (set.source === "db") {
-    return { setId: set.id, questionLogicalIds: set.questionLogicalIds };
-  }
-  const created = await insertQuestionSet(supabase, {
-    title: set.title,
-    description: set.description,
-    instructions: set.instructions ?? undefined,
-    questionLogicalIds: set.questionLogicalIds,
-    sandboxZipRef: set.sandboxZipRef ?? undefined,
-  });
-  if (!created) return null;
-  return { setId: created.id, questionLogicalIds: created.questionLogicalIds };
+  return { setId: set.id, questionLogicalIds: set.questionLogicalIds };
 }
 
 export type { QuestionSet, QuestionSetListItem, QuestionSetFile } from "./types";
-export { listQuestionSetsFromDb, getQuestionSetFromDb, insertQuestionSet, updateQuestionSet } from "./load-db";
-export { listQuestionSetsFromFs, getQuestionSetFromFs } from "./load-fs";
+export {
+  listQuestionSetsFromDb,
+  getQuestionSetFromDb,
+  insertQuestionSet,
+  updateQuestionSet,
+} from "./load-db";
+export { getQuestionSetsRoot, getQuestionSetFolderPath, parseSetYamlFromContent } from "./load-fs";
+export { syncQuestionSetsFromFs } from "./sync-question-sets";

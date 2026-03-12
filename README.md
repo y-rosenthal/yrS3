@@ -1,6 +1,6 @@
 # yrS3 — Tutorial & Testing System
 
-A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 focuses on the **testing component**: users log in, work with **question sets** (take as test, homework, or study list), answer questions (including multiple choice, short answer, and code), submit, and receive scores and feedback. The app supports question creation and upload, and creating question sets by choosing questions (stored in DB and/or filesystem). Optional local or hosted Supabase for auth and storage.
+A web-based tutorial and testing system for knowledge assessment. Version 0.0.1 focuses on the **testing component**: users log in, work with **question sets** (take as test, homework, or study list), answer questions (including multiple choice, short answer, and code), submit, and receive scores and feedback. The app supports question creation and upload, and creating question sets by choosing questions (stored in the DB; filesystem under `question-sets/` is imported via sync (same as questions)). Optional local or hosted Supabase for auth and storage.
 
 ## Features (v0.0.1)
 

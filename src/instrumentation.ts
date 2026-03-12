@@ -55,19 +55,27 @@ export async function register() {
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const { syncFsWithDb } = await import("@/lib/questions/sync-questions");
+    const { syncQuestionSetsFromFs } = await import("@/lib/question-sets/sync-question-sets");
     const supabase = createAdminClient();
     const result = await syncFsWithDb(supabase);
+    const setResult = await syncQuestionSetsFromFs(supabase);
+    const allErrors = [...result.errors, ...setResult.errors];
     setSyncStatusRan({
       imported: result.imported,
       conflictsResolved: result.conflictsResolved,
-      errors: result.errors,
+      errors: allErrors,
     });
     if (
       result.imported > 0 ||
       result.conflictsResolved > 0 ||
-      result.errors.length > 0
+      setResult.imported > 0 ||
+      setResult.updated > 0 ||
+      allErrors.length > 0
     ) {
-      console.log("[yrS3] Startup question sync:", result);
+      console.log("[yrS3] Startup sync:", {
+        questions: result,
+        questionSets: setResult,
+      });
     }
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));

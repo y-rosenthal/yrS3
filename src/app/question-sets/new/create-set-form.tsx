@@ -63,14 +63,20 @@ export function CreateSetForm() {
         return;
       }
       const imported = data.imported ?? 0;
+      const setImported = data.questionSetImported ?? 0;
+      const setUpdated = data.questionSetUpdated ?? 0;
       const errors = Array.isArray(data.errors) ? data.errors : [];
       await loadQuestions();
-      if (imported > 0) {
-        setSyncMessage(`Synced ${imported} question(s) from the questions/ folder.`);
+      const parts: string[] = [];
+      if (imported > 0) parts.push(`${imported} question version(s)`);
+      if (setImported > 0) parts.push(`${setImported} question set(s) imported`);
+      if (setUpdated > 0) parts.push(`${setUpdated} question set(s) updated`);
+      if (parts.length > 0) {
+        setSyncMessage(`Sync: ${parts.join("; ")}.`);
       } else if (errors.length > 0) {
         setSyncMessage(errors.slice(0, 3).join("; ") + (errors.length > 3 ? "…" : ""));
       } else {
-        setSyncMessage("Sync completed. No new questions imported (folder may be empty or already in sync).");
+        setSyncMessage("Sync completed. Nothing new (folders may be empty or already in sync).");
       }
     } catch (e) {
       setSyncMessage(e instanceof Error ? e.message : "Sync failed");
@@ -304,7 +310,7 @@ export function CreateSetForm() {
                 disabled={syncLoading}
                 className="rounded border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
               >
-                {syncLoading ? "Syncing…" : "Sync questions from folder"}
+                {syncLoading ? "Syncing…" : "Sync from folders (questions + question sets)"}
               </button>
               {syncMessage && (
                 <p className={`text-sm ${syncMessage.startsWith("Synced") ? "text-green-700" : "text-amber-700"}`}>

@@ -11,10 +11,9 @@ type Props = {
   title: string;
   instructions?: string | null;
   files?: QuestionSetFile[];
-  setSource?: "db" | "file";
 };
 
-export function TakeSetClient({ setId, title, instructions, files = [], setSource = "db" }: Props) {
+export function TakeSetClient({ setId, title, instructions, files = [] }: Props) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ParsedQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -136,9 +135,7 @@ export function TakeSetClient({ setId, title, instructions, files = [], setSourc
   const isLast = currentIndex === questions.length - 1;
 
   const downloadUrl = (f: QuestionSetFile) =>
-    setSource === "file"
-      ? `/api/question-sets/${encodeURIComponent(setId)}/file/${encodeURIComponent(f.filename)}`
-      : `/api/question-sets/${encodeURIComponent(setId)}/files/${encodeURIComponent(f.id)}`;
+    `/api/question-sets/${encodeURIComponent(setId)}/files/${encodeURIComponent(f.id)}`;
 
   return (
     <div className="mx-auto w-full max-w-[1600px]">

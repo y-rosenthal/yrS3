@@ -16,22 +16,6 @@ export default async function EditQuestionSetPage({
   const set = await getQuestionSetById(supabase, id);
   if (!set) notFound();
 
-  if (set.source !== "db") {
-    return (
-      <div className="min-h-screen bg-zinc-50 px-[1em] py-6">
-        <div className="mx-auto w-full max-w-[800px]">
-          <h1 className="text-2xl font-semibold text-zinc-900">Edit question set</h1>
-          <p className="mt-2 text-sm text-zinc-600">
-            File-based question sets cannot be edited here. Edit the set file in your repository instead.
-          </p>
-          <Link href="/question-sets" className="mt-4 inline-block text-sm text-zinc-600 hover:underline">
-            Back to question sets
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-zinc-50 px-[1em] py-6">
       <div className="mx-auto w-full max-w-[800px]">
@@ -45,6 +29,9 @@ export default async function EditQuestionSetPage({
           {set.title}
           {set.questionLogicalIds.length > 0 && (
             <span> — {set.questionLogicalIds.length} question(s)</span>
+          )}
+          {set.sourceSlug && (
+            <span className="ml-1 text-zinc-500"> (synced from question-sets/{set.sourceSlug}/)</span>
           )}
         </p>
         <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6">

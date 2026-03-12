@@ -31,7 +31,7 @@ export default async function QuestionSetsPage() {
         <ul className="mt-6 space-y-4">
           {sets.length === 0 ? (
             <li className="rounded-lg border border-zinc-200 bg-white p-6 text-center text-zinc-500">
-              No question sets yet. Create one or add set files under <code className="text-zinc-700">question-sets/</code>.
+              No question sets yet. Create one in the UI or add sets under <code className="text-zinc-700">question-sets/</code> and run sync (same as questions).
             </li>
           ) : (
             sets.map((set) => (
@@ -44,18 +44,16 @@ export default async function QuestionSetsPage() {
                     )}
                     <p className="mt-1 text-xs text-zinc-500">
                       {set.questionCount} question(s)
-                      {set.source === "file" && " · from file"}
+                      {set.sourceSlug && ` · from repo (${set.sourceSlug})`}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    {set.source === "db" && (
-                      <Link
-                        href={`/question-sets/${encodeURIComponent(set.id)}/edit`}
-                        className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
-                      >
-                        Edit
-                      </Link>
-                    )}
+                    <Link
+                      href={`/question-sets/${encodeURIComponent(set.id)}/edit`}
+                      className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                    >
+                      Edit
+                    </Link>
                     <Link
                       href={`/question-sets/${encodeURIComponent(set.id)}/take`}
                       className="rounded bg-zinc-800 px-4 py-2 text-sm text-white hover:bg-zinc-700"
