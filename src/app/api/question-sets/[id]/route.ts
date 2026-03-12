@@ -47,7 +47,7 @@ export async function PATCH(
       );
     }
     const ok = await updateQuestionSet(supabase, id, {
-      ...(instructions !== undefined && { instructions: instructions?.trim() ?? null }),
+      ...(instructions !== undefined && { instructions: instructions?.trim() || null }),
     });
     if (!ok) {
       return NextResponse.json({ error: "Update failed" }, { status: 500 });

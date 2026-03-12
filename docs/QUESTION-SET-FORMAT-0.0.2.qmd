@@ -1,6 +1,10 @@
----
-title: "QUESTION-SET-FORMAT-0.0.2.qmd"
----
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
 
 # Question Set Format — File-based storage (v0.0.2)
 
