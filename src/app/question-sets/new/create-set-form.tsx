@@ -21,7 +21,7 @@ export function CreateSetForm() {
   const [questions, setQuestions] = useState<QuestionListEntry[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>(TAB_INCLUDE);
-  const [frontMatterCollapsed, setFrontMatterCollapsed] = useState(true);
+  const [frontMatterCollapsed, setFrontMatterCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -299,7 +299,7 @@ export function CreateSetForm() {
           className="pt-4"
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="submit"
                 disabled={submitting || !title.trim()}
@@ -314,6 +314,11 @@ export function CreateSetForm() {
               >
                 Cancel
               </button>
+              {!submitting && !title.trim() && (
+                <span className="text-sm text-zinc-500">
+                  {"Enter a title in \"Title, description & instructions\" above to enable Create."}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -339,7 +344,7 @@ export function CreateSetForm() {
           </div>
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-sm text-zinc-500">
-              Click &quot;Add to set&quot; to add a question. Use the &quot;Selected questions&quot; tab to review, reorder, and remove.
+              {"Click \"Add to set\" to add a question. Use the \"Selected questions\" tab to review, reorder, and remove."}
             </p>
             {questions.length > 0 && (
               <button
@@ -455,7 +460,7 @@ export function CreateSetForm() {
           className="pt-4"
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="submit"
                 disabled={submitting || !title.trim()}
@@ -470,6 +475,11 @@ export function CreateSetForm() {
               >
                 Cancel
               </button>
+              {!submitting && !title.trim() && (
+                <span className="text-sm text-zinc-500">
+                  {"Enter a title in \"Title, description & instructions\" above to enable Create."}
+                </span>
+              )}
               <label className="flex items-center gap-2 text-sm text-zinc-700">
                 <input
                   type="checkbox"

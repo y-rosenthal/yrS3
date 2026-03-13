@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>yrSqliteViewer</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.0/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+    <link rel="stylesheet" href="yrSqliteViewer-styles.css" />
+
+    <!-- YR - June 26, 2025 
+	    I temporarily copied the styles from the yrSqliteViewer-styles.css file directly into this 
+	    style tag. I did that to make it easier for novices to use by having everything contained 
+	    in one HTML file. I had previously separated the styles into the separate file when I was
+	    working on adding features and making this product more robust. However, for now at least
+	    I'm temporarily adding the styles back into the HTML file until I finish the new
+	    feature additions and make the product more robust -->
+	    `
+    <style>
+
+body {
+    background-color: lightgrey;
+  }
+
+  .yrHeader {
+    text-align: center;
+    margin: 5px 0;
+    font-size: 2em;
+    padding: 0 50px;
+    font-weight: bold;
+  }
+
+  .yrControlPanel {
+    text-align: center;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .yrFileInput {
+    display: none;
+  }
+
+  .yrFileInputLabel {
+    padding: 8px 16px;
+    font-size: 1.1em;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    min-width: 140px;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .yrFileInputLabel:hover {
+    background-color: #1b4b1d;
+  }
+
+  .yrFileName {
+    font-size: 1.3em;
+    color: #666;
+    font-style: italic;
+  }
+
+  .yrButton {
+    padding: 8px 16px;
+    font-size: 0.95em;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    min-width: 140px;
+  }
+
+  .yrGreenButton {
+    background-color: #4caf50;
+  }
+
+  .yrGreenButton:hover {
+    background-color: #1b4b1d;
+  }
+
+  .yrGreyButton {
+    background-color: #666;
+  }
+
+  .yrGreyButton:hover {
+    background-color: #444;
+  }
+
+  .yrRedButton {
+    background-color: #f44336;
+  }
+
+  .yrRedButton:hover {
+    background-color: #771616;
+  }
+
+  .yrTableList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+  }
+
+  .yrQueryInterfaces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    padding: 10px;
+  }
+
+  .yrQueryInterface {
+    flex: 0 0 auto;
+    border: 1px solid #e0e0e0;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+    margin: 10px;
+  }
+
+  .yrQueryInterface:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .yrQueryTextarea {
+    width: 100%;
+    margin-bottom: 10px;
+    resize: none;
+    overflow: hidden;
+    font-size: 1em;
+    font-family: inherit;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .yrQueryTextarea:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+  }
+
+  .yrQueryInterface h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+
+  .yrTableCard {
+    flex: 0 1 auto;
+    margin: 5px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    min-width: 250px;
+  }
+
+  .yrTableName {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 1.2em;
+  }
+
+  .yrTableButtons {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+
+  .yrTableInfo {
+    display: block;
+  }
+
+  .yrDataTable {
+    font-size: 1em;
+    margin-top: 10px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .yrDataTable th,
+  .yrDataTable td {
+    text-align: left;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .yrOutputContainer {
+    margin-top: 5px;
+    overflow-x: auto;
+  }
+
+  .yrErrorMessage {
+    color: red;
+    margin-bottom: 10px;
+  }
+
+  .yrTableStructure {
+    overflow-x: auto;
+    margin-top: 5px;
+  }
+
+  .yrScrollContainer {
+    overflow-x: auto;
+    margin-top: 5px;
+  }
+
+  .yrFlexContainer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: flex-start;
+  }
+
+  .yrFlexContainer h2 {
+    margin-right: 15px;
+  }
+
+  .yrFontControl {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .yrFontButton {
+    padding: 2px 8px;
+    font-size: 0.9em;
+    color: white;
+    background-color: #666;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .yrHeaderFontButton {
+    padding: 4px 12px;
+    height: 28px;
+    font-size: 1.1em;
+    color: white;
+    background-color: #666;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .yrHeaderFontButton:hover {
+    background-color: #444;
+  }
+
+  .yrFontInput {
+    width: 60px;
+    height: 28px;
+    padding: 4px 8px;
+    font-size: 1.1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #e0e0e0;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    text-align: center;
+  }
+
+  .yrFontInput:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    background-color: white;
+  }
+
+  .yrFontInput:hover {
+    border-color: #999;
+    background-color: white;
+  }
+
+  .CodeMirror {
+    height: auto;
+    min-height: 100px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: monospace;
+  }
+
+  .CodeMirror-scroll {
+    min-height: 100px;
+  }
+    </style>
+
+    <!-- themes for codemirror -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css"
+    />
+    <!--
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/idea.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material.min.css" />
+    -->
+    <style>
+      /* Make comments bold and larger */
+      .CodeMirror .cm-comment {
+        font-weight: bold;
+        font-size: 1.2em;
+        padding: 0px;
+        margin: 0px;
+      }
+
+      /* Examples of other syntax elements you can customize */
+      .CodeMirror .cm-keyword {
+        /* SELECT, FROM, WHERE, etc */
+        color: #0000cc;
+      }
+
+      .CodeMirror .cm-string {
+        /* String literals */
+        color: #008800;
+      }
+
+      .CodeMirror .cm-number {
+        /* Numeric literals */
+        color: #aa00aa;
+      }
+
+      .CodeMirror .cm-operator {
+        /* Operators like =, <, > */
+        color: #666666;
+      }
+
+      /* You can also style the editor itself */
+      .CodeMirror {
+        font-family: "Consolas", monospace;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="yrControlPanel">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span class="yrHeader">yrSqliteViewer (ver 0.2)</span>
+
+        <!--
+        <input type="file" id="sqliteFile" class="yrFileInput" accept=".sqlite,.db" onchange="loadDatabase()" />
+        <label for="sqliteFile" class="yrFileInputLabel">Load Database File</label>
+        -->
+        <input
+          type="file"
+          id="sqliteFile"
+          class="yrFileInput"
+          accept=".sqlite,.db"
+        />
+        <label for="sqliteFile" class="yrFileInputLabel"
+          >Load Database File</label
+        >
+
+        <span id="selectedFileName" class="yrFileName">no file chosen yet</span>
+      </div>
+      <button onclick="saveSession()" class="yrButton yrGreenButton">
+        Save Session
+      </button>
+      <input
+        type="file"
+        id="restoreSession"
+        class="yrFileInput"
+        accept=".yrslv"
+        onchange="restoreSession()"
+      />
+      <label for="restoreSession" class="yrButton yrGreenButton">
+        Restore Session
+      </label>
+      <button onclick="clearSession()" class="yrButton yrRedButton">
+        Clear Session
+      </button>
+    </div>
+
+    <div class="yrFlexContainer">
+      <h2 id="yrDbTablesHeader">Database Tables</h2>
+      <button
+        onclick="showAllTablesStructure()"
+        class="yrButton yrGreyButton"
+        style="font-weight: bold"
+      >
+        Show Structure <i>(for all tables)</i>
+      </button>
+      <button
+        onclick="showAllTablesData()"
+        class="yrButton yrGreyButton"
+        style="font-weight: bold"
+      >
+        Show Rows <i>(for all tables)</i>
+      </button>
+      <div class="yrFontControl">
+        <button
+          onclick="adjustAllTablesFontSize(-0.1)"
+          class="yrHeaderFontButton"
+        >
+          A-
+        </button>
+        <button
+          onclick="adjustAllTablesFontSize(0.1)"
+          class="yrHeaderFontButton"
+        >
+          A+
+        </button>
+        <input
+          type="number"
+          step="0.1"
+          min="0.5"
+          max="3"
+          value="1.0"
+          onchange="setAllTablesFontSize(this.value)"
+          class="yrFontInput"
+        />
+      </div>
+    </div>
+
+    <div
+      id="noFileMessage"
+      style="
+        font-style: italic;
+        color: #444;
+        font-size: 1.2em;
+        margin: 20px 10px;
+      "
+    >
+      <ul>
+        <li>
+          Click the "Load Database File" button (at the top of this page) to
+          load a new sqlite database file (.sqlite or .db).
+        </li>
+        <li>
+          Or ... click the "Restore Session" button to load a previously saved
+          session (including the database file and SQL queries).
+        </li>
+      </ul>
+    </div>
+    <div
+      id="loadingMessage"
+      style="
+        display: none;
+        font-style: italic;
+        color: #444;
+        font-size: 1.2em;
+        margin: 20px 10px;
+      "
+    >
+      <img
+        src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA=="
+        alt="Loading..."
+        style="vertical-align: middle; margin-right: 10px"
+      />
+      Loading database file...
+    </div>
+    <div id="tableList" class="yrTableList"></div>
+
+    <div class="yrFlexContainer">
+      <h2 id="sqlCommandsHeader">SQL Commands</h2>
+      <div class="yrFontControl">
+        <button
+          onclick="adjustAllQueryInterfacesFontSize(-0.1)"
+          class="yrHeaderFontButton"
+        >
+          A-
+        </button>
+        <button
+          onclick="adjustAllQueryInterfacesFontSize(0.1)"
+          class="yrHeaderFontButton"
+        >
+          A+
+        </button>
+        <input
+          type="number"
+          step="0.1"
+          min="0.5"
+          max="3"
+          value="1.0"
+          onchange="setAllQueryInterfacesFontSize(this.value)"
+          class="yrFontInput"
+        />
+      </div>
+    </div>
+
+    <div id="queryInterfaces" class="yrQueryInterfaces">
+      <div class="yrQueryInterface" data-base-font="1">
+        <div class="yrFlexContainer">
+          <h3>SQL Command 1</h3>
+          <div class="yrFontControl">
+            <button
+              onclick="adjustFontSize('query_interface_1', -0.1)"
+              class="yrFontButton"
+            >
+              A-
+            </button>
+            <button
+              onclick="adjustFontSize('query_interface_1', 0.1)"
+              class="yrFontButton"
+            >
+              A+
+            </button>
+          </div>
+        </div>
+        <textarea
+          id="sqlQuery1"
+          rows="3"
+          placeholder="Enter SQL query here..."
+          class="yrQueryTextarea"
+          oninput="autoResize(this)"
+        ></textarea>
+        <br />
+        <button onclick="runQuery(1)" class="yrButton yrGreyButton">
+          Run Query
+        </button>
+        <div id="output1" style="margin-top: 10px; overflow-x: auto"></div>
+      </div>
+    </div>
+
+    <script>
+      let pyodideInstance = null;
+      let queryHistory = [];
+      let queryInterfaceCount = 0;
+      let currentDatabaseName = "";
+      let tableNames = [];
+      let isSessionSaved = true;
+      let editors = {};
+
+      window.onbeforeunload = function (e) {
+        if (queryHistory.length > 0 && !isSessionSaved) {
+          e.preventDefault();
+          e.returnValue = "";
+          return "";
+        }
+      };
+
+      async function loadDatabase(file, isRestoring = false) {
+        console.log(`starting: loadDatabase(${file})`);
+        if (!file) {
+          document.getElementById("output1").innerHTML =
+            '<div class="yrErrorMessage">Please select a file.</div>';
+          return;
+        }
+
+        // Show loading message and hide no file message
+        document.getElementById("noFileMessage").style.display = "none";
+        document.getElementById("loadingMessage").style.display = "block";
+
+        try {
+          // Skip creating initial interface if we're restoring a session
+          if (!isRestoring) {
+            // Clear existing query interfaces and reset counter
+            document.getElementById("queryInterfaces").innerHTML = `
+              <div class="yrQueryInterface" data-base-font="1">
+                <div class="yrFlexContainer">
+                  <h3>SQL Command 1</h3>
+                  <div class="yrFontControl">
+                    <button onclick="adjustFontSize('query_interface_1', -0.1)" class="yrFontButton">A-</button>
+                    <button onclick="adjustFontSize('query_interface_1', 0.1)" class="yrFontButton">A+</button>
+                  </div>
+                </div>
+                <div id="sqlQuery1" class="yrQueryTextarea"></div>
+                <br />
+                <button onclick="runQuery(1)" class="yrButton yrGreyButton">Run Query</button>
+                <div id="output1" class="yrOutputContainer"></div>
+              </div>
+            `;
+            queryInterfaceCount = 0;
+            // Initialize CodeMirror for the first interface
+            initializeCodeMirror('sqlQuery1');
+          }
+
+          // Display filename
+          document.getElementById("selectedFileName").textContent = file.name;
+
+          // Show the query interfaces container
+          document.getElementById("queryInterfaces").style.display = "flex";
+
+          // Initialize Pyodide if not already initialized
+          if (!pyodideInstance) {
+            pyodideInstance = await loadPyodide();
+            await pyodideInstance.loadPackage("sqlite3");
+          }
+
+          currentDatabaseName = file.name;
+
+          // Read file as an ArrayBuffer and pass to Pyodide
+          const arrayBuffer = await file.arrayBuffer();
+          const bytes = new Uint8Array(arrayBuffer);
+          pyodideInstance.FS.writeFile("database.sqlite", bytes);
+
+          // Run Python code in Pyodide to check tables and their schemas
+          const result = await pyodideInstance.runPythonAsync(`
+import sqlite3
+import json
+
+conn = sqlite3.connect("database.sqlite")
+cursor = conn.cursor()
+
+# Get all tables
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+tables = cursor.fetchall()  
+
+# Get schema for each table
+table_info = {}
+for table in tables:
+    table_name = table[0]
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = cursor.fetchall()
+    table_info[table_name] = [
+        {
+            "name": col[1],
+            "type": col[2]
+        } for col in columns
+    ]
+
+json.dumps({"tables": table_info})
+          `);
+
+          const data = JSON.parse(result);
+          tableNames = Object.keys(data.tables);
+
+          // YR - clear the table list
+          document.getElementById("tableList").innerHTML = "";
+
+          // Display tables with buttons
+          let tableListHtml = "";
+          Object.entries(data.tables).forEach(([tableName, columns]) => {
+            const tableCard = document.createElement("div");
+            tableCard.className = "yrTableCard";
+            tableCard.setAttribute("data-base-font", "1");
+            tableCard.innerHTML = `
+              <div class="yrFlexContainer">
+                <div class="yrTableName">Table: ${tableName}</div>
+                <div class="yrFontControl">
+                  <button onclick="adjustFontSize('${tableName}_card', -0.1)" class="yrFontButton">A-</button>
+                  <button onclick="adjustFontSize('${tableName}_card', 0.1)" class="yrFontButton">A+</button>
+                </div>
+              </div>
+              <div class="yrTableButtons">
+                <button 
+                  onclick="showTableStructure('${tableName}', ${JSON.stringify(
+              columns
+            ).replace(/"/g, "&quot;")})"
+                  class="yrButton yrGreyButton"
+                >Show Structure</button>
+                <button 
+                  onclick="showTableData('${tableName}')"
+                  class="yrButton yrGreyButton"
+                >Show Rows</button>
+              </div>
+              <div id="${tableName}_info" class="yrTableInfo"></div>
+            `;
+            document.getElementById("tableList").appendChild(tableCard);
+          });
+
+          // Show structure for all tables by default
+          Object.entries(data.tables).forEach(([tableName, columns]) => {
+            showTableStructure(tableName, columns);
+          });
+
+          // Clear the "no file" message when loading a database
+          document.getElementById("noFileMessage").style.display = "none";
+          document.getElementById("sqlCommandsHeader").style.display = "block";
+        } finally {
+          // Hide loading message when done (whether successful or not)
+          document.getElementById("loadingMessage").style.display = "none";
+        }
+      }
+
+      /*
+      function autoResize(textarea) {
+        console.log("starting: autoResize(textarea)");
+        textarea.style.width = "auto"; // Reset height to recalculate
+        textarea.style.width = textarea.scrollWidth + "px";
+        textarea.style.height = "auto"; // Reset height to recalculate
+        textarea.style.height = textarea.scrollHeight + "px";
+      }
+      */
+
+      function autoResize(textarea) {
+        console.log("starting: autoResize(textarea)");
+        const EXTRA_SPACE = 50; // Extra pixels to add for width
+        const WIDTH_THRESHOLD = 30; // Minimum change in width before adjusting
+        const MIN_WIDTH = 100;
+        const MAX_WIDTH = Math.min(800, window.innerWidth - 40);
+
+        // Create hidden div for measurement if it doesn't exist
+        let helper = document.getElementById("textarea-helper");
+        if (!helper) {
+          helper = document.createElement("div");
+          helper.id = "textarea-helper";
+          helper.style.position = "absolute";
+          helper.style.visibility = "hidden";
+          helper.style.whiteSpace = "pre";
+          document.body.appendChild(helper);
+        }
+
+        // Copy relevant styles
+        const styles = window.getComputedStyle(textarea);
+        helper.style.fontSize = styles.fontSize;
+        helper.style.fontFamily = styles.fontFamily;
+        helper.style.padding = styles.padding;
+        helper.style.border = styles.border;
+
+        // Measure content
+        helper.textContent = textarea.value;
+        const newWidth = helper.offsetWidth + EXTRA_SPACE;
+        const currentWidth =
+          parseInt(textarea.style.width) || textarea.offsetWidth;
+
+        // Only adjust width if change is significant
+        if (Math.abs(newWidth - currentWidth) > WIDTH_THRESHOLD) {
+          textarea.style.width =
+            Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth)) + "px";
+        }
+
+        // Adjust height
+        textarea.style.height = "auto";
+        textarea.style.height = textarea.scrollHeight + "px";
+      }
+
+      async function runQuery(interfaceId) {
+        console.log(`starting: runQuery(interfaceId=${interfaceId})`);
+        if (!pyodideInstance) return;
+
+        const editor = editors[`sqlQuery${interfaceId}`];
+        const outputElement = document.getElementById(`output${interfaceId}`);
+        const query = editor.getValue();
+
+        // If query is empty, don't proceed
+        if (!query.trim()) return;
+
+        try {
+          const result = await pyodideInstance.runPythonAsync(
+            `
+import sqlite3
+import json
+
+conn = sqlite3.connect("database.sqlite")
+cursor = conn.cursor()
+cursor.execute("""${query}""")
+columns = [description[0] for description in cursor.description]
+rows = cursor.fetchall()
+json.dumps({"columns": columns, "rows": rows})
+          `.trim()
+          );
+
+          const data = JSON.parse(result);
+
+          // Create table HTML
+          let tableHtml = '<table border="1"><tr>';
+          data.columns.forEach((col) => {
+            tableHtml += `<th>${col}</th>`;
+          });
+          tableHtml += "</tr>";
+
+          data.rows.forEach((row) => {
+            tableHtml += "<tr>";
+            row.forEach((cell) => {
+              tableHtml += `<td>${cell}</td>`;
+            });
+            tableHtml += "</tr>";
+          });
+          tableHtml += "</table>";
+
+          // Update or add to history
+          const historyIndex = interfaceId - 1;
+          const historyEntry = {
+            query: query,
+            timestamp: new Date().toISOString(),
+            results: data,
+          };
+
+          if (historyIndex < queryHistory.length) {
+            // Update existing entry
+            queryHistory[historyIndex] = historyEntry;
+          } else {
+            // Add new entry
+            queryHistory.push(historyEntry);
+          }
+          isSessionSaved = false;
+
+          outputElement.innerHTML = tableHtml;
+
+          // Check if there's already a blank query interface at the end
+          const lastInterface = document.querySelector(
+            ".yrQueryInterface:last-child"
+          );
+          const lastTextarea =
+            lastInterface.querySelector(".CodeMirror").CodeMirror;
+
+          // Only add a new interface if the last one isn't empty
+          if (lastTextarea.getValue().trim() !== "") {
+            // Count existing interfaces to determine next number
+            const existingInterfaces =
+              document.getElementsByClassName("yrQueryInterface");
+            const newInterfaceId = existingInterfaces.length + 1;
+
+            const newInterface = document.createElement("div");
+            newInterface.className = "yrQueryInterface";
+            newInterface.setAttribute("data-base-font", "1");
+            newInterface.innerHTML = `
+              <div class="yrFlexContainer">
+                <h3>SQL Command ${newInterfaceId}</h3>
+                <div class="yrFontControl">
+                  <button onclick="adjustFontSize('query_interface_${newInterfaceId}', -0.1)" class="yrFontButton">A-</button>
+                  <button onclick="adjustFontSize('query_interface_${newInterfaceId}', 0.1)" class="yrFontButton">A+</button>
+                </div>
+              </div>
+              <div id="sqlQuery${newInterfaceId}" class="yrQueryTextarea"></div>
+              <br />
+              <button onclick="runQuery(${newInterfaceId})" class="yrButton yrGreyButton">Run Query</button>
+              <div id="output${newInterfaceId}" class="yrOutputContainer"></div>
+            `;
+            document
+              .getElementById("queryInterfaces")
+              .appendChild(newInterface);
+            initializeCodeMirror(`sqlQuery${newInterfaceId}`);
+            queryInterfaceCount = newInterfaceId; // Update the counter to match
+          }
+        } catch (error) {
+          outputElement.innerHTML = `<div class="yrErrorMessage">Error executing query: ${error.message}</div>`;
+        }
+      }
+
+      function formatQueryResultsAsText(query, results) {
+        console.log("starting: formatQueryResultsAsText(query, results)");
+        let output = `Query: ${query}\n\n`;
+
+        // Handle case where query hasn't been run yet
+        if (!results) {
+          return output + "(Query not yet executed)\n\n";
+        }
+
+        // Find max width for each column
+        const colWidths = results.columns.map((col, i) => {
+          let maxWidth = col.length;
+          results.rows.forEach((row) => {
+            const cellWidth = String(row[i]).length;
+            maxWidth = Math.max(maxWidth, cellWidth);
+          });
+          return maxWidth;
+        });
+
+        // Header
+        output +=
+          results.columns
+            .map((col, i) => col.padEnd(colWidths[i]))
+            .join(" | ") + "\n";
+
+        // Separator
+        output += colWidths.map((w) => "-".repeat(w)).join("-+-") + "\n";
+
+        // Rows
+        results.rows.forEach((row) => {
+          output +=
+            row
+              .map((cell, i) => String(cell).padEnd(colWidths[i]))
+              .join(" | ") + "\n";
+        });
+
+        return output + "\n";
+      }
+
+      function clearSession() {
+        console.log("starting: clearSession()");
+        if (
+          confirm(
+            "Are you sure you want to clear the current session? This will remove all queries and results."
+          )
+        ) {
+          queryHistory = [];
+          isSessionSaved = true;
+          queryInterfaceCount = 0;
+          currentDatabaseName = "";
+          tableNames = [];
+
+          document.getElementById("tableList").innerHTML = "";
+          document.getElementById("queryInterfaces").innerHTML = `
+            <div class="yrQueryInterface" data-base-font="1">
+              <div class="yrFlexContainer">
+                <h3>SQL Command 1</h3>
+                <div class="yrFontControl">
+                  <button onclick="adjustFontSize('query_interface_1', -0.1)" class="yrFontButton">A-</button>
+                  <button onclick="adjustFontSize('query_interface_1', 0.1)" class="yrFontButton">A+</button>
+                </div>
+              </div>
+              <textarea
+                id="sqlQuery1"
+                rows="3"
+                placeholder="Enter SQL query here..."
+                class="yrQueryTextarea"
+                oninput="autoResize(this)"
+              ></textarea>
+              <br />
+              <button onclick="runQuery(1)" class="yrButton yrGreyButton">Run Query</button>
+              <div id="output1" class="yrOutputContainer"></div>
+            </div>
+          `;
+          document.getElementById("selectedFileName").textContent =
+            "no file chosen yet";
+          document.getElementById("noFileMessage").style.display = "block";
+          initializeCodeMirror("sqlQuery1");
+        }
+      }
+
+      async function saveSession() {
+        console.log("starting: async function saveSession()");
+        const baseFilename = prompt(
+          "Enter filename (without extension)\nFile will be saved as a .yrslv file:",
+          "yrSqliteViewerSession"
+        );
+
+        if (baseFilename) {
+          const zip = new JSZip();
+
+          // Update queryHistory with current state of all editors
+          const queryInterfaces =
+            document.getElementsByClassName("yrQueryInterface");
+          let updatedHistory = [];
+
+          Array.from(queryInterfaces).forEach((interface, index) => {
+            const interfaceId = index + 1;
+            const editor = editors[`sqlQuery${interfaceId}`];
+            if (editor) {
+              const currentQuery = editor.getValue().trim();
+              if (currentQuery) {
+                // Only save non-empty queries
+                let historyEntry;
+                // Try to find existing history entry
+                const existingEntry = queryHistory[index];
+                if (existingEntry) {
+                  historyEntry = {
+                    ...existingEntry,
+                    query: currentQuery,
+                  };
+                } else {
+                  historyEntry = {
+                    query: currentQuery,
+                    timestamp: new Date().toISOString(),
+                    results: null, // No results if query hasn't been run
+                  };
+                }
+                updatedHistory.push(historyEntry);
+              }
+            }
+          });
+
+          // Replace queryHistory with updated version
+          queryHistory = updatedHistory;
+
+          // Prepare JSON content
+          const jsonContent = JSON.stringify(
+            {
+              jsonFormatVersion: "0.1",
+              yrSqliteViewerVersion: "0.1",
+              databaseName: currentDatabaseName,
+              queries: queryHistory,
+            },
+            null,
+            2
+          );
+          zip.file(`${baseFilename}.json`, jsonContent);
+
+          // Prepare TXT content
+          let textContent = `Database: ${currentDatabaseName}\n\n`;
+          textContent += `Tables:\n${tableNames.join("\n")}\n\n`;
+          textContent += "Query Results:\n\n";
+
+          queryHistory.forEach((item, index) => {
+            textContent += `--- Query ${index + 1} ---\n`;
+            textContent += formatQueryResultsAsText(item.query, item.results);
+          });
+          zip.file(`${baseFilename}.txt`, textContent);
+
+          // Add the SQLite database file to the ZIP
+          const dbBytes = pyodideInstance.FS.readFile("database.sqlite");
+          zip.file(`${currentDatabaseName}`, dbBytes);
+
+          // Generate and download ZIP file using saveAs
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          saveAs(zipBlob, `${baseFilename}.yrslv`);
+
+          isSessionSaved = true;
+        }
+      }
+
+      function showTableStructure(tableName, columns) {
+        console.log(
+          `starting: function showTableStructure(tableName=${tableName}, columns=${columns})`
+        );
+        const infoDiv = document.getElementById(`${tableName}_info`);
+
+        let structureHtml = `
+          <div class="yrTableStructure">
+            <table class="yrDataTable">
+              <tr>
+                <th>Column</th>
+                <th>Type</th>
+              </tr>`;
+
+        columns.forEach((col) => {
+          structureHtml += `
+            <tr>
+              <td>${col.name}</td>
+              <td>${col.type}</td>
+            </tr>`;
+        });
+
+        structureHtml += `</table></div>`;
+        infoDiv.innerHTML = structureHtml;
+        infoDiv.style.display = "block";
+      }
+
+      async function showTableData(tableName) {
+        console.log("starting: async function showTableData(tableName)");
+        const infoDiv = document.getElementById(`${tableName}_info`);
+        try {
+          const result = await pyodideInstance.runPythonAsync(`
+            import sqlite3
+            import json
+
+            conn = sqlite3.connect("database.sqlite")
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM '" + "${tableName}" + "'")
+            columns = [description[0] for description in cursor.description]
+            rows = cursor.fetchall()
+            json.dumps({"columns": columns, "rows": rows})
+          `);
+
+          const data = JSON.parse(result);
+
+          let tableHtml = `
+            <div class="yrScrollContainer">
+              <table class="yrDataTable">
+                <tr>`;
+
+          data.columns.forEach((col) => {
+            tableHtml += `<th>${col}</th>`;
+          });
+
+          tableHtml += `</tr>`;
+
+          data.rows.forEach((row) => {
+            tableHtml += `<tr>`;
+            row.forEach((cell) => {
+              tableHtml += `<td>${cell}</td>`;
+            });
+            tableHtml += `</tr>`;
+          });
+
+          tableHtml += `</table></div>`;
+          infoDiv.innerHTML = tableHtml;
+          infoDiv.style.display = "block";
+        } catch (error) {
+          infoDiv.innerHTML = `<div class="yrErrorMessage">Error loading table data: ${error.message}</div>`;
+          infoDiv.style.display = "block";
+        }
+      }
+
+      function adjustFontSize(elementId, delta) {
+        console.log("starting: function adjustFontSize(elementId, delta)");
+        let element;
+        if (elementId.includes("query_interface_")) {
+          const interfaceNumber = elementId.split("_").pop();
+          const editor = editors[`sqlQuery${interfaceNumber}`];
+          if (editor) {
+            const wrapper = editor.getWrapperElement();
+            let baseFontSize =
+              parseFloat(wrapper.getAttribute("data-base-font")) || 1;
+            baseFontSize = Math.max(0.5, Math.min(2, baseFontSize + delta));
+            wrapper.setAttribute("data-base-font", baseFontSize);
+            wrapper.style.fontSize = `${baseFontSize}em`;
+          }
+        } else if (elementId.includes("_card")) {
+          // For table cards
+          const tableName = elementId.replace("_card", "");
+          element = Array.from(
+            document.getElementsByClassName("yrTableCard")
+          ).find(
+            (card) =>
+              card.querySelector(".yrTableName").textContent ===
+              `Table: ${tableName}`
+          );
+        }
+
+        if (!element) return;
+
+        let baseFontSize =
+          parseFloat(element.getAttribute("data-base-font")) || 1;
+        baseFontSize = Math.max(0.5, Math.min(2, baseFontSize + delta)); // Limit between 0.5 and 2
+
+        element.setAttribute("data-base-font", baseFontSize);
+        element.style.fontSize = `${baseFontSize}em`;
+      }
+
+      function adjustAllTablesFontSize(delta) {
+        console.log("starting: function adjustAllTablesFontSize(delta)");
+        const tableCards = document.getElementsByClassName("yrTableCard");
+        Array.from(tableCards).forEach((card) => {
+          let baseFontSize =
+            parseFloat(card.getAttribute("data-base-font")) || 1;
+          baseFontSize = Math.max(0.5, Math.min(3, baseFontSize + delta));
+          card.setAttribute("data-base-font", baseFontSize);
+          card.style.fontSize = `${baseFontSize}em`;
+        });
+      }
+
+      function setAllTablesFontSize(size) {
+        console.log("starting: function setAllTablesFontSize(size)");
+        const tableCards = document.getElementsByClassName("yrTableCard");
+        const newSize = Math.max(0.5, Math.min(3, parseFloat(size)));
+        Array.from(tableCards).forEach((card) => {
+          card.setAttribute("data-base-font", newSize);
+          card.style.fontSize = `${newSize}em`;
+        });
+      }
+
+      function adjustAllQueryInterfacesFontSize(delta) {
+        console.log(
+          "starting: function adjustAllQueryInterfacesFontSize(delta)"
+        );
+        const queryInterfaces =
+          document.getElementsByClassName("yrQueryInterface");
+        Array.from(queryInterfaces).forEach((interface) => {
+          let baseFontSize =
+            parseFloat(interface.getAttribute("data-base-font")) || 1;
+          baseFontSize = Math.max(0.5, Math.min(3, baseFontSize + delta));
+          interface.setAttribute("data-base-font", baseFontSize);
+          interface.style.fontSize = `${baseFontSize}em`;
+        });
+      }
+
+      function setAllQueryInterfacesFontSize(size) {
+        console.log("starting: function setAllQueryInterfacesFontSize(size)");
+        const queryInterfaces =
+          document.getElementsByClassName("yrQueryInterface");
+        const newSize = Math.max(0.5, Math.min(3, parseFloat(size)));
+        Array.from(queryInterfaces).forEach((interface) => {
+          interface.setAttribute("data-base-font", newSize);
+          interface.style.fontSize = `${newSize}em`;
+        });
+      }
+
+      async function restoreSession() {
+        console.log("starting: async function restoreSession()");
+        const fileInput = document.getElementById("restoreSession");
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        try {
+          // Read the zip file
+          const zipData = await file.arrayBuffer();
+          const zip = await JSZip.loadAsync(zipData);
+
+          // Find and parse the JSON file
+          const jsonFile = Object.values(zip.files).find((file) =>
+            file.name.endsWith(".json")
+          );
+          if (!jsonFile) throw new Error("No JSON file found in the archive");
+
+          const jsonContent = await jsonFile.async("string");
+          const sessionData = JSON.parse(jsonContent);
+
+          // Verify format version
+          if (sessionData.jsonFormatVersion !== "0.1") {
+            throw new Error("Incompatible session format version");
+          }
+
+          // Find and extract the database file
+          const dbFile = zip.files[sessionData.databaseName];
+          if (!dbFile) throw new Error("Database file not found in archive");
+
+          // Write the database file to Pyodide's virtual filesystem
+          const dbBytes = await dbFile.async("uint8array");
+          if (!pyodideInstance) {
+            pyodideInstance = await loadPyodide();
+            await pyodideInstance.loadPackage("sqlite3");
+          }
+          pyodideInstance.FS.writeFile("database.sqlite", dbBytes);
+
+          // Reset query state before restoring
+          queryHistory = sessionData.queries; // Set this first
+          queryInterfaceCount = 0;
+          document.getElementById("queryInterfaces").innerHTML = ""; // Clear after setting queryHistory
+
+          // Restore the session state
+          currentDatabaseName = sessionData.databaseName;
+          document.getElementById("selectedFileName").textContent =
+            currentDatabaseName;
+          document.getElementById("noFileMessage").style.display = "none";
+
+          // Create a File object from the database bytes
+          const databaseFile = new File([dbBytes], sessionData.databaseName, {
+            type: "application/x-sqlite3",
+          });
+
+          // Pass the File object to loadDatabase with isRestoring flag
+          await loadDatabase(databaseFile, true);
+
+          // Restore query interfaces with correct counting
+          queryHistory.forEach((item, index) => {
+            queryInterfaceCount = index + 1; // Update counter as we add each interface
+            const interfaceId = queryInterfaceCount;
+            const newInterface = document.createElement("div");
+            newInterface.className = "yrQueryInterface";
+            newInterface.setAttribute("data-base-font", "1");
+            newInterface.innerHTML = `
+              <div class="yrFlexContainer">
+                <h3>SQL Command ${interfaceId}</h3>
+                <div class="yrFontControl">
+                  <button onclick="adjustFontSize('query_interface_${interfaceId}', -0.1)" class="yrFontButton">A-</button>
+                  <button onclick="adjustFontSize('query_interface_${interfaceId}', 0.1)" class="yrFontButton">A+</button>
+                </div>
+              </div>
+              <div id="sqlQuery${interfaceId}" class="yrQueryTextarea"></div>
+              <br />
+              <button onclick="runQuery(${interfaceId})" class="yrButton yrGreyButton">Run Query</button>
+              <div id="output${interfaceId}" class="yrOutputContainer"></div>
+            `;
+            document
+              .getElementById("queryInterfaces")
+              .appendChild(newInterface);
+
+            // Initialize CodeMirror and set the value
+            const editor = initializeCodeMirror(`sqlQuery${interfaceId}`);
+            editor.setValue(item.query);
+            editor.refresh();
+
+            // Restore the query results
+            const outputElement = document.getElementById(
+              `output${interfaceId}`
+            );
+            if (item.results) {
+              let tableHtml = '<table border="1"><tr>';
+              item.results.columns.forEach((col) => {
+                tableHtml += `<th>${col}</th>`;
+              });
+              tableHtml += "</tr>";
+
+              item.results.rows.forEach((row) => {
+                tableHtml += "<tr>";
+                row.forEach((cell) => {
+                  tableHtml += `<td>${cell}</td>`;
+                });
+                tableHtml += "</tr>";
+              });
+              tableHtml += "</table>";
+              outputElement.innerHTML = tableHtml;
+            }
+          });
+
+          // Add blank interface with correct numbering
+          const newInterfaceId = queryInterfaceCount + 1;
+          const newInterface = document.createElement("div");
+          newInterface.className = "yrQueryInterface";
+          newInterface.setAttribute("data-base-font", "1");
+          newInterface.innerHTML = `
+            <div class="yrFlexContainer">
+              <h3>SQL Command ${newInterfaceId}</h3>
+              <div class="yrFontControl">
+                <button onclick="adjustFontSize('query_interface_${newInterfaceId}', -0.1)" class="yrFontButton">A-</button>
+                <button onclick="adjustFontSize('query_interface_${newInterfaceId}', 0.1)" class="yrFontButton">A+</button>
+              </div>
+            </div>
+            <div id="sqlQuery${newInterfaceId}" class="yrQueryTextarea"></div>
+            <br />
+            <button onclick="runQuery(${newInterfaceId})" class="yrButton yrGreyButton">Run Query</button>
+            <div id="output${newInterfaceId}" class="yrOutputContainer"></div>
+          `;
+          document.getElementById("queryInterfaces").appendChild(newInterface);
+          const editor = initializeCodeMirror(`sqlQuery${newInterfaceId}`);
+          editor.refresh();
+          queryInterfaceCount++; // Increment the counter for the new blank interface
+
+          isSessionSaved = true;
+        } catch (error) {
+          alert(`Error restoring session: ${error.message}`);
+          console.error("Session restore error:", error);
+        } finally {
+          // Clear the file input so the same file can be selected again
+          fileInput.value = "";
+        }
+      }
+
+      async function showAllTablesData() {
+        console.log("starting: async function showAllTablesData()");
+        const tableCards = document.getElementsByClassName("yrTableCard");
+        for (const card of tableCards) {
+          const tableName = card
+            .querySelector(".yrTableName")
+            .textContent.replace("Table: ", "");
+          await showTableData(tableName);
+        }
+      }
+
+      function showAllTablesStructure() {
+        console.log("starting: function showAllTablesStructure()");
+        const tableCards = document.getElementsByClassName("yrTableCard");
+        for (const card of tableCards) {
+          const tableName = card
+            .querySelector(".yrTableName")
+            .textContent.replace("Table: ", "");
+          // Get the columns data from the existing button's onclick attribute
+          const structureButton = card.querySelector(".yrButton");
+          const onclickAttr = structureButton.getAttribute("onclick");
+          const columnsMatch = onclickAttr.match(
+            /showTableStructure\('.*?', (.*?)\)/
+          );
+          if (columnsMatch && columnsMatch[1]) {
+            const columns = JSON.parse(columnsMatch[1].replace(/&quot;/g, '"'));
+            showTableStructure(tableName, columns);
+          }
+        }
+      }
+
+      function initializeCodeMirror(elementId) {
+        const editor = CodeMirror(document.getElementById(elementId), {
+          mode: "text/x-sql",
+          theme: "eclipse", // Change this to try different themes
+          lineNumbers: true,
+          lineWrapping: true,
+          viewportMargin: Infinity,
+          placeholder: "Enter SQL query here...",
+          extraKeys: {
+            "Ctrl-Enter": function (cm) {
+              const id = elementId.replace("sqlQuery", "");
+              runQuery(id);
+            },
+            "Cmd-Enter": function (cm) {
+              const id = elementId.replace("sqlQuery", "");
+              runQuery(id);
+            },
+          },
+        });
+
+        editors[elementId] = editor;
+        return editor;
+      }
+
+      // Attach the event listener
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("sqliteFile")
+          .addEventListener("input", async (event) => {
+            const file = event.target.files[0];
+            await loadDatabase(file);
+          });
+      });
+    </script>
+  </body>
+</html>
