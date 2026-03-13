@@ -34,7 +34,7 @@ Minimal metadata that identifies and classifies the question. Keep this file sho
 |-------------------|----------|-------------|
 | `title`           | string   | Short title for admin UIs. |
 | `domain`          | string   | Knowledge domain (e.g. `bash`, `r`, `regex`, `excel`, `html`, `css`). |
-| `tags`            | string[] | List of tags for filtering and discovery (e.g. `[bash, intro, week-1]`). See SPEC-0.0.6. |
+| `tags`            | string[] | Hierarchical tag paths for filtering and discovery (e.g. `[programming/bash/intro, programming/bash/week-1]`). Path separator is `/`. See SPEC-0.0.6 and SPEC-0.0.8. |
 | `sandbox_zip_ref` | string   | (bash only) Filename or path to a zip for the sandbox folder tree. |
 | `created_at`      | string   | ISO 8601 date (user or system on first upload). |
 | `modified_at`     | string   | ISO 8601 date (system on each modification upload). |

@@ -6,6 +6,7 @@
 import fs from "fs/promises";
 import path from "path";
 import type { QuestionVersionRow } from "./store-db";
+import { getEffectiveOwner } from "./store-db";
 import { getVersionDirPath, writeDbMeta } from "./db-meta-fs";
 
 export interface ContentFile {
@@ -38,7 +39,7 @@ export async function writeQuestionVersionToFs(
     await fs.writeFile(path.join(dir, f.name), f.content, "utf-8");
   }
   await writeDbMeta(root, logicalId, version, {
-    owner_id: dbRow.owner_id,
+    owner_id: getEffectiveOwner(dbRow) ?? "",
     status: dbRow.status,
     proposed_by: dbRow.proposed_by,
   });

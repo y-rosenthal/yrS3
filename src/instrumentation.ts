@@ -26,10 +26,19 @@ export async function register() {
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const { syncFsWithDb } = await import("@/lib/questions/sync-questions");
     const { syncQuestionSetsFromFs } = await import("@/lib/question-sets/sync-question-sets");
+    const { syncTagsFromFs } = await import("@/lib/tags/sync-tags");
+    const { syncFactsFromFs } = await import("@/lib/facts/sync-facts");
     const supabase = createAdminClient();
     const result = await syncFsWithDb(supabase);
     const setResult = await syncQuestionSetsFromFs(supabase);
-    const allErrors = [...result.errors, ...setResult.errors];
+    const tagsResult = await syncTagsFromFs(supabase);
+    const factsResult = await syncFactsFromFs(supabase);
+    const allErrors = [
+      ...result.errors,
+      ...setResult.errors,
+      ...tagsResult.errors,
+      ...factsResult.errors,
+    ];
     setSyncStatusRan({
       imported: result.imported,
       conflictsResolved: result.conflictsResolved,
@@ -40,11 +49,15 @@ export async function register() {
       result.conflictsResolved > 0 ||
       setResult.imported > 0 ||
       setResult.updated > 0 ||
+      tagsResult.imported > 0 ||
+      factsResult.imported > 0 ||
       allErrors.length > 0
     ) {
       console.log("[yrS3] Startup sync:", {
         questions: result,
         questionSets: setResult,
+        tags: tagsResult,
+        facts: factsResult,
       });
     }
   } catch (e) {

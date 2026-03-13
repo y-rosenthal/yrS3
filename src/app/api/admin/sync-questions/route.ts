@@ -3,13 +3,14 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncFsWithDb } from "@/lib/questions/sync-questions";
 import { syncQuestionSetsFromFs } from "@/lib/question-sets/sync-question-sets";
+import { syncTagsFromFs } from "@/lib/tags/sync-tags";
+import { syncFactsFromFs } from "@/lib/facts/sync-facts";
 import { setSyncStatusRan } from "@/lib/questions/sync-status";
 import { reportError } from "@/lib/report";
 
 /**
  * POST /api/admin/sync-questions
- * Run FS-DB sync (import FS-only, resolve conflicts with DB wins). Requires auth.
- * Uses service role so inserts with sync owner_id are not blocked by RLS.
+ * Run FS-DB sync for questions, question sets, tags, and facts. Requires auth.
  */
 export async function POST() {
   try {
@@ -17,7 +18,14 @@ export async function POST() {
     const supabase = createAdminClient();
     const result = await syncFsWithDb(supabase);
     const setSyncResult = await syncQuestionSetsFromFs(supabase);
-    const allErrors = [...result.errors, ...setSyncResult.errors];
+    const tagsResult = await syncTagsFromFs(supabase);
+    const factsResult = await syncFactsFromFs(supabase);
+    const allErrors = [
+      ...result.errors,
+      ...setSyncResult.errors,
+      ...tagsResult.errors,
+      ...factsResult.errors,
+    ];
     setSyncStatusRan({
       imported: result.imported,
       conflictsResolved: result.conflictsResolved,
@@ -27,6 +35,8 @@ export async function POST() {
       ...result,
       questionSetImported: setSyncResult.imported,
       questionSetUpdated: setSyncResult.updated,
+      tagsImported: tagsResult.imported,
+      factsImported: factsResult.imported,
       errors: allErrors,
     });
   } catch (e) {

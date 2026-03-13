@@ -23,6 +23,7 @@ book:
         - PRD-0.0.1-v001.qmd
     - part: "SPEC files for different releases"
       chapters:
+        - SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.qmd
         - SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd
         - SPEC-0.0.7-QUESTION-BROWSE-DETAIL-VIEW.qmd
         - SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.qmd
@@ -46,6 +47,10 @@ book:
         - QUESTION-MODULE-SPEC.qmd
         - QUESTION-FORMAT-0.0.1.qmd
         - QUESTION-SET-FORMAT-0.0.2.qmd
+    - part: "Tags and facts format (SPEC-0.0.8)"
+      chapters:
+        - TAGS-FORMAT-0.0.8.qmd
+        - FACTS-FORMAT-0.0.8.qmd
 
 format:
   html:
