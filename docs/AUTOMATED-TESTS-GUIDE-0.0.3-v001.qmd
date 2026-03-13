@@ -58,6 +58,7 @@ High-value, no-mock modules under `src/lib/`:
 - **`src/lib/questions/validate.ts`** — `validateMetaYaml`, `validateOptionsYaml`, type-specific validators. Use inline fixture objects.
 - **`src/lib/questions/parse.ts`** — `parseQuestion`, prompt selection. Use in-memory `QuestionFile[]` arrays.
 - **`src/lib/evaluators/short-answer.ts`** and **`multiple-choice.ts`** — `evaluateShortAnswer`, `evaluateMultipleChoice`. Cover expected/answers, normalization, correct vs wrong.
+- **`src/app/components/tag-filter-bar-load.ts`** — `fetchAvailableTags`. Tag filter bar loads from GET /api/tags (taxonomy) and falls back to GET /api/questions/tags when the taxonomy is unavailable. Tests in `tag-filter-bar-load.test.ts` mock `fetch` and cover: taxonomy array of `{ path }`, flat string array, non-OK response fallback, non-JSON body fallback, non-array JSON fallback, and failure cases. See [SPEC-0.0.8](SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd) UI section.
 
 ### Phase 2: API route tests
 

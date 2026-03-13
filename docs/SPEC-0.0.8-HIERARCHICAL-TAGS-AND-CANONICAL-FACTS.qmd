@@ -207,6 +207,14 @@ All UIs that involve **tags** or **facts** should favor **natural language and s
 
 Users should not be required to memorize or paste UUIDs or internal IDs when attaching tags or facts to questions or tutorials.
 
+### Tag filter bar (implementation)
+
+The tag filter bar (e.g. on the Browse questions and Create set pages) loads the list of available tags as follows:
+
+- **Primary source:** GET `/api/tags` — returns the hierarchical tag taxonomy (array of objects with `path`, or array of path strings). The UI displays these so the user can filter by tag path without typing UUIDs.
+- **Fallback:** If the taxonomy is unavailable — e.g. the response is not OK (404, 500), the response body is not valid JSON (e.g. an HTML error page), or the parsed JSON is not a recognized array shape — the bar falls back to GET `/api/questions/tags`, which returns the distinct tag values currently used on questions (flat strings). This ensures the filter still works when the taxonomy API is missing or failing.
+- **Failure:** If both requests fail or return unusable data, the bar shows an empty list. See `src/app/components/tag-filter-bar-load.ts` and `tag-filter-bar-load.test.ts` for the logic and tests.
+
 ---
 
 ## How the two concepts relate

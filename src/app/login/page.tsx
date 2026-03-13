@@ -18,6 +18,22 @@ function LoginForm() {
     if (error) setMessage({ type: "error", text: error });
   }, [searchParams]);
 
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7243/ingest/8ff7ff1e-218b-4b2b-b613-6784eb826cca", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        location: "login/page.tsx:LoginForm",
+        message: "LoginForm mounted (client)",
+        data: {},
+        timestamp: Date.now(),
+        hypothesisId: "H4",
+      }),
+    }).catch(() => {});
+  }, []);
+  // #endregion
+
   async function signInWithGitHub() {
     setMessage(null);
     const supabase = createClient();

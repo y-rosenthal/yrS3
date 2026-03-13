@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fetchAvailableTags } from "./tag-filter-bar-load";
 
 type Props = {
   chosenTags: string[];
@@ -22,39 +23,15 @@ export function TagFilterBar({
   const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const loadFallbackTags = useCallback(async () => {
-    const fallback = await fetch("/api/questions/tags").then((r) => r.json().catch(() => []));
-    setAvailableTags(Array.isArray(fallback) ? fallback : []);
-  }, []);
-
   const loadTags = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/tags");
-      if (!res.ok) {
-        await loadFallbackTags();
-        return;
-      }
-      let data: unknown;
-      try {
-        data = await res.json();
-      } catch {
-        await loadFallbackTags();
-        return;
-      }
-      if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object" && data[0] !== null && "path" in data[0]) {
-        setAvailableTags((data as { path: string }[]).map((t) => t.path));
-      } else if (Array.isArray(data)) {
-        setAvailableTags(data as string[]);
-      } else {
-        await loadFallbackTags();
-      }
-    } catch {
-      setAvailableTags([]);
+      const tags = await fetchAvailableTags();
+      setAvailableTags(tags);
     } finally {
       setLoading(false);
     }
-  }, [loadFallbackTags]);
+  }, []);
 
   useEffect(() => {
     if (open) {
